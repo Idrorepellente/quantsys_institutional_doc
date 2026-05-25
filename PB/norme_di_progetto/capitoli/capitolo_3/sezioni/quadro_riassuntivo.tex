@@ -1,0 +1,20 @@
+\section{Quadro riassuntivo}
+
+In sintesi, il ciclo di vita di una strategia all'interno del progetto QuantSys Institutional segue il seguente schema, partendo dalla lettura della issue:
+
+\begin{enumerate}
+  \item \textbf{Issue GitHub} richiede una nuova strategia con criteri di accettazione espliciti;
+  \item Lo sviluppatore \textbf{legge la documentazione tecnica} (\texttt{GUIDE\_STRATEGIE\_CUSTOM.md});
+  \item Crea il \textbf{branch dedicato} \texttt{feature/<nome-strategia>} a partire da \texttt{main} aggiornato;
+  \item \textbf{Implementa} la strategia come plugin in \texttt{strategies/<nome\_strategia>/};
+  \item Crea lo \textbf{script di walk-forward} in \texttt{tests/walk\_forward\_<nome>.py};
+  \item Effettua \textbf{commit incrementali} e push periodici;
+  \item Lancia il \textbf{walk-forward OOS} e analizza i risultati;
+  \item In base ai risultati si presentano \textbf{due possibili esiti}:
+  \begin{itemize}
+    \item \textbf{Esito positivo}: strategia valida la performance attesa $\rightarrow$ pull request di integrazione con aggiornamento documentazione e numeri OOS in descrizione $\rightarrow$ review $\rightarrow$ merge $\rightarrow$ strategia attiva nel sistema;
+    \item \textbf{Esito negativo}: strategia non rispetta i criteri $\rightarrow$ rinomina cartella aggiungendo prefisso \texttt{\_} $\rightarrow$ creazione di \texttt{\_FAILED.md} che documenta cattive performance e ragioni del fallimento $\rightarrow$ pull request di archiviazione $\rightarrow$ merge $\rightarrow$ codice conservato come riferimento ma ignorato dal discovery.
+  \end{itemize}
+\end{enumerate}
+
+In entrambi gli esiti il lavoro è tracciato, riproducibile e auditable. Questo è coerente con la filosofia del progetto: ogni decisione (sia di integrazione che di scarto) deve essere documentata e basata su evidenza empirica, non su intuizione o su numeri di backtest non validati.

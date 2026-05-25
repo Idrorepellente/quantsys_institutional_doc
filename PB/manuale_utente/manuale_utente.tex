@@ -1,0 +1,88 @@
+\documentclass[a4paper,12pt]{report}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[italian]{babel}
+\usepackage{geometry}
+\usepackage{hyperref}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    citecolor=red,
+    urlcolor=blue
+}
+
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{listings}
+\usepackage{xcolor}
+
+\geometry{margin=2.5cm}
+\onehalfspacing
+
+% Configurazione listings per codice
+\lstset{
+    language=bash,
+    basicstyle=\ttfamily\small,
+    backgroundcolor=\color{gray!10},
+    breaklines=true,
+    frame=single,
+    framerule=0pt,
+    columns=fullflexible,
+    keepspaces=true,
+    showstringspaces=false,
+    morekeywords={docker, docker-compose},
+}
+
+\title{Manuale Utente}
+\author{Mirofish Trading Offline}
+\date{\today}
+
+\titleformat{\section}[hang]{\Large\bfseries}{Sezione \thesection}{1em}{}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\newpage
+
+% ===== SEZIONE 1: INTRODUZIONE =====
+\input{sezioni/introduzione}
+
+\newpage
+
+% ===== SEZIONE 2: PREREQUISITI =====
+\input{sezioni/prerequisiti}
+
+\newpage
+
+% ===== SEZIONE 3: CONFIGURAZIONE INIZIALE =====
+\input{sezioni/configurazione}
+
+\newpage
+
+% ===== SEZIONE 4: AVVIO DELL'APPLICAZIONE =====
+\input{sezioni/avvio}
+
+\newpage
+
+% ===== SEZIONE 5: COMANDI UTILI =====
+\input{sezioni/comandi_utili}
+
+\newpage
+
+% ===== SEZIONE 6: TROUBLESHOOTING =====
+\input{sezioni/troubleshooting}
+
+\newpage
+
+% ===== SEZIONE 7: PULIZIA E RESET =====
+\input{sezioni/pulizia}
+
+\newpage
+
+% ===== SEZIONE 8: PROSSIMI PASSI E RISORSE =====
+\input{sezioni/prossimi_passi}
+
+\end{document}

@@ -1,0 +1,33 @@
+\section{Configurazione Iniziale}
+
+\subsection{Step 1: Scarica i Modelli Ollama}
+
+Prima di avviare Docker, scarica i modelli LLM necessari. Apri il terminale PowerShell:
+
+\begin{lstlisting}
+ollama pull qwen2.5:7b
+ollama pull qwen2.5vl:3b
+\end{lstlisting}
+
+\textbf{Nota}: Se non hai Ollama installato localmente, puoi saltare questo step e i modelli verranno scaricati automaticamente al primo avvio del container (più lento).
+
+\subsection{Step 2: Crea il File di Configurazione}
+
+Nella radice della directory del progetto, crea un file chiamato \texttt{.env} con il seguente contenuto:
+
+\begin{lstlisting}
+NEO4J_USER=neo4j
+NEO4J_PASSWORD=mirofish
+LLM_MODEL=qwen2.5:7b
+VISION_MODEL=qwen2.5vl:3b
+MIROFISH_START_LOCAL_SERVICES=0
+\end{lstlisting}
+
+Questo file definisce:
+\begin{description}
+    \item[NEO4J\_USER] Nome utente per il database Neo4j
+    \item[NEO4J\_PASSWORD] Password per accedere a Neo4j
+    \item[LLM\_MODEL] Modello principale LLM
+    \item[VISION\_MODEL] Modello per visione artificiale
+    \item[MIROFISH\_START\_LOCAL\_SERVICES] Disabilita servizi locali (Docker li gestisce)
+\end{description}

@@ -1,0 +1,62 @@
+\section{Comandi Utili}
+
+\subsection{Visualizzare i Log}
+
+Per monitorare i log di tutti i servizi in tempo reale:
+
+\begin{lstlisting}
+docker-compose logs -f
+\end{lstlisting}
+
+Per visualizzare i log di un singolo servizio:
+
+\begin{lstlisting}
+docker-compose logs -f mirofish-offline
+\end{lstlisting}
+
+\subsection{Fermare i Container}
+
+Per fermare tutti i servizi mantenendo i dati:
+
+\begin{lstlisting}
+docker-compose down
+\end{lstlisting}
+
+Per fermare e rimuovere i volumi (ATTENZIONE: elimina i dati):
+
+\begin{lstlisting}
+docker-compose down -v
+\end{lstlisting}
+
+\subsection{Riavviare i Container}
+
+Per riavviare tutti i servizi:
+
+\begin{lstlisting}
+docker-compose restart
+\end{lstlisting}
+
+Per riavviare un servizio specifico:
+
+\begin{lstlisting}
+docker-compose restart mirofish-offline
+\end{lstlisting}
+
+\subsection{Ricompilare le Immagini}
+
+Se hai modificato il Dockerfile:
+
+\begin{lstlisting}
+docker-compose build --no-cache
+docker-compose up -d
+\end{lstlisting}
+
+\subsection{Accedere a un Container}
+
+Per eseguire comandi dentro un container:
+
+\begin{lstlisting}
+docker exec -it mirofish-offline bash
+docker exec -it mirofish-neo4j bash
+docker exec -it mirofish-ollama bash
+\end{lstlisting}

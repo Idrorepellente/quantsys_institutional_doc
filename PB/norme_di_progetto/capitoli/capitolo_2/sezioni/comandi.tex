@@ -1,0 +1,25 @@
+\section{Comandi git essenziali}
+
+Di seguito i comandi principali utilizzati nel flusso di lavoro:
+
+\begin{itemize}
+  \item \texttt{git clone <url>}: clonare una repository;
+  \item \texttt{git status}: visualizzare lo stato dei file modificati;
+  \item \texttt{git checkout <branch>}: cambiare branch;
+  \item \texttt{git checkout -b <branch>}: creare e passare a un nuovo branch;
+  \item \texttt{git add .}: aggiungere tutti i file modificati allo stage;
+  \item \texttt{git add <file>}: aggiungere un file specifico;
+  \item \texttt{git commit -m "messaggio"}: creare un commit con il messaggio specificato;
+  \item \texttt{git push origin <branch>}: inviare i cambiamenti al repository remoto;
+  \item \texttt{git push --set-upstream origin <branch>}: primo push di un branch nuovo (collega upstream);
+  \item \texttt{git pull origin <branch>}: scaricare gli ultimi cambiamenti dal remoto;
+  \item \texttt{git fetch}: scaricare i cambiamenti dal remoto senza fare merge;
+  \item \texttt{git log --oneline}: visualizzare la cronologia compatta dei commit;
+  \item \texttt{git diff}: visualizzare le modifiche non ancora staged;
+  \item \texttt{git diff --staged}: visualizzare le modifiche staged ma non committate;
+  \item \texttt{git merge <branch>}: fondere un branch nel branch corrente;
+  \item \texttt{git branch -d <branch>}: eliminare un branch locale (sicuro: rifiuta se ha commit non mergiati);
+  \item \texttt{git branch -D <branch>}: eliminare un branch locale forzando (anche se non mergiato);
+  \item \texttt{git stash}: salvare temporaneamente modifiche non committate;
+  \item \texttt{git stash pop}: ripristinare le modifiche salvate con \texttt{stash}.
+\end{itemize}

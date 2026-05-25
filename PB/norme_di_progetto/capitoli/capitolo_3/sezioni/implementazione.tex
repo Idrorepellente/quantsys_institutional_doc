@@ -1,0 +1,86 @@
+\section{Implementazione della strategia}
+
+\subsection{Step 5: Creazione della cartella della strategia}
+
+All'interno di \texttt{strategies/} creare una nuova cartella con il nome scelto:
+
+\begin{lstlisting}
+mkdir strategies/stat_arb_coint
+\end{lstlisting}
+
+La cartella deve contenere almeno i seguenti tre file:
+
+\begin{itemize}
+  \item \texttt{\_\_init\_\_.py}: rende la cartella un package Python ed espone il \texttt{DESCRIPTOR};
+  \item \texttt{strategy.py}: definisce il \texttt{DESCRIPTOR} (entry point per il discovery);
+  \item Un file di implementation, ad esempio \texttt{cointegration.py}: contiene la classe Python che implementa la logica della strategia.
+\end{itemize}
+
+Tutti i dettagli sul contenuto di questi file sono nel documento \texttt{GUIDE\_STRATEGIE\_CUSTOM.md}.
+
+\subsection{Step 6: Implementazione del codice}
+
+L'implementazione della strategia segue il \emph{contract} dell'interfaccia \texttt{AtomicStrategy} (definita in \texttt{strategies/base.py}). Le metodi e proprietà obbligatori sono:
+
+\begin{itemize}
+  \item \texttt{style}: lo \texttt{StrategyStyle} che la strategia implementa (es. \texttt{STAT\_ARB});
+  \item \texttt{allowed\_asset\_classes}: insieme di \texttt{AssetClass} che la strategia opera (es. \texttt{\{EQUITY\_STOCK\}});
+  \item \texttt{generate\_signals(t\_decision, t\_execution, indicators\_by\_symbol, portfolio)}: ritorna la lista dei \texttt{Signal} per la barra corrente.
+\end{itemize}
+
+Si raccomanda di:
+
+\begin{itemize}
+  \item Mantenere la logica della strategia \emph{stateless} dove possibile, accettando lo stato corrente del portfolio come parametro;
+  \item Evitare lookahead bias indicizzando gli indicators sempre con \texttt{.loc[:t\_decision]};
+  \item Riutilizzare gli indicators del pool condiviso (\texttt{required\_indicators} nel descriptor) anziché ricomputarli internamente.
+\end{itemize}
+
+\subsection{Step 7: Configurazione del DESCRIPTOR}
+
+Il \texttt{DESCRIPTOR} è il punto di ingresso del sistema di discovery. Esso dichiara:
+
+\begin{itemize}
+  \item Nome, descrizione, categoria, timeframe della strategia;
+  \item Factory function per istanziarla con parametri configurabili;
+  \item \texttt{default\_params}: parametri default tunabili via YAML;
+  \item \texttt{required\_indicators}: indicatori da pre-computare nel pool;
+  \item \texttt{excluded\_instruments} e \texttt{included\_instruments}: per restringere l'universe;
+  \item \texttt{exit\_policy\_type}: \texttt{signal\_only}, \texttt{atr}, \texttt{custom}, o \texttt{combined};
+  \item \texttt{enabled}: \texttt{True} per attivare il discovery, \texttt{False} per disattivare temporaneamente.
+\end{itemize}
+
+\subsection{Step 8: Creazione dello script walk-forward}
+
+In parallelo all'implementation della strategia, creare nella cartella \texttt{tests/} uno script di walk-forward dedicato. Convenzione: \texttt{tests/walk\_forward\_<nome\_strategia>.py}.
+
+Lo script deve:
+
+\begin{itemize}
+  \item Caricare i dati dal cache appropriato (D1, M5, FX);
+  \item Costruire l'engine di backtest con la configurazione del YAML;
+  \item Istanziare la strategia (con \texttt{s.descriptor = STRATEGY\_DESCRIPTOR} per consentire la discovery della exit policy);
+  \item Lanciare il walk-forward rolling con finestre train/test definite;
+  \item Salvare l'output (PnL, equity, metriche) in \texttt{output/strategies/}.
+\end{itemize}
+
+\subsection{Step 9: Commit incrementali}
+
+Durante lo sviluppo, effettuare commit incrementali con messaggi chiari:
+
+\begin{lstlisting}
+git add strategies/stat_arb_coint/
+git commit -m "Aggiungi scheletro strategia stat_arb_coint"
+
+git add strategies/stat_arb_coint/cointegration.py
+git commit -m "Implementa Engle-Granger test su pair S&P 100"
+
+git add tests/walk_forward_stat_arb_coint.py
+git commit -m "Aggiungi script walk-forward per stat_arb_coint"
+\end{lstlisting}
+
+Effettuare il push del branch sul remoto in modo periodico per non perdere lavoro:
+
+\begin{lstlisting}
+git push origin feature/stat-arb-coint
+\end{lstlisting}

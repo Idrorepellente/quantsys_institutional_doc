@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quantsys Institutional – Documentazione</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="header-top">
+        <div class="dot"></div>
+        <h1>Quantsys Institutional — Documentazione</h1>
+      </div>
+      <p class="subtitle">Documenti tecnici del progetto</p>
+    </div>
+
+    <div class="footer">Quantsys Institutional · documentazione interna</div>
+  </div>
+
+  <script>
+    const container = document.querySelector('.container');
+    const footer = document.querySelector('.footer');
+
+    function creaSezione(titolo) {
+      const div = document.createElement('div');
+      div.className = 'section';
+      div.innerHTML = `<div class="section-title">${titolo}</div><div class="pdf-list" id="list-${titolo}"></div>`;
+      container.insertBefore(div, footer);
+      return document.getElementById(`list-${titolo}`);
+    }
+
+    function creaItem(href, nome, path) {
+      return `
+        <a class="pdf-item" href="${href}">
+          <div class="pdf-icon-box"><span>PDF</span></div>
+          <div class="pdf-info">
+            <div class="pdf-name">${nome}</div>
+            <div class="pdf-path">${path}</div>
+          </div>
+          <span class="arrow">↗</span>
+        </a>`;
+    }
+
+    async function caricaBaseline(baseline) {
+      let docs = [];
+      let verbali = [];
+
+      try {
+        const res = await fetch(`${baseline}/documenti.json`);
+        if (!res.ok) throw new Error('not found');
+        docs = await res.json();
+      } catch { return; } // se non esiste la baseline, salta tutto
+
+      // Header baseline
+      const header = document.createElement('div');
+      header.className = 'baseline-header';
+      header.textContent = baseline;
+      container.insertBefore(header, footer);
+
+      // Documenti principali
+      docs.forEach(doc => {
+        const list = creaSezione(doc.nome);
+        list.innerHTML = creaItem(
+          `view.html?doc=${doc.file}`,
+          doc.nome,
+          doc.file
+        );
+      });
+
+      // Verbali (opzionali)
+      try {
+        const resV = await fetch(`${baseline}/verbali/verbali.json`);
+        if (!resV.ok) throw new Error('not found');
+        verbali = await resV.json();
+        const listV = creaSezione('Verbali ' + baseline);
+        verbali.forEach(v => {
+          listV.innerHTML += creaItem(
+            `view.html?doc=${baseline}/verbali/${v.file}`,
+            v.nome,
+            `${baseline}/verbali/${v.file}`
+          );
+        });
+      } catch {} // verbali opzionali, si ignora se non esistono
+    }
+
+    caricaBaseline('RTB').then(() => caricaBaseline('PB'));
+  </script>
+</body>
+</html>

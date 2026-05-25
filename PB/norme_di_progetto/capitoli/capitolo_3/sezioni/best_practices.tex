@@ -1,0 +1,41 @@
+\section{Best Practices}
+
+\subsection{Comandi git essenziali}
+
+Di seguito i comandi principali utilizzati nel flusso di lavoro:
+
+\begin{itemize}
+  \item \texttt{git clone <url>} - Clonare una repository
+  \item \texttt{git checkout <branch>} - Cambiare branch
+  \item \texttt{git checkout -b <branch>} - Creare e cambiare a un nuovo branch
+  \item \texttt{git add .} - Aggiungere tutti i file modificati
+  \item \texttt{git add <file>} - Aggiungere un file specifico
+  \item \texttt{git commit -m "messaggio"} - Effettuare un commit
+  \item \texttt{git push origin <branch>} - Inviare i cambiamenti al repository remoto
+  \item \texttt{git pull origin <branch>} - Scaricate gli ultimi cambiamenti da remoto
+  \item \texttt{git status} - Visualizzare lo stato dei file
+  \item \texttt{git log} - Visualizzare la cronologia dei commit
+  \item \texttt{git merge <branch>} - Fondere un branch nel branch corrente
+\end{itemize}
+
+\subsection{Linee guida generali}
+
+\begin{enumerate}
+  \item \textbf{Nomenclatura branch}: Usare sempre \texttt{feature\#<numero>} per i nuovi branch
+  \item \textbf{Messaggi commit}: Essere descrittivi e concisi
+  \item \texttt{Commit frequenti}: Effettuare commit piccoli e logici
+  \item \textbf{Pull request}: Creare sempre una PR prima di fare il merge su main
+  \item \textbf{Review}: Attendere l'approvazione del team prima del merge
+  \item \textbf{Sincronizzazione}: Mantenere il branch sincronizzato con main
+  \item \textbf{Notion}: Aggiornare il status della issue su Notion dopo la pubblicazione
+\end{enumerate}
+
+\subsection{Flusso dalla redazione alla pubblicazione}
+
+\begin{enumerate}
+  \item \textbf{Redazione}: Il contenuto viene redatto in Notion
+  \item \textbf{Verifica}: Il contenuto è sottoposto a review nel team
+  \item \textbf{Approvazione}: Una volta approvato, il contenuto è marcato come pronto per la pubblicazione
+  \item \textbf{Pubblicazione}: Il contenuto approvato è pubblicato sulla repository di documentazione via pull request
+  \item \textbf{Closure}: L'issue correlata è chiusa dopo il merge
+\end{enumerate}

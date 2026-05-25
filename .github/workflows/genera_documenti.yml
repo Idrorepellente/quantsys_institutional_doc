@@ -1,0 +1,73 @@
+name: Genera JSON documenti
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  genera:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Genera JSON per RTB e PB
+        run: |
+          python3 - <<'EOF'
+          import os, json
+
+          ESCLUSE = {"verbali"}
+
+          for baseline in ["RTB", "PB"]:
+              if not os.path.isdir(baseline):
+                  continue
+
+              # documenti.json
+              documenti = []
+              for cartella in sorted(os.listdir(baseline)):
+                  path = os.path.join(baseline, cartella)
+                  if not os.path.isdir(path):
+                      continue
+                  if cartella in ESCLUSE or cartella.startswith("."):
+                      continue
+                  pdf = os.path.join(path, cartella + ".pdf")
+                  if os.path.exists(pdf):
+                      nome = cartella.replace("_", " ").title()
+                      documenti.append({
+                          "nome": nome,
+                          "cartella": cartella,
+                          "file": f"{baseline}/{cartella}/{cartella}.pdf"
+                      })
+
+              with open(os.path.join(baseline, "documenti.json"), "w") as out:
+                  json.dump(documenti, out, indent=2, ensure_ascii=False)
+              print(f"{baseline}: generati {len(documenti)} documenti.")
+
+              # verbali.json
+              verbali_path = os.path.join(baseline, "verbali")
+              if os.path.isdir(verbali_path):
+                  verbali = []
+                  for f in sorted(os.listdir(verbali_path)):
+                      if f.endswith(".pdf"):
+                          nome = f.replace(".pdf", "").replace("_", " ").title()
+                          verbali.append({"nome": nome, "file": f})
+                  with open(os.path.join(verbali_path, "verbali.json"), "w") as out:
+                      json.dump(verbali, out, indent=2, ensure_ascii=False)
+                  print(f"{baseline}: generati {len(verbali)} verbali.")
+          EOF
+
+      - name: Commit e push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          find . -name "documenti.json" -o -name "verbali.json" | xargs git add
+          git diff --staged --quiet || git commit -m "chore: aggiorna JSON documenti"
+          git pull --rebase origin main
+          git push origin main

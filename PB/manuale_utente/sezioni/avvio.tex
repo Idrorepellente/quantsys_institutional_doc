@@ -1,0 +1,54 @@
+\section{Avvio dell'Applicazione}
+
+\subsection{Step 1: Avvia i Container}
+
+Dalla directory radice del progetto, esegui:
+
+\begin{lstlisting}
+docker-compose up -d
+\end{lstlisting}
+
+Il flag \texttt{-d} esegue i container in modalità detached (background).
+
+Docker procederà a:
+\begin{enumerate}
+    \item Costruire l'immagine dell'applicazione
+    \item Scaricare le immagini di Neo4j e Ollama
+    \item Avviare i container
+    \item Eseguire i health check
+\end{enumerate}
+
+\textbf{Tempo di completamento}: 30-60 secondi (più lungo al primo avvio).
+
+\subsection{Step 2: Verifica che i Servizi siano Attivi}
+
+Attendi 30-60 secondi, poi esegui:
+
+\begin{lstlisting}
+docker-compose ps
+\end{lstlisting}
+
+Dovresti vedere output simile a:
+
+\begin{lstlisting}
+NAME                 STATUS              PORTS
+mirofish-offline     Up (healthy)        ...
+mirofish-neo4j       Up (healthy)        ...
+mirofish-ollama      Up                  ...
+\end{lstlisting}
+
+Tutti i servizi devono avere status \textbf{Up}.
+
+\subsection{Step 3: Accedi all'Applicazione}
+
+Una volta che i servizi sono attivi, accedi ai seguenti URL:
+
+\begin{itemize}
+    \item \textbf{Frontend}: \href{http://localhost:3000}{http://localhost:3000}
+    \item \textbf{Backend API}: \href{http://localhost:5001}{http://localhost:5001}
+    \item \textbf{Neo4j Browser}: \href{http://localhost:7474}{http://localhost:7474}
+    \begin{itemize}
+        \item Username: \texttt{neo4j}
+        \item Password: \texttt{mirofish}
+    \end{itemize}
+\end{itemize}

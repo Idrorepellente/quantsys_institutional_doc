@@ -1,0 +1,50 @@
+\section{Best practices}
+
+\subsection{Linee guida sui commit}
+
+\begin{enumerate}
+  \item \textbf{Commit piccoli e atomici}: ogni commit dovrebbe rappresentare un singolo cambiamento logico. Evitare commit "tutto in uno" con decine di file modificati per scopi differenti;
+  \item \textbf{Messaggi descrittivi}: il messaggio del commit deve descrivere \emph{cosa} è cambiato e \emph{perché}, non \emph{come};
+  \item \textbf{Commit frequenti}: meglio molti commit piccoli che pochi giganti. È più facile rivedere, rollback-are, cherry-pickare;
+  \item \textbf{Non committare file generati}: cache, output di backtest, file di lock di virtualenv. Questi sono gestiti via \texttt{.gitignore};
+  \item \textbf{Non committare credenziali}: API key, password, token devono essere in \texttt{.env} (escluso da git) o in variabili d'ambiente.
+\end{enumerate}
+
+\subsection{Linee guida sui branch}
+
+\begin{enumerate}
+  \item \textbf{Branch corti}: un branch dovrebbe vivere al massimo qualche giorno, idealmente meno. Branch che vivono settimane sono difficili da mergiare e creano conflitti;
+  \item \textbf{Un branch per issue}: non mescolare multiple feature in un singolo branch;
+  \item \textbf{Nomenclatura coerente}: seguire la convenzione \texttt{feature/<numero>-<descrizione>} o le sue varianti (\texttt{fix/}, \texttt{docs/});
+  \item \textbf{Sincronizzazione regolare}: pull da \texttt{main} almeno una volta al giorno se il branch vive più di un giorno.
+\end{enumerate}
+
+\subsection{Linee guida sulle pull request}
+
+\begin{enumerate}
+  \item \textbf{PR piccole}: una PR dovrebbe modificare al massimo qualche centinaio di righe. PR enormi sono difficili da revisionare e tendono a contenere bug;
+  \item \textbf{Una PR per scopo}: non mescolare feature, fix e refactoring nella stessa PR;
+  \item \textbf{Descrizione chiara}: utilizzare il template descritto nella Sezione precedente;
+  \item \textbf{Test prima di chiedere review}: assicurarsi che il codice giri localmente e che i test passino \emph{prima} di chiedere la review;
+  \item \textbf{Rispondere ai commenti}: rispondere a ogni commento di review, anche solo con un "fatto" o un emoji di conferma;
+  \item \textbf{Non auto-mergiare}: anche quando si è l'unico maintainer, è buona pratica aspettare almeno una review prima di mergiare.
+\end{enumerate}
+
+\subsection{Linee guida sul codice}
+
+\begin{enumerate}
+  \item \textbf{PEP 8}: seguire le convenzioni di stile Python standard;
+  \item \textbf{Docstring}: ogni funzione pubblica e classe deve avere una docstring che descriva scopo, argomenti, valori di ritorno;
+  \item \textbf{Type hints}: utilizzare type hint dove appropriato per migliorare la leggibilità;
+  \item \textbf{Niente codice morto}: rimuovere codice commentato. Se serve come riferimento, è già nella storia git;
+  \item \textbf{Niente \texttt{print()} in production}: usare il modulo \texttt{logging} per output diagnostico.
+\end{enumerate}
+
+\subsection{Anti-pattern da evitare}
+
+\begin{itemize}
+  \item \textbf{Forzare push su branch condivisi}: \texttt{git push --force} su branch su cui lavorano altre persone causa perdita di lavoro. Usare \texttt{--force-with-lease} se proprio necessario, e comunicare al team in anticipo;
+  \item \textbf{Commit di binari grandi}: parquet, CSV grandi, modelli ML pesanti non vanno committati. Usare la cache locale o Git LFS se davvero necessario;
+  \item \textbf{Branch nominati male}: branch chiamati \texttt{test}, \texttt{nuova}, \texttt{mio} non aiutano nessuno;
+  \item \textbf{Messaggi di commit vuoti}: \texttt{git commit -m "wip"} o \texttt{"fix"} senza altre informazioni rendono la storia inutile.
+\end{itemize}

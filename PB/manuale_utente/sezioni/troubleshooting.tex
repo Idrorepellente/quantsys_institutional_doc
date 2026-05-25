@@ -1,0 +1,56 @@
+\section{Troubleshooting}
+
+\subsection{Neo4j non si Avvia}
+
+\textbf{Sintomo}: Il container di Neo4j mostra status \texttt{Exited}
+
+\textbf{Soluzione}:
+\begin{enumerate}
+    \item Verifica le credenziali nel file \texttt{.env}
+    \item Controlla lo spazio su disco disponibile
+    \item Visualizza i log: \texttt{docker-compose logs neo4j}
+    \item Riavvia: \texttt{docker-compose down -v \&\& docker-compose up -d}
+\end{enumerate}
+
+\subsection{Ollama Timeout}
+
+\textbf{Sintomo}: Errori di timeout quando si chiama l'API Ollama
+
+\textbf{Soluzione}:
+\begin{enumerate}
+    \item Scarica i modelli manualmente: \texttt{ollama pull qwen2.5:7b}
+    \item Verifica la RAM disponibile (minimo 8 GB)
+    \item Aumenta il timeout nelle configurazioni se necessario
+\end{enumerate}
+
+\subsection{Porta Già in Uso}
+
+\textbf{Sintomo}: Errore ``Address already in use''
+
+\textbf{Soluzione}: Modifica le porte in \texttt{docker-compose.yml}:
+\begin{lstlisting}
+ports:
+  - "3001:3000"  # Frontend su porta 3001 invece di 3000
+\end{lstlisting}
+
+\subsection{Container Crasha Subito Dopo l'Avvio}
+
+\textbf{Sintomo}: I container si fermano immediatamente
+
+\textbf{Soluzione}:
+\begin{enumerate}
+    \item Visualizza i log: \texttt{docker-compose logs}
+    \item Verifica la configurazione nel file \texttt{.env}
+    \item Assicurati che il file \texttt{.env} sia nella directory radice
+\end{enumerate}
+
+\subsection{Nessuna Connessione al Database}
+
+\textbf{Sintomo}: L'applicazione non si connette a Neo4j
+
+\textbf{Soluzione}:
+\begin{enumerate}
+    \item Verifica che Neo4j sia in stato \texttt{healthy}: \texttt{docker-compose ps}
+    \item Accedi a Neo4j Browser: \href{http://localhost:7474}{http://localhost:7474}
+    \item Controlla la variabile \texttt{NEO4J\_URI} nel file \texttt{.env}
+\end{enumerate}

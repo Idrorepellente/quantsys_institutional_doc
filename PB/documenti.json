@@ -1,0 +1,22 @@
+[
+  {
+    "nome": "Analisi Dei Requisiti",
+    "cartella": "analisi_dei_requisiti",
+    "file": "PB/analisi_dei_requisiti/analisi_dei_requisiti.pdf"
+  },
+  {
+    "nome": "Manuale Utente",
+    "cartella": "manuale_utente",
+    "file": "PB/manuale_utente/manuale_utente.pdf"
+  },
+  {
+    "nome": "Norme Di Progetto",
+    "cartella": "norme_di_progetto",
+    "file": "PB/norme_di_progetto/norme_di_progetto.pdf"
+  },
+  {
+    "nome": "Specifica Tecnica",
+    "cartella": "specifica_tecnica",
+    "file": "PB/specifica_tecnica/specifica_tecnica.pdf"
+  }
+]

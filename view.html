@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Visualizzatore documenti</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, sans-serif;
+      background: #0a0a0a;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.85rem 2rem;
+      background: #0f0f0f;
+      border-bottom: 1px solid #1a1a1a;
+      flex-shrink: 0;
+    }
+
+    .topbar a {
+      font-size: 0.8rem;
+      color: #444;
+      text-decoration: none;
+      letter-spacing: 0.03em;
+      transition: color 0.2s;
+    }
+
+    .topbar a:hover { color: #4ade80; }
+
+    .separator { color: #1e1e1e; font-size: 0.8rem; }
+
+    .doc-title {
+      font-size: 0.8rem;
+      font-weight: 400;
+      color: #555;
+      letter-spacing: 0.03em;
+    }
+
+    .viewer-wrapper {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      padding: 1.5rem 2rem;
+      overflow: hidden;
+    }
+
+    iframe {
+      width: 100%;
+      max-width: 960px;
+      height: 100%;
+      border: 1px solid #1a1a1a;
+      border-radius: 6px;
+      background: #fff;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="topbar">
+    <a href="index.html">← indice</a>
+    <span class="separator">|</span>
+    <span class="doc-title" id="doc-title"></span>
+  </div>
+
+  <div class="viewer-wrapper">
+    <iframe id="viewer"></iframe>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const doc = params.get('doc');
+    document.getElementById('viewer').src = doc;
+    document.getElementById('doc-title').textContent = doc
+      ? doc.split('/').pop().replace('.pdf','').replace(/_/g,' ')
+      : '';
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,144 @@
+\documentclass[12pt, a4paper]{article}
+
+% Pacchetti
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[italian]{babel}
+\usepackage{geometry}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{parskip}
+\usepackage{hyperref}
+\usepackage{longtable}
+
+% Margini
+\geometry{top=2.5cm, bottom=2.5cm, left=3cm, right=3cm}
+
+% Colori
+\definecolor{primary}{RGB}{30, 60, 120}
+\definecolor{lightgray}{RGB}{245, 245, 245}
+\definecolor{darkgray}{RGB}{80, 80, 80}
+
+% Stile titoli sezioni
+\titleformat{\section}
+  {\large\bfseries\color{primary}}
+  {\thesection.}{0.5em}{}[\titlerule]
+
+\titleformat{\subsection}
+  {\normalsize\bfseries\color{darkgray}}
+  {\thesubsection.}{0.5em}{}
+
+% Header e Footer
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{\small\textcolor{darkgray}{Verbale di Riunione}}
+\lhead{\small\textcolor{darkgray}{MirrorFish Trading Offline}}
+\rfoot{\small\textcolor{darkgray}{\thepage}}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% Hyperlink
+\hypersetup{
+  colorlinks=true,
+  linkcolor=primary,
+  urlcolor=primary
+}
+
+% ─────────────────────────────────────────────
+\begin{document}
+
+% Intestazione / Titolo
+\begin{center}
+  {\LARGE\bfseries\color{primary} VERBALE DI RIUNIONE}\\[0.4cm]
+  {\large Progetto: \textit{MirrorFish Trading Offline}}\\[0.2cm]
+  \textcolor{darkgray}{\rule{0.6\textwidth}{0.4pt}}
+\end{center}
+
+\vspace{0.5cm}
+
+% Tabella riepilogativa
+\begin{center}
+\begin{tabular}{>{\bfseries}p{4cm} p{9cm}}
+\toprule
+Data & 20 aprile 2026 \\
+\midrule
+Luogo & Discord (chiamata vocale) \\
+\midrule
+Partecipanti & Matteo, Marco, Davide \\
+\midrule
+Redatto da & Generato da trascrizione automatica \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{0.8cm}
+
+% ─────────────────────────────────────────────
+\section{Argomenti Discussi}
+
+\subsection{Architettura del sistema e gestione dei componenti}
+
+Il team ha discusso l'architettura generale del sistema MirrorFish, delineando una struttura modulare che distingue tra:
+
+\begin{itemize}[leftmargin=1.5cm]
+  \item \textbf{Componenti core}: il sistema principale responsabile della logica operativa fondamentale e delle regole non negoziabili.
+  \item \textbf{Moduli di analisi e previsione}: estensioni che integrano capacità di Machine Learning per simulare scenari futuri sulla base di dati storici.
+\end{itemize}
+
+È emersa la necessità di bilanciare la robustezza delle fondamenta del sistema — basate su processi certi e deterministici — con la flessibilità delle componenti probabilistiche, che richiedono un approccio adattivo.
+
+\subsection{Gestione delle decisioni e integrazione dati storici}
+
+Il processo decisionale del sistema si basa sull'analisi di dati passati per simulare scenari futuri. Sono stati identificati i seguenti requisiti chiave:
+
+\begin{itemize}[leftmargin=1.5cm]
+  \item I dati storici devono essere \textbf{reperibili retroattivamente} a una data specifica, per garantire la coerenza tra addestramento e inferenza.
+  \item La struttura dell'output deve essere \textbf{definita a priori e fissa}, in modo da essere compatibile con il contesto passato al modello in ogni momento.
+  \item L'output finale non deve essere un semplice dato numerico, ma un \textbf{giudizio motivato} che integri la previsione con le regole operative stabilite.
+\end{itemize}
+
+\subsection{Incorporazione di capacità di Machine Learning}
+
+È stato espresso un forte interesse nell'integrare modelli ML nel flusso decisionale. I punti di discussione principali sono stati:
+
+\begin{itemize}[leftmargin=1.5cm]
+  \item \textbf{Definizione dei confini funzionali}: occorre stabilire se la previsione ML debba essere un output separato e validabile oppure un fattore ponderato integrato nel flusso decisionale.
+  \item \textbf{Ciclo di feedback}: è necessario definire un meccanismo che consenta al sistema di apprendere dai propri errori predittivi e auto-correggersi nel tempo.
+  \item \textbf{Scalabilità}: va chiarito quali parti del sistema saranno \textit{hard-coded} (regole assolute) e quali saranno \textit{trainable} (regole variabili e aggiornabili).
+\end{itemize}
+
+\vspace{0.5cm}
+
+% ─────────────────────────────────────────────
+\section{To Do}
+
+\begin{enumerate}[leftmargin=1.5cm, label=\textbf{\arabic*.}]
+
+  \item \textbf{Analisti di Sistema — Documentazione dello Stato Base (MVP)}\\
+  Formalizzare i processi non negoziabili e le regole operative fondamentali che costituiranno il primo rilascio funzionante del sistema. Il documento deve definire con precisione i confini del Minimum Viable Product.
+
+  \item \textbf{Data Scientists — Specifiche dei Dati Predittivi}\\
+  Definire esattamente quali dataset sono necessari per i modelli ML, specificando:
+  \begin{itemize}
+    \item Volume atteso dei dati;
+    \item Formato di output richiesto dai modelli;
+    \item Requisiti di retroattività storica.
+  \end{itemize}
+
+  \item \textbf{Architetti Software — Diagramma di Flusso Decisionale}\\
+  Creare un diagramma UML o BPMN che mostri il percorso dei dati attraverso il sistema, evidenziando:
+  \begin{itemize}
+    \item I punti di decisione (\textit{Decision Points});
+    \item I punti di intervento dell'intelligenza artificiale;
+    \item Le interfacce tra componenti core e moduli ML.
+  \end{itemize}
+
+  \item \textbf{Team Tech Lead — Roadmap Tecnologica}\\
+  Selezionare lo stack tecnologico appropriato per gestire sia la logica rigorosa (backend) sia l'elaborazione pesante dei modelli ML, tenendo conto di scalabilità e manutenibilità a lungo termine.
+
+\end{enumerate}
+
+\end{document}

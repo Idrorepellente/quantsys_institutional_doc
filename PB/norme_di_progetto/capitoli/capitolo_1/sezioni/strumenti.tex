@@ -1,0 +1,41 @@
+\section{Strumenti}
+
+Questa sezione elenca gli strumenti utilizzati nello sviluppo del progetto.
+
+\subsection{Linguaggio e runtime}
+
+\begin{itemize}
+  \item \textbf{Python 3.11+}: linguaggio principale dell'intero progetto;
+  \item \textbf{Virtual environment (\texttt{venv})}: isolamento delle dipendenze. Tutte le dipendenze sono dichiarate in \texttt{requirements.txt};
+  \item \textbf{Pandas}, \textbf{NumPy}, \textbf{SciPy}: manipolazione dati e calcoli numerici;
+  \item \textbf{scikit-learn}: ML pipeline (Random Forest, gradient boosting);
+  \item \textbf{statsmodels}: regressioni multi-factor, cointegration test;
+  \item \textbf{Flask}: dashboard web di monitoring;
+  \item \textbf{Plotly}: visualizzazioni interattive nella dashboard;
+  \item \textbf{PyYAML}: parsing dei file di configurazione.
+\end{itemize}
+
+\subsection{Provider dati}
+
+\begin{itemize}
+  \item \textbf{Polygon.io}: dati equity D1 e M5 per S\&P 500 (tier Stocks);
+  \item \textbf{Dukascopy}: dati FX D1 e M5 per major pair (via package \texttt{dukascopy-python});
+  \item \textbf{yfinance}: fallback gratuito per dati D1 storici.
+\end{itemize}
+
+\subsection{Strumenti di collaborazione}
+
+\begin{itemize}
+  \item \textbf{GitHub}: versionamento codice, issue tracking, pull request, code review;
+  \item \textbf{GitHub Issues}: registrazione di feature da implementare, bug, decisioni di design da prendere;
+  \item \textbf{GitHub Projects}: board Kanban con stati \emph{Todo}, \emph{In Progress}, \emph{Review}, \emph{Done};
+  \item \textbf{Notion}: collaborazione informale, brainstorming pre-issue, documentazione di lavoro non ancora consolidata.
+\end{itemize}
+
+\subsection{Strumenti di documentazione}
+
+\begin{itemize}
+  \item \textbf{LaTeX}: documenti accademici della cartella \texttt{PB/};
+  \item \textbf{Markdown}: documenti operativi della radice repository;
+  \item \textbf{Mermaid}: diagrammi inseriti in documenti Markdown quando utili.
+\end{itemize}

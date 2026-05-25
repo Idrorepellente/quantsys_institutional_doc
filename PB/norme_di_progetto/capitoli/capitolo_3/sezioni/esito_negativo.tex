@@ -1,0 +1,147 @@
+\section{Esito negativo: archiviazione con disabilitazione del discovery}
+\label{sec:esito_negativo}
+
+Quando la strategia non rispetta i criteri di accettazione della issue, non viene integrata nel sistema ma il lavoro svolto \textbf{non viene cancellato}. Viene invece archiviato in modo che:
+
+\begin{itemize}
+  \item Il sistema di discovery non carichi la strategia (per evitare di includerla involontariamente in qualche ensemble);
+  \item Il codice resti nella repository come riferimento storico;
+  \item Le ragioni del fallimento siano documentate, in modo che in futuro non si ri-implementi la stessa strategia partendo da zero.
+\end{itemize}
+
+\subsection{Convenzione del prefisso underscore}
+
+La convenzione adottata è la seguente: \textbf{le cartelle e i file il cui nome inizia con il carattere underscore \texttt{\_} vengono ignorati dal sistema di discovery delle strategie.}
+
+In pratica, basta rinominare la cartella della strategia aggiungendo un \texttt{\_} all'inizio del nome per disattivarla dal sistema, lasciando però il contenuto consultabile.
+
+\subsection{Step 13b: Rinomina della cartella della strategia}
+
+Rinominare la cartella aggiungendo l'underscore davanti al nome:
+
+\begin{lstlisting}
+git mv strategies/stat_arb_coint strategies/_stat_arb_coint
+\end{lstlisting}
+
+Il sistema di discovery, che scansiona \texttt{strategies/} cercando cartelle con \texttt{strategy.py} al loro interno, ignorerà automaticamente quelle che iniziano con \texttt{\_}.
+
+\subsection{Step 14b: Creazione del file \texttt{\_FAILED.md}}
+
+All'interno della cartella rinominata, creare un file \texttt{\_FAILED.md} (anch'esso col prefisso \texttt{\_} per esplicitarne lo stato) che documenta il fallimento. Il file deve contenere:
+
+\begin{itemize}
+  \item Razionale originale della strategia (recuperato dalla issue);
+  \item Risultati walk-forward OOS effettivamente ottenuti;
+  \item Analisi del motivo del fallimento (interpretabile, non solo numerico);
+  \item Eventuali iterazioni tentate e perché non hanno portato a un esito positivo;
+  \item Raccomandazioni per il futuro (es. "non ri-provare questa stessa strategia su questo universe", oppure "ri-tentare se cambia la disponibilità di dati X").
+\end{itemize}
+
+Si raccomanda il seguente template:
+
+\begin{lstlisting}
+# Strategia <nome>: archiviata per cattive performance
+
+**Data archiviazione**: YYYY-MM-DD
+**Issue di origine**: #<numero>
+**Branch di sviluppo**: feature/<nome-strategia>
+
+## Razionale originale
+<descrizione dell'edge atteso, con riferimenti a letteratura>
+
+## Criteri di accettazione (dalla issue)
+- Sharpe netto OOS > 0.5
+- MaxDD < 15%
+- Correlazione con momentum < 0.3
+- ...
+
+## Risultati walk-forward effettivi
+- Sharpe netto OOS: 0.18 (target era >0.5)
+- CAGR netto: 2.4% (benchmark SPY: 10.2%)
+- Alpha vs SPY: -1.8%
+- MaxDD: -22.5%
+- Periodo coperto: YYYY-MM-DD -> YYYY-MM-DD
+
+## Analisi del fallimento
+<spiegazione interpretabile del perche' la strategia non funziona.
+Esempi tipici:
+- L'edge in letteratura era documentato su dati pre-2010, post-2010
+  e' stato eroso da decimalization e HFT.
+- La correlazione con il momentum esistente e' 0.85, quindi non
+  porta diversificazione.
+- La strategia ha funzionato bene su 2018-2021 ma e' collassata
+  nel 2022 (regime di rising rates) suggerendo dipendenza non
+  modellata dai tassi.
+- Il backtest gross-of-fees era promettente ma i costi di
+  transazione hanno mangiato l'edge.>
+
+## Iterazioni tentate
+1. <descrizione iterazione 1 e perche' non ha funzionato>
+2. <descrizione iterazione 2 e perche' non ha funzionato>
+3. ...
+
+## Raccomandazioni
+- <indicazione su cosa NON ri-provare>
+- <indicazione su cosa potrebbe valere la pena ri-tentare in futuro,
+  e a quali condizioni>
+\end{lstlisting}
+
+\subsection{Step 15b: Aggiornamento documentazione globale}
+
+Per dare visibilita' a livello di progetto del tentativo fallito, si raccomanda di:
+
+\begin{itemize}
+  \item Aggiungere una riga nel registro globale dei tentativi (se presente, ad esempio in \texttt{ROADMAP\_FASE2\_v2.md} o in un eventuale \texttt{JOURNAL.md});
+  \item Aggiornare la issue di origine con un commento di chiusura che riassume l'esito e linka al \texttt{\_FAILED.md} appena creato.
+\end{itemize}
+
+\subsection{Step 16b: Pull request di archiviazione}
+
+A questo punto si apre una pull request che:
+
+\begin{itemize}
+  \item Rinomina la cartella della strategia (commit con \texttt{git mv});
+  \item Aggiunge il \texttt{\_FAILED.md} all'interno;
+  \item Eventualmente aggiorna documentazione globale.
+\end{itemize}
+
+Il template di descrizione della PR di archiviazione e':
+
+\begin{lstlisting}
+Closes #<numero-issue>
+
+## Strategia: <nome> [ARCHIVIATA]
+
+## Esito
+La strategia non ha superato la validazione walk-forward.
+Archiviata in `strategies/_<nome>/` con `_FAILED.md` che
+documenta i risultati e le ragioni del fallimento.
+
+## Numeri principali
+- Sharpe netto OOS: X.XX (target era >Y.YY)
+- CAGR netto: X.XX% (benchmark SPY: Y.YY%)
+- MaxDD: -X.XX% (target era < Y.YY%)
+
+## Motivo principale del fallimento
+<una riga sintetica>
+
+## Note
+Il codice resta nella repository per riferimento storico.
+Il sistema di discovery ignora automaticamente la cartella
+grazie al prefisso `_`.
+\end{lstlisting}
+
+Anche questa PR passa per la normale procedura di review e merge. La differenza rispetto a una PR di esito positivo è semplicemente che il codice mergiato è "archiviato" anziché "attivo".
+
+\subsection{Step 17b: Cleanup}
+
+Identico allo Step 16a: dopo il merge, cancellare il branch remoto e locale.
+
+\subsection{Note operative sul \texttt{\_FAILED.md}}
+
+\begin{enumerate}
+  \item Il file deve essere \textbf{onesto}: registrare i numeri effettivi, non versioni "rimaneggiate" per salvare la faccia;
+  \item Deve essere \textbf{interpretabile}: un altro sviluppatore che lo legga tra sei mesi deve capire perchè la strategia non ha funzionato;
+  \item Deve essere \textbf{actionable}: deve aiutare a non ripetere lo stesso errore. Se il problema era nei dati, indicarlo. Se era nell'edge atteso, indicarlo;
+  \item Non e' un \emph{post-mortem} burocratico: l'obiettivo e' costruire memoria collettiva del progetto, non riempire un campo.
+\end{enumerate}

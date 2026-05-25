@@ -1,0 +1,22 @@
+\section{Pulizia e Reset}
+
+\subsection{Reset Completo}
+
+Se vuoi partire da zero (elimina tutti i dati):
+
+\begin{lstlisting}
+docker-compose down -v
+docker system prune -a --volumes
+docker-compose up -d
+\end{lstlisting}
+
+\textbf{ATTENZIONE}: Questo comando elimina tutti i dati e le immagini Docker non utilizzate!
+
+\subsection{Backup dei Dati}
+
+Per eseguire il backup del database Neo4j:
+
+\begin{lstlisting}
+docker exec mirofish-neo4j neo4j-admin database dump neo4j backup.dump
+docker cp mirofish-neo4j:/var/lib/neo4j/backup.dump ./backup.dump
+\end{lstlisting}

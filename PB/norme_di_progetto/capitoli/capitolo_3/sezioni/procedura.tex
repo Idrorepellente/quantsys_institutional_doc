@@ -1,0 +1,141 @@
+\section{Procedura operativa}
+
+\subsection{Setup iniziale - Clonare le repository}
+
+Per iniziare a lavorare al progetto è necessario clonare entrambe le repository. Eseguire i seguenti comandi:
+
+\subsubsection{Clone della repository di codice}
+\begin{verbatim}
+git clone https://github.com/eghosa02/mirofish_trading_offline.git
+cd mirofish_trading_offline
+\end{verbatim}
+
+\subsubsection{Clone della repository di documentazione}
+\begin{verbatim}
+git clone https://github.com/eghosa02/mirofish_trading_offline_doc.git
+cd mirofish_trading_offline_doc
+\end{verbatim}
+
+\subsection{Creazione di una nuova feature}
+
+\subsubsection{Step 1: Identificare il numero della issue}
+Ogni nuova feature deve essere collegata a una issue su GitHub. Annotare il numero della issue (es. \#42).
+
+\subsubsection{Step 2: Creare il branch locale}
+\begin{verbatim}
+git checkout main
+git pull origin main
+git checkout -b feature#<numero_issue>
+\end{verbatim}
+
+Esempio per la issue \#42:
+\begin{verbatim}
+git checkout -b feature#42
+\end{verbatim}
+
+\subsubsection{Step 3: Sviluppare la feature}
+Effettuare le modifiche necessarie sul branch creato. È possibile effettuare commit locali durante lo sviluppo:
+
+\begin{verbatim}
+git add .
+git commit -m "Descrizione breve delle modifiche"
+\end{verbatim}
+
+\subsection{Caricamento dei cambiamenti}
+
+\subsubsection{Step 1: Verificare i cambiamenti}
+Prima di eseguire il push, verificare lo stato dei file modificati:
+
+\begin{verbatim}
+git status
+\end{verbatim}
+
+\subsubsection{Step 2: Aggiungere i file modificati}
+\begin{verbatim}
+git add .
+\end{verbatim}
+
+Se si desiderano aggiungere solo specifici file:
+\begin{verbatim}
+git add <percorso/file>
+\end{verbatim}
+
+\subsubsection{Step 3: Eseguire il commit}
+\begin{verbatim}
+git commit -m "Messaggio descrittivo del commit"
+\end{verbatim}
+
+\subsubsection{Step 4: Eseguire il push}
+\begin{verbatim}
+git push origin feature#<numero_issue>
+\end{verbatim}
+
+\subsection{Creazione della Pull Request}
+
+\subsubsection{Step 1: Accedere a GitHub}
+Navigare al repository su \url{https://github.com/eghosa02/mirofish_trading_offline}
+
+\subsubsection{Step 2: Creare la Pull Request}
+Dopo aver eseguito il push, GitHub mostrerà un pulsante \textbf{Compare \& pull request}. Cliccare su di esso.
+
+In alternativa:
+\begin{enumerate}
+  \item Andare su \textbf{Pull requests}
+  \item Cliccare su \textbf{New pull request}
+  \item Selezionare il branch \texttt{feature\#<numero\_issue>} da confrontare con \texttt{main}
+  \item Cliccare su \textbf{Create pull request}
+\end{enumerate}
+
+\subsubsection{Step 3: Compilare i dettagli della Pull Request}
+\begin{itemize}
+  \item \textbf{Titolo}: Deve essere descrittivo e conciso
+  \item \textbf{Descrizione}: Includere:
+  \begin{itemize}
+    \item Riferimento alla issue (\#<numero>)
+    \item Descrizione dei cambiamenti effettuati
+    \item Eventuali note importanti
+  \end{itemize}
+\end{itemize}
+
+Esempio di descrizione:
+\begin{verbatim}
+Closes #42
+
+## Descrizione
+Implementazione della nuova funzione di autenticazione.
+
+## Cambiamenti
+- Aggiunto modulo di login
+- Aggiunta validazione credenziali
+- Aggiunto test unitari
+
+## Note
+Testato su Windows 10
+\end{verbatim}
+
+\subsubsection{Step 4: Sottomissione e review}
+\begin{enumerate}
+  \item Cliccare su \textbf{Create pull request}
+  \item Attendere la review del team
+  \item Effettuare i cambiamenti richiesti se necessario
+  \item Una volta approvata, cliccare su \textbf{Merge pull request}
+\end{enumerate}
+
+\subsection{Sincronizzazione e aggiornamenti}
+
+Per mantenere il branch locale aggiornato con i cambiamenti del main:
+
+\begin{verbatim}
+git checkout main
+git pull origin main
+git checkout feature#<numero_issue>
+git merge main
+\end{verbatim}
+
+Per risolvere conflitti (se presenti):
+\begin{enumerate}
+  \item Aprire i file con conflitti nell'editor
+  \item Risolvere manualmente i conflitti
+  \item Effettuare il commit dei cambiamenti
+  \item Eseguire il push
+\end{enumerate}

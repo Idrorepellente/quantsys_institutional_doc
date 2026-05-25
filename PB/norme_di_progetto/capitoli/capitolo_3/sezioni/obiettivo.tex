@@ -1,0 +1,16 @@
+\section{Obiettivo}
+
+Questo capitolo definisce la procedura completa per lo sviluppo di una nuova strategia di trading nel framework QuantSys Institutional, dalla \textbf{lettura della issue GitHub} che richiede la strategia fino alla sua \textbf{conclusione}, che può avere due esiti:
+
+\begin{itemize}
+  \item \textbf{Esito positivo}: la strategia passa la validazione walk-forward OOS e viene integrata nel sistema tramite pull request;
+  \item \textbf{Esito negativo}: la strategia non passa la validazione e viene archiviata insieme a un documento \texttt{\_FAILED.md} che ne registra le cattive performance, in modo che le scelte fatte siano tracciate ma il codice non venga più caricato dal sistema di discovery.
+\end{itemize}
+
+La procedura riportata in questo capitolo è specifica per lo sviluppo di strategie. Per la procedura generale di sviluppo (issue, branch, pull request) si veda il Capitolo \ref{chap:processo_sviluppo}.
+
+\subsection{Razionale della procedura}
+
+Il framework QuantSys è progettato per ospitare un insieme di strategie atomiche decorrelate. Ogni strategia rappresenta una scommessa specifica: una ipotesi di edge documentabile in letteratura o in dati storici. La procedura di sviluppo riflette questa filosofia: non si integra una strategia perché "funziona sul backtest passato", ma perché passa una validazione out-of-sample rigorosa.
+
+L'esito negativo non è considerato un fallimento del processo: anzi, è informazione preziosa. Tenere traccia dei tentativi falliti tramite il file \texttt{\_FAILED.md} previene il rischio di ri-implementare strategie che in passato si sono già rivelate non profittevoli, e fornisce un audit trail trasparente delle decisioni di design.

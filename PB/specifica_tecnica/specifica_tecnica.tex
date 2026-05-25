@@ -1,0 +1,38 @@
+\documentclass[a4paper,12pt]{report}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[italian]{babel}
+\usepackage{geometry}
+\usepackage{hyperref}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    citecolor=red,
+    urlcolor=blue
+}
+
+\usepackage{setspace}
+\usepackage{titlesec}
+
+\geometry{margin=2.5cm}
+\onehalfspacing
+
+\title{Specifica Tecnica}
+\author{Mirofish Trading Offline}
+\date{\today}
+
+\titleformat{\chapter}[hang]{\Huge\bfseries}{Capitolo \thechapter}{1em}{}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\newpage
+
+\input{capitoli/tecnologie_utilizzate/tecnologie_utilizzate}
+\input{capitoli/architettura/architettura}
+\input{capitoli/progettazione_alto_livello/progettazione_alto_livello}
+
+\end{document}
