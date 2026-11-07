@@ -1,1 +1,0 @@
-﻿# quantsys_institutional_doc

@@ -1,0 +1,86 @@
+% ===========================================================================
+%  sviluppatore/06-dashboard/02-dati.tex
+% ===========================================================================
+\section{Come i dati arrivano alle pagine}\label{sez:data-layer}
+
+La dashboard non legge i \file{parquet} a ogni richiesta. All'avvio li carica
+tutti in memoria, in un oggetto che viene poi passato a tutto il resto:
+
+\begin{codiceInterno}{python}{L'interfaccia pubblica}{dashboard/data\_layer.py}
+    DataLayer()
+        .startup()                  - carica streams + computa ensembles
+        .get_ensemble(name)         - 'core' | 'full'
+        .get_stream(name)           - stream singolo
+        .get_stream_names()         - lista
+        .get_spy_benchmark()        - SPY returns
+\end{codiceInterno}
+
+\noindent
+È il secondo argomento che ogni modulo \file{ui\_ext\_*} riceve in
+\simbolo{register(app, data\_layer, base\_path)}, e il motivo per cui una
+pagina nuova non deve aprire file.
+
+\subsection{Che cosa è pigro e che cosa no}
+
+Gli stream si caricano all'avvio; due serie costose no.
+
+\begin{codiceInterno}{python}{Due eccezioni dichiarate}{dashboard/data\_layer.py:86}
+        # Stress di mercato (iso_stress) e risk-off macro (macro_regime): caricati o
+        # CALCOLATI ON-DEMAND e cacheati (lazy), solo quando l'overlay corrispondente e'
+        # attivo -> vedi _get_market_stress / _get_macro_riskoff. Nessun calcolo a startup.
+\end{codiceInterno}
+
+\noindent
+Il criterio: una serie che serve solo a un overlay si calcola quando
+quell'overlay è attivo. Caricarla all'avvio allungherebbe la partenza per
+tutti, a beneficio di chi usa una funzione fra le sette.
+
+\subsection{Gli ensemble preconfigurati non esistono più}
+
+\begin{codiceInterno}{python}{La decisione, scritta nel codice}{dashboard/data\_layer.py:100}
+        # Ensemble pre-configurati DISABILITATI: il sistema usa solo l'ensemble
+        # custom (pagina /ensemble_custom), costruito a runtime dagli stream
+        # selezionati. CORE/FULL rimossi su richiesta. Set vuoto => nessuna
+        # scheda ENSEMBLE fissa in nav/home (restano stream singoli + custom).
+        self.configured_ensemble_names: set[str] = set()
+\end{codiceInterno}
+
+\noindent
+Il metodo \cod{get\_ensemble(name)} esiste ancora e il suo docstring parla
+ancora di \cod{'core'} e \cod{'full'}: sono nomi che non si possono più
+ottenere. Chi cerca di capire perché la pagina \percorsoHTTP{/ensemble/core} dà
+\cod{404} lo trova qui.
+
+\subsection{Come uno stream entra nell'elenco}
+
+\file{dashboard/config.py} costruisce l'elenco degli stream in tre passi, e
+solo il primo è un elenco scritto a mano:
+
+\begin{enumerate}
+  \item Gli stream dichiarati esplicitamente nella mappa interna.
+  \item \textbf{Le strategie scoperte}, tramite
+        \cod{discover\_strategies()}: entra chi ha un
+        \cod{output\_path\_pattern}; chi non ce l'ha viene saltato con un
+        \cod{continue} e un commento che dice «strategia non self-contained
+        per dashboard».
+  \item \textbf{Gli approcci scoperti}, con lo stesso meccanismo.
+\end{enumerate}
+
+\begin{perche}{Perché il passo 3 usa \cod{discover\_all()} e non \cod{discover\_approaches()}}
+Il commento lo spiega: «anche gli overlay producono uno stream, e uno stream
+va elencato indipendentemente da chi lo ha generato. Escluderli qui li
+farebbe sparire dalle composizioni, che è l'unico posto in cui servono
+davvero». È il complemento della scelta fatta nel registro
+(\vediSez{nuovo-approccio}): gli overlay restano \emph{fuori} dall'elenco dei
+backtest lanciabili e \emph{dentro} l'elenco degli stream componibili. Due
+elenchi, due domande diverse.
+\end{perche}
+
+\begin{attenzione}{Il fallimento della scoperta è un avviso}
+Entrambi i passi di scoperta sono dentro un \cod{try/except} che registra un
+avviso e prosegue. Un errore di import in una strategia non impedisce alla
+dashboard di partire: fa sparire quella strategia dall'elenco, e lascia una
+riga \cod{Self-contained stream discovery failed} nel registro. È lo stesso
+schema delle estensioni v2, con la stessa conseguenza: si nota guardando
+l'interfaccia, non guardando un errore.
+\end{attenzione}

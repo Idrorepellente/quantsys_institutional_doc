@@ -1,0 +1,120 @@
+% ===========================================================================
+%  utente/09-account/00-capitolo.tex
+% ===========================================================================
+\chapter{Account e abbonamento}\label{cap:account}
+
+\section{A che serve l'account}\label{sez:account-serve2}
+
+A quattro cose, e a nessun'altra: entrare nel marketplace, ricevere
+messaggi, avere un profilo pubblico, sottoscrivere un abbonamento. Tutto il
+resto dell'applicazione funziona senza.
+
+\figuraSchermata{0.86}{figure/schermate/subscription.png}
+  {Le pagine che richiedono un account lo dicono e offrono di farlo, invece
+   di sparire dal menu.}
+  {subscription}
+
+\section{Entrare la prima volta}\label{sez:entrare}
+
+\begin{pratica}{Durante la fase di prova}
+In beta l'accesso è riservato a chi si è iscritto dal sito. Il primo
+ingresso non è una registrazione: è un recupero password.
+
+\begin{enumerate}
+  \item Nella pagina di accesso, scegliere \voce{Password dimenticata}.
+  \item Inserire l'indirizzo con cui ci si è iscritti alla beta.
+  \item Arriva un messaggio con un codice; con quello si imposta una
+        password nuova.
+  \item Da lì in poi si entra normalmente.
+\end{enumerate}
+
+Un indirizzo non presente nelle iscrizioni viene rifiutato, sia
+all'accesso sia alla registrazione.
+\end{pratica}
+
+\noindent
+Si può anche entrare con Google: l'accesso si apre nel browser di sistema e
+l'applicazione raccoglie l'esito.
+
+\section{Il profilo}\label{sez:profilo}
+
+\figuraSchermata{1.0}{figure/schermate/profile.png}
+  {Il profilo. Nome visibile, biografia, e l'uscita dall'account.}
+  {profile}
+
+\noindent
+Da qui si cambiano nome visibile e biografia --- quelli che gli altri vedono
+accanto a un artefatto pubblicato --- e si manda un riscontro sul prodotto.
+
+La scheda \voce{Security} tratta password, indirizzo e verifica in due
+passaggi. Non sono conservati dall'applicazione: stanno sul sito, e
+l'applicazione fa solo da tramite.
+
+\section{I tre abbonamenti}\label{sez:abbonamenti}
+
+Servono a una cosa sola: poter \emph{pubblicare} sul marketplace. Comprare,
+scaricare, installare e usare non richiedono niente.
+
+\begin{center}
+\begin{tabular}{@{}L{22mm}L{116mm}@{}}
+\toprule
+\textbf{Livello} & \textbf{Che cosa dà} \\
+\midrule
+\rigaTenue
+\voce{Free} & Tutto il sistema: costruire, provare, far girare, comprare,
+  installare. È un utente pieno, non una versione ridotta. \\
+\voce{Author} & In più: pubblicare sul marketplace. \\
+\rigaTenue
+\voce{Studio} & Lo stesso, a un prezzo diverso. \\
+\voce{Desk} & Lo stesso, a un prezzo diverso. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{nota}{Perché oggi i tre piani fanno la stessa cosa}
+È voluto, ed è temporaneo. Durante la fase di prova i tre livelli danno solo
+la pubblicazione e differiscono per prezzo; che cosa aggiungere ai due
+superiori --- o se tenerne uno solo --- si decide all'uscita dalla beta. I
+prezzi attuali sono segnaposto.
+\end{nota}
+
+\subsection{Mensile o annuale}
+
+Entrambi, con l'annuale scontato. Si sceglie al momento dell'acquisto e si
+cambia quando si vuole: il sistema calcola il conguaglio da sé.
+
+\subsection{Disdetta, carta, fatture}
+
+Dal pulsante del portale di fatturazione. Si apre una pagina del fornitore
+dei pagamenti, dove si disdice l'abbonamento, si cambia il metodo di
+pagamento e si scaricano le fatture.
+
+\begin{nota}{La disdetta non toglie niente di già comprato}
+Un artefatto acquistato resta acquistato e resta installato. L'abbonamento
+riguarda la possibilità di \emph{pubblicare}, non quella di usare.
+\end{nota}
+
+\section{Quando qualcosa non torna}\label{sez:account-problemi}
+
+\begin{center}
+\begin{tabular}{@{}L{50mm}L{88mm}@{}}
+\toprule
+\textbf{Sintomo} & \textbf{Che cosa fare} \\
+\midrule
+\rigaTenue
+«Non sei abbonato» ma l'abbonamento c'è
+  & Chiudere e riaprire l'applicazione: il collegamento con il sito viene
+    stabilito all'avvio. \\
+Il marketplace è vuoto
+  & Stesso motivo. Se persiste, uscire dall'account e rientrare. \\
+\rigaTenue
+Ho pagato e non vedo l'artefatto
+  & Aspettare qualche secondo e ricaricare. Se resta così, usare il comando
+    che spiega perché non risulta acquistato, nella scheda dell'artefatto
+    (\vediCap{marketplace}). \\
+Una pagina dice «non lo so» invece di un numero
+  & Non è un guasto: l'applicazione non è riuscita a chiedere al sito, e lo
+    dice invece di inventare una risposta. Riprovare più tardi. \\
+\bottomrule
+\end{tabular}
+\end{center}

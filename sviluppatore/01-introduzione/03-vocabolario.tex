@@ -1,0 +1,84 @@
+% ===========================================================================
+%  sviluppatore/01-introduzione/03-vocabolario.tex
+% ===========================================================================
+\section{Dieci parole da fissare subito}\label{sez:vocabolario}
+
+Nel codice e nell'interfaccia queste parole hanno un significato preciso, e
+alcune significano qualcosa di diverso da ciò che si direbbe leggendole. Vale
+la pena leggerle una volta: metà delle domande su \Lyra{} sono domande di
+vocabolario travestite da domande di architettura.
+
+\begin{description}[leftmargin = 0pt, style = nextline, itemsep = 7pt]
+
+\item[\termdef{Strategia} (\pkgStrategie)]
+  Un oggetto che, a ogni barra, guarda gli indicatori e il portafoglio e
+  restituisce una lista di \term{segnali}. Non decide quanto comprare: decide
+  \emph{che cosa} e in che direzione. Vive dentro il motore e passa per
+  l'allocatore, il rischio e l'esecuzione.
+
+\item[\termdef{Approccio} (\pkgApprocci)]
+  Un oggetto che \emph{salta} tutto il motore e produce direttamente una serie
+  di rendimenti giornalieri. Serve a chi ha già una pipeline propria --- un
+  modello ML con il suo feature store, per dire --- e vuole solo che il
+  risultato entri nel sistema come uno stream qualsiasi. Una strategia e un
+  approccio non sono due nomi per la stessa cosa.
+
+\item[\termdef{Stream}]
+  Una serie storica di profitti e perdite. È l'unità di misura comune: una
+  strategia, un approccio e un overlay producono tutti uno stream, ed è su
+  questo che l'ensemble lavora. Tre formati: \cod{equity\_curve},
+  \cod{pnl\_daily}, \cod{pnl\_sparse}.
+
+\item[\termdef{Ensemble}]
+  La combinazione pesata di più stream. Il peso di ciascuno è deciso da una
+  \term{modalità di pesatura}.
+
+\item[\termdef{Modalità di pesatura} (\pkgPesi)]
+  Il criterio con cui l'ensemble distribuisce il capitale fra gli stream.
+  Quattordici installate, dall'equiponderato alla minima varianza con
+  restringimento di Ledoit--Wolf al meta-allocatore addestrato sui regimi. È
+  un plugin: si aggiunge senza toccare il motore.
+
+\item[\termdef{Overlay} (\pkgOverlay)]
+  Un moltiplicatore di esposizione fra \num{0} e \num{1}, applicato
+  all'ensemble già composto. \cod{1.0} significa esposizione piena,
+  \cod{0.0} fuori dal mercato. Non produce rendimenti: li scala. Gli overlay
+  attivi si moltiplicano fra loro, e il risultato non dipende dall'ordine ---
+  proprietà voluta, non accidente.
+
+\item[\termdef{Regime} (\pkgRegime)]
+  Uno stato di mercato fra tre: \cod{bull}, \cod{neutral}, \cod{bear}. Si
+  costruisce con due artefatti distinti: una \emph{regola} (dalla serie al
+  regime) e un \emph{mercato} (quali simboli usano quale regola, con quali
+  parametri). Le etichette sono sempre quelle tre, perché le strategie
+  dichiarano i propri \cod{regime\_weights} su quei nomi.
+
+\item[\termdef{Walk-forward}]
+  Il modo in cui si valuta una strategia: si addestra su una finestra, si
+  valuta sulla successiva, si avanza. Mai una valutazione sull'intero
+  campione, che misurerebbe quanto bene il modello ricorda invece di quanto
+  bene prevede.
+
+\item[\termdef{Artefatto}]
+  Un plugin impacchettato per essere pubblicato: strategia, approccio,
+  overlay, modalità di pesatura, metrica, indicatore. È l'unità che il
+  marketplace vende e installa.
+
+\item[\termdef{Porta} (\pkgPorte)]
+  Un contratto Python (\cod{Protocol}) fra il centro del sistema e il mondo:
+  un repository, una sorgente dati, un broker, un orologio. Trentadue, e
+  i casi d'uso conoscono solo queste.
+
+\end{description}
+
+\begin{attenzione}{Due parole che tradiscono}
+\textbf{Overlay} in \pkgOverlay{} è un moltiplicatore di esposizione; ma
+esistono anche approcci con \cod{stream\_category = "ml\_overlay"}, che
+\emph{non} sono overlay: sono approcci, con un contratto diverso. Il
+\vediCap{estendere} tiene i due casi separati con cura, perché confonderli
+produce un artefatto che si installa e non compare mai.
+
+\textbf{Project} nell'interfaccia non è il progetto software: è una
+composizione salvata di stream, pesi e overlay. Nel manuale utente è un
+capitolo a sé.
+\end{attenzione}

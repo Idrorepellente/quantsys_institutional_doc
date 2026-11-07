@@ -1,0 +1,90 @@
+% ===========================================================================
+%  utente/02-overview/00-capitolo.tex
+% ===========================================================================
+\chapter{Overview}\label{cap:overview}
+
+È la pagina che si apre per prima. Risponde a una domanda sola: come va
+tutto, adesso.
+
+\figuraSchermata{1.0}{figure/schermate/overview.png}
+  {La schermata iniziale. Quattro riquadri: il grafico dell'ensemble, le
+   metriche, l'elenco degli stream attivi, e la scorciatoia verso lo Studio.}
+  {overview}
+
+\section{Il grafico in alto a sinistra}\label{sez:overview-grafico}
+
+Mostra l'andamento del \voce{Project} scelto: la combinazione di più
+strategie, al netto dei costi stimati, sui dati che la strategia
+\emph{non} aveva visto mentre veniva costruita.
+
+Finché non si è salvato nessun project, al suo posto compare un invito a
+crearne uno. Non è un errore: è che non c'è ancora niente da disegnare.
+
+\section{Metrics OOS}\label{sez:overview-metriche}
+
+Sei numeri, e vanno letti insieme. \voce{OOS} sta per \emph{out of sample}:
+calcolati sui dati che la strategia non conosceva.
+
+\begin{center}
+\begin{tabular}{@{}L{32mm}L{106mm}@{}}
+\toprule
+\textbf{Metrica} & \textbf{Che cosa dice} \\
+\midrule
+\rigaTenue
+\voce{Sharpe ratio} & Quanto rende rispetto a quanto oscilla. È il numero
+  più usato per confrontare due strategie, e il più facile da far sembrare
+  bello guardando i dati sbagliati. \\
+\voce{CAGR net} & Il rendimento annuo composto, già al netto dei costi
+  stimati. \\
+\rigaTenue
+\voce{Max drawdown} & La perdita più grande dal massimo precedente. È la
+  domanda «quanto avrei dovuto sopportare prima di recuperare». \\
+\voce{Ann. volatility} & Quanto oscilla in un anno. \\
+\rigaTenue
+\voce{Alpha vs SPY ann.} & Quanto rende \emph{in più} del mercato, tolta la
+  parte che si spiega con il mercato stesso. Una strategia con un buon
+  rendimento e alfa vicino a zero sta comprando il mercato con altri nomi. \\
+\voce{Win rate} & La percentuale di giorni in guadagno. Da solo dice poco:
+  si può vincere nove volte su dieci e perdere comunque. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{perche}{Quali numeri guardare per primi}
+\voce{Max drawdown} e \voce{Alpha vs SPY}. Il primo perché è la cifra che
+decide se una strategia è sopportabile: uno Sharpe eccellente con un
+drawdown del \num{45}\,\% è una strategia che nessuno tiene fino in fondo.
+Il secondo perché distingue una strategia che fa qualcosa da una che sta
+seguendo il mercato con passi più lunghi.
+\end{perche}
+
+\begin{attenzione}{Un backtest non è una previsione}
+Dice come una strategia si \emph{sarebbe} comportata sui dati del passato,
+con i costi stimati. Non dice come si comporterà. Il capitolo
+\vediCap{streams} spiega quali segnali distinguono una strategia che ha
+funzionato da una che ha avuto fortuna.
+\end{attenzione}
+
+\section{Active streams}\label{sez:overview-elenco}
+
+L'elenco di tutti i risultati disponibili, ordinato. Le colonne:
+
+\begin{description}[leftmargin = 1.4em, style = nextline, itemsep = 4pt]
+  \item[\voce{Sharpe}] Come sopra.
+  \item[\voce{OOS Return}] Il rendimento fuori campione. Verde sopra zero,
+    rosso sotto.
+  \item[\voce{Corr}] La correlazione con gli altri stream. È la colonna che
+    conta di più quando si combinano: due strategie molto correlate, messe
+    insieme, non diversificano niente --- fanno la stessa scommessa due volte.
+  \item[\voce{Watch}] La stellina mette lo stream fra i preferiti.
+\end{description}
+
+\noindent
+I tre menu in alto all'elenco scelgono il periodo (\voce{OOS} o tutto),
+l'ordinamento e il project di riferimento.
+
+\section{Tutorials}\label{sez:overview-tutorial}
+
+In basso a destra, quattro passi che si spuntano man mano che si fanno:
+costruire il primo stream, validarlo, combinarlo, metterlo in produzione. È
+il percorso che questo manuale segue nei capitoli successivi.

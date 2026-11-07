@@ -1,0 +1,107 @@
+% ===========================================================================
+%  sviluppatore/04-motore/02-decisione.tex
+% ===========================================================================
+\section{Decisione ed esecuzione sono due istanti}\label{sez:decisione-esecuzione}
+
+È la regola più importante del motore, e si riduce a due righe di codice.
+
+\begin{codiceInterno}{python}{Le due righe che tengono in piedi tutto}{backtest/engine.py:740}
+            # t_execution = t (open T)
+            # t_decision = data point precedente in all_dates (close T-1)
+            t_execution = t
+            t_decision = all_dates[i - 1]
+\end{codiceInterno}
+
+\figuraTikz{decisione-esecuzione}
+  {I due istanti. Tutto ciò che sta nella fascia a destra non esiste ancora
+   quando si decide.}
+  {decisione-esecuzione}
+
+\subsection{Perché due istanti e non uno}
+
+Una strategia che decide alla chiusura di $T$ e compra alla chiusura di $T$
+non è implementabile: nel momento in cui si conosce il prezzo di chiusura, la
+sessione è finita. Le implementazioni ingenue lo fanno lo stesso, e il
+backtest che ne esce è eccellente.
+
+Qui la decisione avviene con i dati disponibili fino alla chiusura di $T-1$ e
+l'ordine viene eseguito al prezzo di apertura di $T$:
+
+\begin{codiceInterno}{python}{La fase di esecuzione}{backtest/engine.py:945}
+            # ---- EXECUTION PHASE: open T+1 = t_execution ----
+            # Per ogni target ottengo l'open price a t_execution.
+            ...
+                df_sym = data.get(sym)
+                if df_sym is None or t_execution not in df_sym.index:
+                    # Symbol non disponibile, skip silenzioso
+                    continue
+                open_price = float(df_sym.loc[t_execution, "open"])
+\end{codiceInterno}
+
+\subsection{La firma che non si può cambiare}
+
+Le strategie ricevono i due istanti come argomenti \emph{nominati}:
+
+\begin{codiceInterno}{python}{Il contratto}{backtest/engine.py:834}
+                        t_decision=t_decision,
+                        t_execution=t_execution,
+\end{codiceInterno}
+
+\noindent
+Il motore li passa per nome, quindi una strategia che chiami i suoi parametri
+in modo diverso fa fermare il backtest alla prima barra con un
+\cod{TypeError}. Il messaggio di errore del motore lo dice esplicitamente,
+ricordando la firma richiesta:
+
+\begin{codiceInterno}{python}{}{backtest/engine.py:857}
+                            "Firma richiesta: generate_signals(self, t_decision, "
+                            "t_execution, indicators_by_symbol, portfolio) -> "
+\end{codiceInterno}
+
+\begin{attenzione}{Il bug che migliora i risultati}
+Dentro \simbolo{generate\_signals} si legge solo fino a \cod{t\_decision}:
+
+\begin{center}
+\begin{tabular}{@{}L{62mm}L{76mm}@{}}
+\toprule
+\textbf{Corretto} & \textbf{Lookahead} \\
+\midrule
+\cod{ind.close.loc[:t\_decision]} & \cod{ind.close.loc[:t\_execution]} \\
+\cod{serie.shift(1)} prima di decidere & \cod{serie} senza shift \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+La seconda colonna non dà errore, non produce avvisi, e fa salire lo Sharpe.
+È per questo che la separazione è imposta dalla firma invece che raccomandata
+in un commento: una regola che si può violare senza accorgersene viene
+violata.
+\end{attenzione}
+
+\subsection{La stessa regola altrove}
+
+La causalità non riguarda solo le strategie. Si ripresenta identica in tre
+altri punti, e in ciascuno è scritta nel codice come vincolo:
+
+\begin{center}
+\begin{tabular}{@{}L{34mm}L{104mm}@{}}
+\toprule
+\textbf{Dove} & \textbf{Come} \\
+\midrule
+\rigaTenue
+Regime & Lo snapshot è calcolato con \cod{as\_of=True}, che usa solo dati
+         anteriori a \cod{t\_decision}. \\
+Overlay & Il moltiplicatore si calcola dal PnL \emph{base} e si applica
+          shiftato: «la decisione di oggi non può usare il rendimento di
+          oggi». \\
+\rigaTenue
+Regole di regime & Niente statistiche sull'intero campione: un quantile
+          calcolato su tutta la storia è lookahead travestito da soglia.
+          Gli helper condivisi (\cod{\_expanding\_median},
+          \cod{\_hysteresis}) esistono per non doverlo riscrivere ogni volta. \\
+Normalizzazione della volatilità & La vol trailing viene shiftata di un
+          giorno nel backtest (\vediSez{ensemble}). \\
+\bottomrule
+\end{tabular}
+\end{center}

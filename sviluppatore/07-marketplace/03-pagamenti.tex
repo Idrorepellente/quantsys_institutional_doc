@@ -1,0 +1,128 @@
+% ===========================================================================
+%  sviluppatore/07-marketplace/03-pagamenti.tex
+% ===========================================================================
+\section{I pagamenti}\label{sez:pagamenti}
+
+Questa è l'area in cui un errore costa denaro vero, e la regola che la governa
+è una sola: \textbf{l'accesso lo concede il webhook, e nessun altro}.
+
+\figuraTikz{pagamento}
+  {Il percorso di un acquisto. La freccia sbarrata è quella che esisteva e non
+   esiste più.}
+  {pagamento}
+
+\subsection{La regola, e perché c'è}
+
+\begin{commento}{dashboard/community.py:1978 $\cdot$ \cod{marketplace\_purchase\_return()}}
+Ritorno dal browser dopo il pagamento.
+
+NON concede nulla. Prima questa rotta creava l'acquisto come «paid»
+fidandosi della sessione indicata nell'URL: chiunque poteva aprirlo e
+ottenere gratis qualunque artefatto. Ora l'accesso lo apre soltanto il
+webhook del sito, quando Stripe conferma di aver incassato; qui si
+verifica solo se la licenza risulta gia' attiva, per dare all'utente
+un messaggio sensato.
+
+Il pagamento e' appena avvenuto e il webhook puo' arrivare un istante
+dopo: se la licenza non c'e' ancora non e' un errore, si dice di
+attendere.
+\end{commento}
+
+\begin{attenzione}{Un identificativo nell'URL non è una prova di pagamento}
+È il difetto classico dell'integrazione con un fornitore di pagamenti:
+l'utente torna su un indirizzo che contiene l'identificativo della sessione,
+e il codice lo tratta come conferma. Ma quell'indirizzo è visibile,
+indovinabile e condivisibile. L'unica conferma è quella che arriva
+\emph{dal} fornitore, firmata, sul canale del webhook. Qualunque modifica in
+quest'area che aggiunga una concessione fuori dal webhook va considerata un
+difetto di sicurezza, non una comodità.
+\end{attenzione}
+
+\subsection{Quando il webhook non arriva}
+
+I webhook si perdono. Esiste quindi una rotta di riconciliazione, costruita
+con lo stesso principio:
+
+\begin{codiceInterno}{python}{Riconciliare senza concedere}{dashboard/community.py:2068}
+    def marketplace_riconcilia(artifact_id):
+        """Completa un pagamento che il webhook non ha portato a termine.
+
+        Non concede nulla di suo: chiede a Stripe se il pagamento risulta
+        incassato, e solo in quel caso fa cio' che avrebbe fatto il webhook.
+        """
+\end{codiceInterno}
+
+\noindent
+«Non concede nulla di suo» è la frase che la rende legittima: non è una
+scorciatoia, è una seconda interrogazione alla stessa autorità.
+
+\subsection{Distinguere «non comprato» da «non ho potuto chiedere»}
+
+\begin{commento}{dashboard/community.py:2090 $\cdot$ \cod{marketplace\_perche\_non\_mio()}}
+Perche' l'artefatto non risulta acquistato.
+
+Il possesso dipende da due letture: la licenza e l'acquisto. Se
+entrambe tornano vuote non si distingue «non l'hai comprato» da «non
+sono riuscito a chiedere», e sono cose opposte. Qui si guardano una
+per una, dicendo anche se la lettura e' stata rifiutata.
+\end{commento}
+
+\noindent
+È la stessa distinzione fra zero e «non so» del \vediSez{pagina-nuova},
+applicata al caso in cui la differenza è fra «devi pagare» e «c'è un
+problema nostro». Senza questa rotta, un utente che ha pagato e non vede
+l'artefatto non ha modo di sapere di chi sia il problema, e l'unica mossa
+che gli resta è aprire una contestazione.
+
+\subsection{Gli abbonamenti: una rotta sola per due cose}
+
+\begin{commento}{dashboard/community.py:2676 $\cdot$ \cod{abbonamento\_checkout()}}
+Apre il pagamento di un piano, o cambia quello in corso.
+
+Una rotta sola per entrambe le cose perche' la domanda dell'utente e'
+una sola — «voglio il livello X con cadenza Y» — e il sito sa se
+quella richiesta e' un abbonamento nuovo o un cambio con conguaglio.
+Due rotte avrebbero costretto l'interfaccia a indovinarlo.
+\end{commento}
+
+\noindent
+Il corpo della richiesta porta \cod{tier} e \cod{periodo}; le cadenze sono
+mensile e annuale, con l'annuale scontata. La disdetta, il cambio di carta e
+le fatture passano invece dal portale di fatturazione
+(\rotta{POST}{/api/abbonamento/portale}), che è una pagina ospitata dal
+fornitore: non c'è codice da mantenere per quelle funzioni.
+
+\subsection{Le contestazioni}
+
+Un acquirente che ritiene che un artefatto non renda come dichiarato può
+aprire una pratica. Due rotte la rendono una verifica e non una discussione:
+
+\begin{center}
+\begin{tabular}{@{}L{54mm}L{84mm}@{}}
+\toprule
+\textbf{Rotta} & \textbf{Che cosa confronta} \\
+\midrule
+\rigaTenue
+\cod{.../verifica-integrita} & I file installati contro i file venduti,
+  uno per uno. \\
+\cod{.../verifica-performance} & Le metriche dichiarate dal venditore
+  contro quelle ottenute rieseguendo qui. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{perche}{Perché la verifica è automatica}
+Una contestazione fra due persone su che cosa «renda» una strategia non si
+risolve discutendo. Le due rotte producono un confronto riproducibile: o i
+file sono quelli, o non lo sono; o le metriche si riproducono, o non si
+riproducono. L'amministratore che chiude la pratica decide su un risultato,
+non su due racconti.
+\end{perche}
+
+\subsection{Le variabili d'ambiente}
+
+Le chiavi Stripe, SMTP e simili \emph{non} stanno in un \file{.env} locale:
+si gestiscono dal sito e arrivano alla metà locale attraverso il canale~\num{2}
+(\vediSez{due-meta}). È il motivo per cui un ambiente di sviluppo può avere
+il circuito di pagamento funzionante senza che nessuna chiave stia sul disco
+dello sviluppatore.

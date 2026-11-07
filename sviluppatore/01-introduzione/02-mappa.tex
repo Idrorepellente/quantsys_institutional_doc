@@ -1,0 +1,70 @@
+% ===========================================================================
+%  sviluppatore/01-introduzione/02-mappa.tex
+% ===========================================================================
+\section{Le due metà}\label{sez:due-meta}
+
+La prima cosa da sapere di \Lyra{} è che non è un'applicazione: sono due, che
+girano in posti diversi e si parlano attraverso tre soli canali.
+
+\figuraTikz{mappa-sistema}
+  {Le due metà del sistema. Tutto ciò che non attraversa uno dei tre canali
+   numerati resta dalla parte in cui è nato.}
+  {mappa-sistema}
+
+\subsection{La metà che gira sul computer dell'utente}
+
+È il progetto Python: \pkgCore, \pkgStrategie, \pkgBacktest, \pkgLive,
+\pkgReport, e l'interfaccia Flask in \pkgDashboard. Gira in locale,
+tipicamente su \url{http://127.0.0.1:5000}, e si impacchetta come applicazione
+desktop (\file{desktop\_app.py} apre la stessa dashboard in una finestra
+nativa invece che in una scheda del browser).
+
+Qui stanno i dati di mercato e i risultati dei backtest, e qui restano. Non
+c'è nessun percorso per cui un prezzo scaricato o un'equity line calcolata
+finisca in rete.
+
+\subsection{La metà che gira in rete}
+
+È il sito, un'applicazione Next.js con un database Postgres. Tiene gli
+account, le password, gli abbonamenti, i pagamenti e il catalogo del
+marketplace. Non ha accesso ai dati di mercato e non esegue calcoli
+quantitativi.
+
+\subsection{I tre canali, e perché sono tre}
+
+\begin{description}[leftmargin = 2.2em, style = nextline, itemsep = 6pt]
+  \item[\textbf{1} --- identità e permessi]
+    La dashboard chiede al sito «chi è questo utente, e che cosa può fare».
+    La risposta è un \term{token} personale con dentro il livello di
+    abbonamento e il flag di amministratore. Senza di esso l'applicazione
+    funziona lo stesso: non si entra nel marketplace, e basta.
+  \item[\textbf{2} --- chiavi e impostazioni]
+    Le variabili d'ambiente --- chiavi Polygon, FRED, Stripe, SMTP --- sono
+    gestite dal sito, non da un \file{.env} locale. È il verso opposto al
+    canale 1, ed è l'unico che va da destra a sinistra.
+  \item[\textbf{3} --- artefatti]
+    Una strategia venduta sul marketplace viaggia come pacchetto di file. Va
+    su quando si pubblica, viene giù quando si installa.
+\end{description}
+
+\begin{nota}{Dove cercare un bug che «sparisce»}
+Quando un comportamento si vede in un ambiente e non nell'altro, la domanda da
+farsi è quale dei tre canali è in mezzo. Un marketplace vuoto in locale e
+pieno sul sito è il canale 1 (token mancante o scaduto); un download dati che
+fallisce solo su una macchina è il canale 2 (chiave non arrivata); un
+artefatto installato che non compare è il canale 3 più una delle trappole del
+sistema a plugin (\vediCap{estendere}).
+\end{nota}
+
+\section{Le due applicazioni dentro la metà locale}\label{sez:strangler-intro}
+
+Dentro la metà locale ci sono, a loro volta, due applicazioni web: la
+dashboard Flask storica e un'API FastAPI più recente, avviate separatamente e
+in ascolto su porte diverse. Non è un residuo da ripulire: è una migrazione
+deliberata, il cosiddetto \term{strangler fig}, e il \vediCap{architettura} la
+spiega per esteso.
+
+\figuraTikz{strangler}
+  {Le due applicazioni web della metà locale. Entrambe passano dalle stesse
+   porte e usano lo stesso motore: ciò che cambia è il guscio.}
+  {strangler}

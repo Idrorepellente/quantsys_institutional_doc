@@ -1,0 +1,52 @@
+% ===========================================================================
+%  figure/tikz/plugin-due-forme.tex
+%  Le cinque famiglie di plugin non hanno un contratto unico: ne hanno due.
+% ===========================================================================
+\begin{tikzpicture}
+
+  % ---------- forma A ------------------------------------------------------
+  \node[minuto, minimum width = 30mm]              (strat) {\pkgStrategie};
+  \node[minuto, below = 3mm of strat, minimum width = 30mm] (appr) {\pkgApprocci};
+
+  \node[motore, right = 11mm of strat, yshift = -4.5mm, minimum width = 34mm]
+    (descr) {\codT{DESCRIPTOR}\\{\scriptsize dataclass}};
+  \node[astratto, right = 9mm of descr, minimum width = 30mm]
+    (fact) {\codT{factory(params)}\\\codT{build(params)}};
+  \node[motore, right = 9mm of fact, minimum width = 28mm]
+    (regA) {\codT{discover\_*()}\\{\scriptsize a richiesta}};
+
+  \lyrastrato[inner sep = 10pt]{(strat)(appr)(descr)(fact)(regA)}%
+             {FORMA A — descriptor}
+
+  % ---------- forma B ------------------------------------------------------
+  \node[minuto, below = 24mm of appr, minimum width = 30mm]  (pesi) {\pkgPesi};
+  \node[minuto, below = 3mm of pesi, minimum width = 30mm]    (over) {\pkgOverlay};
+  \node[minuto, below = 3mm of over, minimum width = 30mm]    (reg)  {\pkgRegime};
+
+  \node[motore, right = 11mm of over, minimum width = 34mm]
+    (meta) {\codT{META}\\{\scriptsize dict di soli letterali}};
+  \node[astratto, right = 9mm of meta, minimum width = 30mm]
+    (comp) {\codT{compute(...)}};
+  \node[motore, right = 9mm of comp, minimum width = 28mm]
+    (regB) {\codT{REGISTRY}\\{\scriptsize all'import}};
+
+  \lyrastrato[inner sep = 10pt]{(pesi)(over)(reg)(meta)(comp)(regB)}%
+             {FORMA B — \codT{META} + \codT{compute}}
+
+  % ---------- le frecce ----------------------------------------------------
+  \draw[flusso] (strat.east) -- ([yshift = 2mm]descr.west);
+  \draw[flusso] (appr.east)  -- ([yshift = -2mm]descr.west);
+  \draw[flusso] (descr) -- (fact);
+  \draw[flusso] (fact)  -- (regA);
+
+  \draw[flusso] (pesi.east) -- ([yshift = 3mm]meta.west);
+  \draw[flusso] (over.east) -- (meta.west);
+  \draw[flusso] (reg.east)  -- ([yshift = -3mm]meta.west);
+  \draw[flusso] (meta) -- (comp);
+  \draw[flusso] (comp) -- (regB);
+
+  \node[nota, below = 5mm of regB, text width = 44mm, anchor = north east]
+    {Un plugin di forma B scritto male\\
+     non dà errore: \emph{non compare}.};
+
+\end{tikzpicture}

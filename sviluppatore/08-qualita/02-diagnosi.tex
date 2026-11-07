@@ -1,0 +1,131 @@
+% ===========================================================================
+%  sviluppatore/08-qualita/02-diagnosi.tex
+% ===========================================================================
+\section{Quando qualcosa non va}\label{sez:diagnosi}
+
+Un elenco dei sintomi che capitano davvero, con la causa più probabile
+accanto. Ciascuno rimanda al punto della guida che lo spiega.
+
+\begin{center}
+\begin{longtable}{@{}L{50mm}L{88mm}@{}}
+\toprule
+\textbf{Sintomo} & \textbf{Dove guardare} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Sintomo} & \textbf{Dove guardare} \\
+\midrule
+\endhead
+
+\rigaTenue
+Metà dell'interfaccia è sparita dopo una modifica
+  & Un modulo \file{ui\_ext\_*} solleva all'import, e il \cod{try} unico
+    impedisce anche agli altri di caricarsi. Nel registro:
+    \cod{v2 page extensions not loaded}. \vediSez{ui-ext} \\
+
+Una strategia non compare nell'elenco
+  & \file{python tests/diagnostica\_strategie.py}, che stampa l'errore di
+    import \emph{visibile} --- nella dashboard finisce in un avviso che
+    nessuno legge. \\
+
+\rigaTenue
+Un artefatto nuovo non compare
+  & Dieci cause possibili, in ordine di frequenza:
+    \vediSez{trappole}. \\
+
+Una modalità di pesatura compare ma risponde \cod{400}
+  & Ricarica parziale del registro:
+    \cod{EnsembleEngine.WEIGHTING\_MODES} non è stato aggiornato.
+    \vediSez{trappole} \\
+
+\rigaTenue
+Il backtest si ferma alla prima barra con \cod{TypeError}
+  & La firma di \cod{generate\_signals} usa nomi di parametro diversi da
+    quelli attesi. \vediSez{decisione-esecuzione} \\
+
+Lo Sharpe è straordinario
+  & Prima di festeggiare: lookahead. Si legge oltre \cod{t\_decision},
+    oppure una soglia è un quantile calcolato sull'intero campione.
+    \vediSez{decisione-esecuzione} \\
+
+\rigaTenue
+Dal vivo il conto si muove molto più (o molto meno) del backtest
+  & La normalizzazione per stream. È il difetto storico del progetto, e la
+    suite che lo sorveglia è \file{prova\_normalizzazione\_stream.py}.
+    \vediSez{live} \\
+
+Il marketplace è vuoto in locale e pieno sul sito
+  & Canale~\num{1}: token mancante o scaduto. Il token è in cache per tutta
+    la vita del processo. \vediSez{ponte} \\
+
+\rigaTenue
+«Non sei abbonato» per tutti
+  & Si sta chiamando il sito con il segreto della dashboard invece che con
+    il token dell'utente. \vediSez{ponte} \\
+
+Un download dati fallisce solo su una macchina
+  & Canale~\num{2}: la chiave non è arrivata. Le variabili d'ambiente le
+    gestisce il sito. \vediSez{due-meta} \\
+
+\rigaTenue
+Una pagina mostra «nessun acquisto» a chi ne ha
+  & Una lettura fallita trattata come elenco vuoto. \vediSez{pagina-nuova} \\
+
+Un mercato di regime non modula
+  & Nessuno dei suoi \cod{driver} è disponibile: lo dice un avviso nel
+    registro, non un errore. Serve
+    \file{scripts/download\_regime\_drivers.py}. \vediSez{nuovo-regime} \\
+
+\rigaTenue
+Le pagine sono tutte vuote all'avvio
+  & Non ci sono dati. Non è un errore: non c'è niente da mostrare.
+    \vediSez{dati} \\
+
+\percorsoHTTP{/ensemble/core} risponde \cod{404}
+  & Gli ensemble preconfigurati sono stati disattivati: esiste solo
+    l'ensemble costruito a runtime. \vediSez{data-layer} \\
+
+\bottomrule
+\end{longtable}
+\end{center}
+
+\subsection{Gli strumenti di diagnosi}
+
+\begin{center}
+\begin{tabular}{@{}L{48mm}L{90mm}@{}}
+\toprule
+\textbf{Strumento} & \textbf{A che serve} \\
+\midrule
+\rigaTenue
+\file{tests/diagnostica\_strategie.py}
+  & Per ogni cartella di strategia: importa o dà errore, con il traceback
+    intero. Si lancia dalla radice, con lo \emph{stesso} interprete con cui
+    si lancia la dashboard --- la differenza fra due ambienti virtuali è una
+    causa frequente. \\
+\rotta{GET}{/api/marketplace/diagnostica}
+  & Verifica la catena della vetrina e dice in quale punto si rompe. \\
+\rigaTenue
+\rotta{GET}{/api/marketplace/<id>/perche-non-mio}
+  & Perché un artefatto non risulta acquistato, distinguendo «non
+    comprato» da «non sono riuscito a chiedere». \vediSez{pagamenti} \\
+\rotta{GET}{/api/data/cache\_status}
+  & Che cosa c'è su disco: numero di file, dimensione, intervallo di date. \\
+\rigaTenue
+\rotta{GET}{/api/universo}
+  & Che cosa il sistema \emph{sa} di avere, contro che cosa ha davvero. La
+    differenza fra le due è il registro \file{data/\_universe.json}. \\
+\rotta{GET}{/api/streams/orfani}
+  & Risultati senza una strategia che li abbia prodotti: restano dopo una
+    cancellazione, e sporcano gli elenchi. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{pratica}{Il primo posto dove guardare, sempre}
+Il registro. Questo sistema è pieno di \cod{try/except} che registrano un
+avviso e proseguono, ed è una scelta giusta --- un plugin rotto non deve
+impedire l'avvio --- che però sposta l'informazione dal comportamento al
+registro. Un sintomo che non ha un errore corrispondente nell'interfaccia ha
+quasi sempre una riga nel registro, e quasi sempre quella riga contiene il
+nome del modulo colpevole.
+\end{pratica}

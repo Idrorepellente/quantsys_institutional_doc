@@ -1,0 +1,55 @@
+% ===========================================================================
+%  figure/tikz/decisione-esecuzione.tex
+%  La separazione fra l'istante in cui si decide e quello in cui si esegue.
+%  È la figura più importante del documento: tutto il resto del motore è
+%  costruito per non violarla.
+% ===========================================================================
+\begin{tikzpicture}[x = 1mm, y = 1mm]
+
+  % ---------- la zona ancora nel futuro, dietro a tutto --------------------
+  \begin{scope}[on background layer]
+    \fill[lyraPesca!45!white] (86,-7) rectangle (140,9);
+  \end{scope}
+
+  % ---------- la linea del tempo ------------------------------------------
+  \draw[flusso] (2,0) -- (140,0);
+  \node[nota, anchor = west] at (141,0) {tempo};
+
+  \foreach \x/\et in {26/{$T-1$}, 86/{$T$}} {
+    \draw[draw = lyraInchiostro!45, line width = 0.9pt] (\x,-3) -- (\x,3);
+    \node[font = \sffamily\small, below = 1mm] at (\x,-3) {\et};
+  }
+  \fill[lyraInchiostro] (26,0) circle (0.9mm);
+  \fill[lyraInchiostro] (86,0) circle (0.9mm);
+  \fill[lyraNegativo]   (124,0) circle (0.9mm);
+  \node[font = \sffamily\scriptsize, text = lyraNegativo, below = 1mm]
+    at (124,-3) {chiusura di $T$};
+
+  % ---------- i due momenti ------------------------------------------------
+  \node[riquadro, fill = lyraCielo, draw = lyraCieloBordo,
+        minimum width = 38mm, minimum height = 11mm] at (26,24)
+    (dec) {\codT{t\_decision}\\{\scriptsize chiusura di $T-1$}};
+  \node[riquadro, fill = lyraMenta, draw = lyraMentaBordo,
+        minimum width = 38mm, minimum height = 11mm] at (86,24)
+    (esec) {\codT{t\_execution}\\{\scriptsize apertura di $T$}};
+
+  \draw[flusso] (dec)  -- (26,4);
+  \draw[flusso] (esec) -- (86,4);
+  \draw[accento] (dec.east) -- (esec.west)
+    node[etichettaAccento, pos = 0.5] {una notte};
+
+  % ---------- la freccia che non si deve poter disegnare -------------------
+  \draw[bloccato] (124,7) .. controls (120,40) and (70,46) .. (34,31);
+  \node[font = \sffamily\scriptsize\bfseries, text = lyraNegativo,
+        anchor = south] at (84,41) {lookahead};
+
+  % ---------- cosa è lecito guardare ---------------------------------------
+  \node[nota, anchor = north, text width = 46mm, align = center] at (26,-11)
+    {\textbf{Leggibile.} Tutti i dati\\fino a questo istante.};
+  \node[nota, anchor = north west, text width = 58mm] at (90,-11)
+    {\textbf{Ancora nel futuro.} Di $T$ esiste solo
+     l'apertura. Chiusura, massimo e minimo arrivano
+     dopo la decisione: leggerli migliora il backtest
+     e non si vede.};
+
+\end{tikzpicture}

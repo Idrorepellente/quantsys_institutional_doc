@@ -1,0 +1,211 @@
+% ===========================================================================
+%  sviluppatore/05-estendere/02-strategia.tex
+% ===========================================================================
+\section{Una strategia}\label{sez:nuova-strategia}
+
+\subsection{Che cosa si crea}
+
+\begin{codiceInterno}{console}{La struttura minima}{strategies/}
+strategies/mia_strategia/
+|-- __init__.py       # ri-esporta DESCRIPTOR
+|-- strategy.py       # espone DESCRIPTOR
+`-- mia_impl.py       # l'implementazione
+\end{codiceInterno}
+
+\noindent
+La cartella \textbf{non} deve cominciare con \cod{\_}: il prefisso è
+l'interruttore di spegnimento, e il filtro che lo applica è questo.
+
+\begin{codiceInterno}{python}{Il filtro delle cartelle}{strategies/registry.py:55}
+def _is_valid_strategy_dir(p: Path) -> bool:
+    if not p.is_dir():                                   return False
+    if p.name.startswith("_") or p.name.startswith("."): return False
+    if p.name in SKIP_DIR_NAMES:                         return False
+    if not (p / "strategy.py").exists():                 return False
+    return True
+\end{codiceInterno}
+
+\subsection{Il livello di esecuzione}
+
+Si sottoclassa \simbolo{BaseAtomicStrategy} da \file{strategies/base.py}, che
+offre già \simbolo{applicable\_symbols()}, \simbolo{get\_value()} e
+\simbolo{get\_last\_value\_until()}. Tre cose sono obbligatorie:
+
+\begin{codiceInterno}{python}{Il contratto di esecuzione}{strategies/base.py:55}
+class AtomicStrategy(ABC):
+    @property
+    @abstractmethod
+    def style(self) -> StrategyStyle: ...
+
+    @property
+    @abstractmethod
+    def allowed_asset_classes(self) -> set[AssetClass]: ...
+
+    @abstractmethod
+    def generate_signals(
+        self,
+        t_decision: datetime,
+        t_execution: datetime,
+        indicators_by_symbol: dict[str, PrecomputedIndicators],
+        portfolio: Portfolio,
+    ) -> list[Signal]:
+\end{codiceInterno}
+
+\noindent
+I valori ammessi per \cod{style} vengono da \simbolo{core.types.StrategyStyle}:
+\cod{TREND}, \cod{MEAN\_REVERSION}, \cod{MOMENTUM}, \cod{BREAKOUT},
+\cod{STAT\_ARB}, \cod{STAT\_ARB\_INTRADAY}, \cod{FACTOR}, \cod{VALUE},
+\cod{MACRO}, \cod{CARRY}, \cod{VOL}.
+
+\begin{attenzione}{I nomi dei parametri fanno parte del contratto}
+Il motore chiama \cod{generate\_signals} per \emph{keyword}
+(\vediSez{decisione-esecuzione}). Rinominare \cod{t\_decision} in \cod{t}, o
+\cod{indicators\_by\_symbol} in \cod{ind}, fa fermare il backtest alla prima
+barra con un \cod{TypeError}.
+\end{attenzione}
+
+\subsection{Il livello dei metadati}
+
+\simbolo{StrategyDescriptor} ha sei campi obbligatori e una ventina di
+opzionali.
+
+\begin{codiceInterno}{python}{I sei obbligatori}{strategies/descriptor.py:107}
+    # Required
+    name: str
+    description: str
+    category: StrategyCategory
+    timeframe: StrategyTimeframe
+    factory: Callable[[dict], Any]
+    default_params: dict
+\end{codiceInterno}
+
+\noindent
+Un esempio reale, che mostra anche il modo idiomatico di scrivere la
+\cod{factory}:
+
+\begin{codiceInterno}{python}{Il descrittore di una strategia installata}{strategies/momentum/strategy.py:16}
+DESCRIPTOR = StrategyDescriptor(
+    name="momentum",
+    description="Cross-Sectional Momentum 12-1 (Jegadeesh-Titman). "
+                "Top decile, monthly rebalance, long-only.",
+    category=StrategyCategory.D1_LONG_ONLY,
+    timeframe=StrategyTimeframe.D1,
+
+    excluded_instruments=["EURUSD", "GBPUSD", "USDJPY", "USDCHF", "AUDUSD"],
+    required_indicators=["momentum_252_21"],
+
+    factory=lambda params: CrossSectionalMomentumStrategy(**{
+        k: v for k, v in params.items() if not k.startswith("exit_")
+    }),
+    default_params={
+        "formation_window": 252,
+        "skip_window": 21,
+        "top_decile_pct": 0.10,
+        "max_positions": 25,
+        "rebalance_every_n_days": 21,
+        "exit_catastrophic_sl_pct": None,
+    },
+
+    min_lookback_days=300,
+    backtest_script="strategies/momentum/run_backtest.py",
+    output_path_pattern="output/strategies/wf_momentum_oos_equity*.parquet",
+    stream_type="equity_curve",
+    stream_category="d1",
+    exit_policy_type="signal_only",
+    regime_weights={"bull": 1.0, "neutral": 1.0, "bear": 0.7},
+)
+\end{codiceInterno}
+
+\begin{nota}{Il filtro delle chiavi \cod{exit\_}}
+La \cod{factory} scarta le chiavi che cominciano con \cod{exit\_} prima di
+passarle al costruttore. Quei parametri non appartengono alla strategia: li
+consuma la politica di uscita, costruita a parte da
+\cod{exit\_policy\_type}. Scrivere la \cod{factory} senza quel filtro
+produce un \cod{TypeError} su un argomento inatteso.
+\end{nota}
+
+\subsection{I campi opzionali che contano davvero}
+
+\begin{center}
+\begin{tabular}{@{}L{40mm}L{98mm}@{}}
+\toprule
+\textbf{Campo} & \textbf{A che serve} \\
+\midrule
+\rigaTenue
+\cod{output\_path\_pattern},\newline\cod{stream\_type},
+\cod{stream\_category}
+  & \textbf{Integrazione con la dashboard, senza toccarla.} Con questi tre
+    campi lo stream compare da solo in \voce{Streams}: non c'è nessun
+    elenco da aggiornare in \file{dashboard/config.py}. Senza
+    \cod{output\_path\_pattern} lo stream non compare. \\
+\cod{required\_indicators}
+  & Nomi presi dal pool comune. Il registro ne calcola l'unione su tutte le
+    strategie e li pre-calcola una volta sola. \\
+\rigaTenue
+\cod{regime\_weights}
+  & Modulatori \cod{bull}/\cod{neutral}/\cod{bear}. Le chiavi devono essere
+    esattamente quelle tre e i valori numerici non negativi: è l'unico
+    controllo del descrittore che solleva \cod{ValueError} invece di un
+    avviso. \\
+\cod{allocator\_overrides}
+  & Scavalca per questa sola strategia \cod{max\_position\_weight},
+    \cod{max\_gross\_leverage}, \cod{max\_asset\_class\_gross},
+    \cod{portfolio\_target\_vol\_annual}. \\
+\rigaTenue
+\cod{extra\_timeframes}
+  & Per le strategie multi-timeframe. Il caricamento parte dal più fine. \\
+\cod{required\_external\_data}
+  & \cod{news}, \cod{fundamentals}, \cod{policy\_rates}. Il sistema li
+    \emph{scarica} se mancano. \\
+\rigaTenue
+\cod{required\_mms\_features},\newline\cod{required\_volume\_profile}
+  & Feature specialistiche calcolate su richiesta. \\
+\cod{maintenance}
+  & \cod{retrain\_every\_days}, \cod{retrain\_every\_bars},
+    \cod{retrain\_on\_drawdown\_pct}, \cod{data\_refresh\_every\_days}. È
+    da qui che il sistema sa quando un modello va riaddestrato. \\
+\rigaTenue
+\cod{\_module\_path}, \cod{\_folder\_path}
+  & \textbf{Li scrive il registro.} Non vanno impostati a mano. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{attenzione}{\cod{regime\_weights} si dichiara a priori}
+Il commento nel descrittore è esplicito: modificarli guardando il backtest
+«sarebbe curve-fitting mascherato da regime adaptation». Si dichiarano sul
+ragionamento strutturale --- questa strategia compra il momentum, quindi in
+regime ribassista deve pesare meno --- e poi si verifica che il modulato non
+peggiori rispetto al neutro. Non si cercano i valori che massimizzano il
+risultato.
+\end{attenzione}
+
+\subsection{La procedura}
+
+\begin{pratica}{Aggiungere una strategia}
+\begin{enumerate}
+  \item Creare la cartella \textbf{senza} prefisso \cod{\_}.
+  \item \file{mia\_impl.py}: sottoclassare \simbolo{BaseAtomicStrategy},
+        implementare \cod{style}, \cod{allowed\_asset\_classes},
+        \cod{reset()} e \cod{generate\_signals()} \emph{con quei nomi esatti
+        di parametro}.
+  \item Leggere solo fino a \cod{t\_decision}. Mettere
+        \cod{Signal.timestamp = t\_execution}.
+  \item \file{strategy.py}: \cod{DESCRIPTOR = StrategyDescriptor(...)} con i
+        sei campi obbligatori; \cod{factory} che filtra le chiavi
+        \cod{exit\_}.
+  \item Per vedere lo stream in dashboard: \cod{output\_path\_pattern} +
+        \cod{stream\_type} + \cod{stream\_category}.
+  \item \file{\_\_init\_\_.py}: ri-esportare \cod{DESCRIPTOR}.
+  \item Verificare con \file{tests/diagnostica\_strategie.py}, che esiste
+        proprio per rispondere alla domanda «perché
+        \cod{discover\_strategies()} torna vuota».
+\end{enumerate}
+\end{pratica}
+
+\noindent
+Il riferimento completo è \file{strategies/GUIDE\_STRATEGIE\_CUSTOM.md}
+(\num{2281} righe), affiancato da sei guide tematiche: il grafo a nodi come
+alternativa al Python, l'uso dei regimi dentro una strategia, le posizioni
+multiple sullo stesso simbolo, le feature MMS, il volume profile e un
+documento di proposta sulle strategie in valuta.

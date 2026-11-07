@@ -1,0 +1,107 @@
+% ===========================================================================
+%  sviluppatore/04-motore/03-allocatore.tex
+% ===========================================================================
+\section{Dall'intenzione alla posizione}\label{sez:allocatore}
+
+Una strategia dice \emph{che cosa}; l'allocatore decide \emph{quanto}. Sta in
+\file{core/allocator.py}, e il suo comportamento si governa con una sola
+\cod{dataclass} di configurazione.
+
+\subsection{Le quattro modalità}
+
+\begin{center}
+\begin{tabular}{@{}L{28mm}L{110mm}@{}}
+\toprule
+\cod{strategy\_mix\_mode} & \textbf{Come distribuisce} \\
+\midrule
+\rigaTenue
+\cod{equal\_weight}
+  & Gerarchico classico: il portafoglio si divide fra le strategie, poi
+    dentro ciascuna. Il fattore $\sqrt{N_\text{strat}}$ assume indipendenza
+    fra strategie. È il valore predefinito, ed è anche il ripiego quando le
+    altre modalità non hanno i dati che servono. \\
+\cod{stream\_level}
+  & Ogni strategia opera come stream indipendente con un proprio budget di
+    volatilità (\cod{stream\_target\_vol\_annual}, \num{0.12} di
+    default); i contributi si sommano con peso $1/N$. \\
+\rigaTenue
+\cod{explicit}
+  & Si esegue il vettore di pesi dichiarato dalla strategia, punto. Serve a
+    chi ha già calcolato le proprie dimensioni e non vuole che nessuno le
+    tocchi. \\
+\cod{covariance}
+  & Le correlazioni si \emph{stimano} invece che assumerle: la volatilità del
+    libro è $\sqrt{w^{\mathsf T}\Sigma w}$, con $\Sigma$ da
+    \file{core/covariance.py}. \\
+\rigaTenue
+\cod{bayesian}
+  & Dichiarata e non implementata: solleva \cod{NotImplementedError}. È
+    elencata nei valori ammessi perché il messaggio d'errore è più utile di
+    un «valore non valido». \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{perche}{Perché \cod{explicit\_vol\_target} è un campo a sé}
+In modalità \cod{explicit} si può chiedere che il libro venga scalato una
+volta sola perché la sua volatilità prevista sia un certo valore --- le
+proporzioni fra i titoli restano identiche, cambia solo quanto pesa il libro
+nel suo insieme. Il parametro non è \cod{portfolio\_target\_vol\_annual}
+perché quello ha sempre un valore (ha un default), e con un default non si
+distingue «lo voglio» da «c'era». Qui l'assenza significa qualcosa:
+\cod{None} vuol dire «esegui ciò che ti ho dato, senza scalare».
+\end{perche}
+
+\subsection{I tetti di rischio}
+
+\begin{center}
+\begin{tabular}{@{}L{44mm}R{16mm}L{76mm}@{}}
+\toprule
+\textbf{Parametro} & \textbf{Default} & \textbf{Che cosa limita} \\
+\midrule
+\rigaTenue
+\cod{portfolio\_target\_vol\_annual} & \num{0.10} & Volatilità annua
+  obiettivo del portafoglio. \\
+\cod{max\_position\_weight} & \num{0.10} & $|w|$ del singolo strumento. \\
+\rigaTenue
+\cod{max\_asset\_class\_gross} & \num{0.20} & $\sum |w|$ dentro una classe
+  di attività. \\
+\cod{max\_gross\_leverage} & \num{1.5} & $\sum |w|$ totale. \\
+\rigaTenue
+\cod{min\_vol\_floor} & \num{0.05} & Pavimento sulla volatilità stimata. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{nota}{Il ragionamento dietro il tetto per classe}
+Il commento nel codice lo dice senza giri: quattro obbligazioni tutte lunghe
+fanno il \num{40}\,\% lordo senza alcun tetto, e in situazione di stress sono
+una posizione sola. Il tetto al \num{20}\,\% limita a «un'esposizione
+obbligazionaria con leva~2 al massimo», che è realistico. Non è un numero
+scelto per prudenza generica: è la risposta a un modo preciso in cui una
+diversificazione apparente sparisce.
+\end{nota}
+
+\subsection{La validazione è nel costruttore}
+
+\simbolo{\_\_post\_init\_\_} controlla ogni campo e solleva \cod{ValueError}
+con il valore ricevuto nel messaggio. Due vincoli meritano attenzione perché
+non sono ovvi:
+
+\begin{itemize}
+  \item \cod{max\_gross\_leverage >= 1.0}. Un tetto inferiore a~\num{1}
+        significherebbe non poter mai investire tutto il capitale, ed è quasi
+        sempre un errore di unità di misura.
+  \item \cod{max\_asset\_class\_gross} ammesso fino a~\num{4.0}. Il limite è
+        stato ampliato per sostenere i portafogli lungo-corto, che arrivano
+        a un lordo di~\num{2} e oltre.
+\end{itemize}
+
+\begin{attenzione}{La configurazione è congelata}
+\simbolo{AllocatorConfig} è una \cod{dataclass} congelata: non si modifica un
+campo dopo averla costruita. Per variarne uno in un test si usa
+\cod{dataclasses.replace(config, max\_gross\_leverage=2.0)}, che ne
+restituisce una copia nuova. Assegnare direttamente solleva
+\cod{FrozenInstanceError}, ed è voluto: una configurazione di rischio
+modificata a metà di un backtest renderebbe i risultati non riproducibili.
+\end{attenzione}

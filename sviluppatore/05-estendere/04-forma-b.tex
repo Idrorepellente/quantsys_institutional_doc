@@ -1,0 +1,211 @@
+% ===========================================================================
+%  sviluppatore/05-estendere/04-forma-b.tex
+% ===========================================================================
+\section{Una modalità di pesatura, o un overlay}\label{sez:forma-b}
+
+Le due famiglie condividono forma, meccanismo di scoperta e modi di fallire.
+Cambiano il file atteso e la firma di \cod{compute}.
+
+\begin{center}
+\begin{tabular}{@{}L{22mm}L{34mm}L{80mm}@{}}
+\toprule
+ & \textbf{File} & \textbf{Firma e significato del ritorno} \\
+\midrule
+\rigaTenue
+\pkgPesi & \file{weight\_mode.py}
+  & \cod{compute(eng, stream\_pnls)}\newline
+    \cod{kind="static"} \freccia{} \cod{dict[str, float]}, somma \num{1}\newline
+    \cod{kind="rolling"} \freccia{} \cod{DataFrame} di pesi nel tempo \\
+\pkgOverlay & \file{overlay.py}
+  & \cod{compute(eng, ensemble\_pnl, stream\_pnls)}\newline
+    \freccia{} \cod{Series} di \emph{moltiplicatori} in $[0,1]$, allineata
+    a \cod{ensemble\_pnl.index} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Due forme di cartella, e perché}
+
+Entrambe le famiglie accettano sia un modulo singolo
+(\file{weights/<chiave>.py}, forma storica) sia una cartella
+(\file{weights/<chiave>/weight\_mode.py}, da preferire per i nuovi). La
+scoperta ha un ripiego che vale la pena conoscere:
+
+\begin{codiceInterno}{python}{Il ripiego sulle cartelle senza \_\_init\_\_.py}{weights/\_\_init\_\_.py:26}
+def _nomi_disponibili():
+    """I nomi da provare: moduli, package e CARTELLE SENZA __init__.py.
+
+    `pkgutil.iter_modules` non vede una cartella priva di `__init__.py`. Il
+    marketplace pero' esclude dai pacchetti i file che iniziano con "__",
+    quindi un artefatto installato arriva proprio cosi': con il solo
+    weight_mode.py. Senza questa aggiunta un overlay comprato non si sarebbe
+    caricato, e l'unico sintomo sarebbe stato la sua assenza dall'elenco.
+    """
+\end{codiceInterno}
+
+\noindent
+È il tipo di dettaglio che non si deduce leggendo il meccanismo: il
+marketplace e il caricatore dei plugin hanno un'interazione, e il caricatore
+si adatta a come il marketplace impacchetta.
+
+\subsection{Il registro si costruisce all'import}
+
+\begin{codiceInterno}{python}{La costruzione del registro}{weights/\_\_init\_\_.py:73}
+for _nome in _nomi_disponibili():
+    try:
+        _m = importlib.import_module(f"{__name__}.{_nome}")
+    except Exception as exc:  # un plugin rotto non deve impedire l'avvio
+        logger.debug("%s: import diretto fallito (%s)", _nome, exc)
+        _m = None
+    _m = _risolvi(_m, _nome)
+    if _m is not None and hasattr(_m, "META") and hasattr(_m, "compute"):
+        _mods.append(_m)
+
+_mods.sort(key=lambda m: (m.META.get("order", 999), m.META["key"]))
+
+REGISTRY  = tuple(m.META for m in _mods)
+COMPUTERS = {m.META["key"]: m.compute for m in _mods}
+\end{codiceInterno}
+
+\noindent
+La riga che conta è l'ultima condizione: senza \cod{META} \emph{e}
+\cod{compute} il modulo viene scartato in silenzio. Non c'è nemmeno un
+\cod{logger.warning}: l'oggetto semplicemente non entra nel registro.
+
+\subsection{Il campo \cod{META}}
+
+\begin{center}
+\begin{tabular}{@{}L{34mm}L{16mm}L{86mm}@{}}
+\toprule
+\textbf{Campo} & \textbf{Obbl.} & \textbf{A che serve} \\
+\midrule
+\rigaTenue
+\cod{key} & sì & Identificativo \cod{[a-z0-9\_]}, uguale al nome del file o
+  della cartella. È la chiave del dizionario dei \cod{compute}. \\
+\cod{label} & sì & Il nome mostrato nell'interfaccia. \\
+\rigaTenue
+\cod{kind} & solo \pkgPesi & \cod{"static"} o \cod{"rolling"}. Governa il
+  dispatch. \\
+\cod{group} & no & Raggruppamento nell'interfaccia. \\
+\rigaTenue
+\cod{order} & no & Ordinamento, default \num{999}. \\
+\cod{hint} & no & Una riga di descrizione. \\
+\rigaTenue
+\cod{maintenance} & no & \cod{retrain\_every\_days},
+  \cod{data\_refresh\_every\_days}, \cod{notes}. \\
+\cod{required\_external\_data} & no & \cod{news}, \cod{macro},
+  \cod{fundamentals}, \cod{rates}. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+Un esempio minimo e completo:
+
+\begin{codiceInterno}{python}{La modalità più semplice che esista}{weights/equal/weight\_mode.py:16}
+META = {
+    "key": 'equal',
+    "label": 'Equal',
+    "kind": 'static',
+    "group": 'Naive',     # nel sorgente: Naive con la dieresi
+    "order": 10,
+    "hint": "Classic 1/N",
+}
+
+def compute(eng, stream_pnls: dict[str, pd.Series]) -> dict[str, float]:
+    """Pesi equal-weight 1/N. Output: dict {stream_name: weight}, somma 1.0."""
+    n = len(stream_pnls)
+    if n == 0:
+        return {}
+    return {name: 1.0 / n for name in stream_pnls}
+\end{codiceInterno}
+
+\noindent
+E uno che dichiara dati esterni e una scadenza:
+
+\begin{codiceInterno}{python}{Quando l'artefatto ha bisogno di dati freschi}{overlays/news\_pressure/overlay.py:30}
+    # QUALI dati servono e OGNI QUANTO vanno rinfrescati. Il sistema legge di
+    # qui per sapere quando chiamare la porta: senza, la scadenza non
+    # esisterebbe e in live i dati resterebbero fermi al giorno
+    # dell'installazione.
+    "required_external_data": ["news"],
+    "maintenance": {
+        "data_refresh_every_days": 1,
+        "notes": "news goes stale in hours: it is refreshed every day",
+    },
+\end{codiceInterno}
+
+\subsection{Che cosa si può importare}
+
+Il codice di un artefatto di forma~B passa da un validatore \simbolo{AST}
+quando arriva dall'editor. Le radici ammesse e quelle vietate:
+
+\begin{center}
+\begin{tabular}{@{}L{30mm}L{108mm}@{}}
+\toprule
+ & \textbf{Moduli} \\
+\midrule
+\rigaTenue
+Ammessi ovunque & \pkg{numpy}, \pkg{pandas}, \pkg{math}, \pkg{statistics},
+  \pkg{logging}, \pkg{typing} \\
+Ammessi in \pkgPesi & più \pkg{scipy}, \pkg{sklearn}, \pkg{lightgbm},
+  \cod{from ..metrics import ...} \\
+\rigaTenue
+Ammessi in \pkgOverlay & più \pkg{approaches}, \pkg{core}, \pkg{reporting} \\
+\textbf{Vietati} & \pkg{os}, \pkg{sys}, \pkg{subprocess}, \pkg{socket},
+  \pkg{requests}, \cod{open}, \cod{eval}, \cod{exec}, \cod{\_\_import\_\_},
+  \pkg{importlib} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{perche}{Perché un validatore e non la fiducia}
+Un artefatto del marketplace è codice di qualcun altro che gira sulla
+macchina di chi lo installa, con i suoi dati e le sue credenziali del broker
+a portata di \cod{open()}. Il validatore non rende sicuro l'ineseguibile: un
+calcolo malizioso scritto con solo \pkg{numpy} resta possibile. Toglie però
+la via diretta --- leggere un file, aprire una connessione, eseguire una
+stringa --- e rende il resto visibile a chi guarda il sorgente, che il
+marketplace mostra sempre.
+\end{perche}
+
+\subsection{Le regole dei pesi}
+
+Oltre al contratto di firma, una modalità di pesatura deve rispettare quattro
+condizioni, che il motore \emph{non} verifica:
+
+\begin{itemize}
+  \item pesi \textbf{solo lunghi};
+  \item limitati all'intervallo \cod{[eng.min\_weight, eng.max\_weight]};
+  \item normalizzati a somma \num{1};
+  \item \cod{\{\}} se non calcolabili --- l'ensemble ha un ripiego, ma solo
+        se glielo si dice restituendo il vuoto. Restituire pesi sbagliati non
+        attiva nessun ripiego.
+\end{itemize}
+
+\subsection{Le regole degli overlay}
+
+\begin{itemize}
+  \item il ritorno è una serie di \emph{moltiplicatori}, non di rendimenti;
+  \item causale: \cod{shift(1)} sulla decisione --- «la decisione di oggi non
+        può usare il rendimento di oggi»;
+  \item \textbf{non} esporre \cod{APPROACH\_DESCRIPTOR}. Il registro cerca
+        \cod{META} e \cod{compute}; non trovandoli, l'artefatto resta
+        invisibile senza alcun errore.
+\end{itemize}
+
+\begin{pratica}{Aggiungere una modalità di pesatura o un overlay}
+\begin{enumerate}
+  \item \file{weights/mia\_chiave/weight\_mode.py} (o
+        \file{overlays/mia\_chiave/overlay.py}), con
+        \file{\_\_init\_\_.py} che può restare vuoto.
+  \item \cod{META} con \cod{key} uguale al nome della cartella.
+  \item \cod{compute} con la firma giusta per la famiglia.
+  \item Se il processo è già avviato:
+        \cod{from weights import reload\_registry; reload\_registry()}.
+\end{enumerate}
+I modelli di riferimento sono \file{weights/WEIGHT\_MODE\_TEMPLATE.md} e
+\file{overlays/OVERLAY\_TEMPLATE.md}; quest'ultimo si apre con una tabella
+che separa overlay e approccio su sei assi, e la frase è «\emph{An overlay and
+an approach are two different constructs. This is not a nuance.}»
+\end{pratica}

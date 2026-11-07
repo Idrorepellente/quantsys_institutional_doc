@@ -1,0 +1,105 @@
+% ===========================================================================
+%  sviluppatore/02-ambiente/03-dati.tex
+% ===========================================================================
+\section{Dove stanno i dati}\label{sez:dati}
+
+Tutti i percorsi del sistema sono definiti in un file solo,
+\file{core/paths.py}, e nessun altro modulo costruisce percorsi a mano. Chi
+deve aggiungere una cartella la aggiunge lì.
+
+\subsection{La cartella di lavoro}
+
+La radice non è necessariamente quella del repository. \simbolo{PROJECT\_ROOT}
+si decide a ogni avvio, in questo ordine:
+
+\begin{enumerate}
+  \item \cod{LYRA\_HOME} impostata nell'ambiente \freccia{} si usa quella. È il
+        modo per tenere i dati su un disco diverso, o condividerli fra più
+        installazioni.
+  \item Applicazione impacchettata (PyInstaller, Electron) \freccia{} la
+        cartella utente del sistema operativo:
+        \file{\%LOCALAPPDATA\%/Lyra} su Windows,
+        \file{\textasciitilde/Library/Application Support/Lyra} su macOS,
+        \file{\textasciitilde/.local/share/Lyra} su Linux.
+  \item Altrimenti \freccia{} la radice del repository.
+\end{enumerate}
+
+\begin{perche}{Perché i dati escono dal bundle}
+In un'applicazione impacchettata il codice vive in una cartella di sola
+lettura che ogni aggiornamento sovrascrive. Se i \file{parquet} e i risultati
+dei backtest stessero lì dentro, un aggiornamento cancellerebbe mesi di
+lavoro. \simbolo{CODE\_ROOT} --- dove sta il codice --- e
+\simbolo{PROJECT\_ROOT} --- dove si scrive --- sono due cose distinte proprio
+per questo, e vanno tenute distinte anche quando coincidono, come in sviluppo.
+\end{perche}
+
+\subsection{Che cosa c'è sotto \file{data/}}
+
+\begin{center}
+\begin{tabular}{@{}L{40mm}L{104mm}@{}}
+\toprule
+\textbf{Cartella} & \textbf{Contenuto} \\
+\midrule
+\rigaTenue
+\file{data/assets/<TF>/}
+  & OHLCV, un \file{parquet} per simbolo, divisi per timeframe:
+    \file{D1/}, \file{H4/}, \file{H1/}, \file{M30/}, \file{M15/},
+    \file{M5/}. Lo stesso simbolo può esistere a più timeframe, ciascuno
+    con il proprio intervallo di date. \\
+\file{data/driver/}
+  & Le serie che guidano i regimi (SPY, DXY, VIX\ldots). Stanno a parte
+    perché possono avere un timeframe diverso dagli asset. \\
+\rigaTenue
+\file{data/rates/}      & Tassi di politica monetaria per valuta, da FRED. \\
+\file{data/news/}       & Archivio delle notizie. \\
+\rigaTenue
+\file{data/earnings/}   & Date e sorprese degli utili, per simbolo. \\
+\file{data/fundamentals/} & Bilanci, per simbolo. \\
+\rigaTenue
+\file{data/mms/}        & Feature della heatmap di liquidità, per
+                          (simbolo, timeframe). \\
+\file{data/\_universe.json}
+  & Che cosa il sistema sa di avere. Non è un indice generato: è il
+    registro, e una cartella piena di \file{parquet} non censiti qui per il
+    sistema è vuota. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+I risultati stanno altrove, sotto \file{output/}: \file{output/strategies/}
+per gli stream (è da qui che la dashboard li legge, seguendo il
+\cod{output\_path\_pattern} dichiarato da ciascun artefatto),
+\file{output/ml/} per feature e predizioni, \file{output/reports/} per i
+report aggregati.
+
+\begin{nota}{I percorsi legacy sono ancora letti}
+\file{tests/outputs/}, \file{data/feature\_store/}, \file{data/ml\_outputs/}
+sono posizioni storiche. L'helper \simbolo{discover\_parquet()} cerca prima
+nei percorsi nuovi e poi in questi, così una installazione vecchia continua a
+funzionare. Scrivere lì non è più previsto.
+\end{nota}
+
+\subsection{Portare dentro i primi dati}
+
+Gli script di scarico stanno in \file{scripts/} e sono uno per sorgente:
+
+\begin{codiceInterno}{console}{I quattro che servono per cominciare}{scripts/}
+python scripts/download_d1.py              # azioni ed ETF, giornaliero
+python scripts/download_regime_drivers.py  # le serie dichiarate dai mercati di regime
+python scripts/download_fred_rates.py      # tassi (serve FRED_API_KEY)
+python scripts/download_polygon_m5.py      # intraday (serve POLYGON_API_KEY)
+\end{codiceInterno}
+
+\noindent
+Lo stesso si fa dall'interfaccia, in \voce{Data}, che chiama le rotte
+\cod{/api/data/download/<modalità>} e mostra l'avanzamento. La differenza è
+che dall'interfaccia il lavoro parte come \term{job} con un registro
+consultabile, dalla riga di comando no.
+
+\begin{attenzione}{\cod{download\_regime\_drivers.py} legge i file di mercato}
+Non ha un elenco di simboli suo: scarica i \cod{driver} dichiarati nei file
+sotto \file{regime/markets/}. Se si aggiunge un mercato che guarda una serie
+nuova, questo script è il modo di procurarsela --- e finché non lo si lancia,
+quel mercato non modula niente e lo dice solo in un avviso nel registro.
+\end{attenzione}

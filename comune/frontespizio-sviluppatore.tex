@@ -1,0 +1,125 @@
+% ===========================================================================
+%  comune/frontespizio-sviluppatore.tex
+% ===========================================================================
+\begin{titlepage}
+\thispagestyle{empty}
+\begin{tikzpicture}[remember picture, overlay]
+
+  % La banda verde acqua in alto: è il segno del prodotto, e serve a
+  % riconoscere il documento di lato in una pila di fogli.
+  \fill[lyraAccento] (current page.north west)
+    rectangle ([yshift = -9mm]current page.north east);
+
+  \node[anchor = north west, inner sep = 0pt]
+    at ([shift = {(28mm, -42mm)}]current page.north west)
+    {\begin{minipage}{125mm}
+       {\sffamily\fontsize{10}{12}\selectfont
+        \color{lyraAccentoScuro}\bfseries
+        LYRA CAPITAL\par}
+       \vspace{3mm}
+       {\sffamily\fontsize{40}{44}\selectfont\color{lyraInchiostro}
+        Guida dello\\sviluppatore\par}
+       \vspace{5mm}
+       {\color{lyraAccento}\rule{34mm}{1.6pt}\par}
+       \vspace{6mm}
+       {\sffamily\fontsize{12}{17}\selectfont\color{lyraInchiostro!62}
+        Architettura, motore quantitativo,\\
+        estensioni e rilascio della piattaforma.\par}
+     \end{minipage}};
+
+  % Il riquadro in basso dice a chi serve il documento. Sta in copertina
+  % perché chi lo apre per sbaglio deve accorgersene subito: il manuale utente
+  % è un altro file, e cercare qui come si preme un pulsante è tempo perso.
+  \node[anchor = south west, inner sep = 0pt]
+    at ([shift = {(28mm, 34mm)}]current page.south west)
+    {\begin{minipage}{125mm}
+       \begin{tcolorbox}[enhanced, colback = lyraPannello,
+                         colframe = lyraBordo, boxrule = 0.6pt, arc = 4pt,
+                         left = 10pt, right = 10pt, top = 9pt, bottom = 9pt]
+         {\sffamily\footnotesize\color{lyraInchiostro}%
+          \textbf{A chi serve.} A chi deve \emph{modificare} Lyra: aggiungere
+          una strategia, cambiare il motore, toccare l'interfaccia, mettere
+          mano al marketplace.\par
+          \vspace{4pt}
+          \textbf{A chi non serve.} A chi deve \emph{usare} Lyra: quello è il
+          \emph{Manuale utente}, documento separato nella stessa cartella.\par}
+       \end{tcolorbox}
+     \end{minipage}};
+
+  \node[anchor = south east, inner sep = 0pt, align = right]
+    at ([shift = {(-24mm, 18mm)}]current page.south east)
+    {\sffamily\scriptsize\color{lyraInchiostro!45}
+     Documento generato da sorgente \LaTeX\\
+     \today};
+
+\end{tikzpicture}
+\end{titlepage}
+
+\cleardoublepage
+
+% --- la pagina che dice come è fatto il documento ---------------------------
+\thispagestyle{empty}
+\vspace*{18mm}
+
+{\sffamily\Large\bfseries\color{lyraInchiostro}Come è fatto questo documento\par}
+\vspace{3mm}
+{\color{lyraAccento}\rule{\textwidth}{1pt}\par}
+\vspace{7mm}
+
+\noindent
+Quattro parti, in ordine di quanto a fondo si deve andare.
+
+\begin{description}[leftmargin = 2.4em, style = nextline, itemsep = 5pt]
+  \item[Parte I — Orientarsi]
+    Che cos'è Lyra, come è diviso, e come si mette in moto una copia sulla
+    propria macchina. Si legge una volta.
+  \item[Parte II — Come è fatto]
+    L'architettura e il motore di calcolo: dove stanno le decisioni e perché
+    sono dove sono. È la parte da leggere prima di toccare qualunque cosa.
+  \item[Parte III — Come si cambia]
+    Aggiungere una strategia, una modalità di pesatura, una pagina,
+    un'operazione sul database. Ogni capitolo è una procedura che si segue
+    con il codice aperto accanto.
+  \item[Parte IV — Tenerlo in piedi]
+    Le prove automatiche, il rilascio, e l'elenco di ciò che si rompe più
+    spesso con il motivo accanto.
+\end{description}
+
+\vspace{6mm}
+{\sffamily\large\bfseries\color{lyraInchiostro}Le convenzioni\par}
+\vspace{3mm}
+
+\noindent
+I riquadri sono quattro e hanno quattro significati distinti.
+
+\vspace{3mm}
+\begin{nota}{Nota}
+Un chiarimento utile ma non necessario: saltandolo non ci si perde niente di
+ciò che serve per lavorare.
+\end{nota}
+
+\begin{perche}{Perché così}
+La ragione di una scelta che, vista da fuori, sembrerebbe potersi fare
+diversamente. Serve a non «semplificare» qualcosa che è complicato per un
+motivo.
+\end{perche}
+
+\begin{pratica}{In pratica}
+Cosa fare, passo per passo. Se si cerca solo l'operazione, sono questi i
+riquadri da seguire.
+\end{pratica}
+
+\begin{attenzione}{Attenzione}
+Qui si rompe qualcosa: dati persi, denaro movimentato, o un errore che si
+scopre solo settimane dopo. Non sono avvisi di cortesia.
+\end{attenzione}
+
+\vspace{4mm}
+\noindent
+Nel testo, \cod{questo} è un simbolo del codice, \file{questo/} un percorso nel
+progetto, \voce{Questa} una voce dell'interfaccia e \pulsante{Questo} un
+pulsante da premere. Ogni blocco di codice porta in alto a destra il file da
+cui viene: la documentazione si legge con il sorgente aperto accanto, e un
+frammento senza il suo file costringe a cercarlo.
+
+\cleardoublepage

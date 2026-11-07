@@ -1,0 +1,36 @@
+% ===========================================================================
+%  figure/tikz/flusso-utente.tex
+%  L'ordine in cui si usano le zone dell'applicazione. Per il manuale utente.
+% ===========================================================================
+\begin{tikzpicture}[x = 1mm, y = 1mm]
+
+  \foreach \i/\x/\st/\titolo/\sotto in {
+      1/  0/sito/{Settings}/{scaricare i dati},
+      2/ 37/interfaccia/{Studio}/{costruire},
+      3/ 74/motore/{Streams}/{provare},
+      4/111/motore/{Projects}/{combinare},
+      5/148/esterno/{Live}/{far girare}} {
+    \node[\st, minimum width = 30mm, minimum height = 13mm] at (\x,0)
+      (n\i) {\titolo\\{\scriptsize \sotto}};
+    \node[passo] at (\x-17,8) {\i};
+  }
+
+  \foreach \a/\b in {1/2, 2/3, 3/4, 4/5}
+    \draw[flusso] (n\a) -- (n\b);
+
+  % Il ritorno: quasi nessuno arriva in fondo al primo giro.
+  \draw[ritorno] (n3.south) .. controls (74,-20) and (37,-20) .. (n2.south)
+    node[etichetta, pos = 0.5] {non regge: si rifà};
+
+  \node[sito, minimum width = 30mm, minimum height = 13mm] at (74,30) (mk)
+    {Marketplace\\{\scriptsize comprare o vendere}};
+  \draw[dipendenza] (mk.south west) -- (n2.north)
+    node[etichetta, pos = 0.55] {si installa};
+  \draw[dipendenza] (n3.north) -- (mk.south)
+    node[etichetta, pos = 0.5] {si pubblica};
+
+  \node[nota, anchor = north, text width = 120mm, align = center] at (74,-28)
+    {Solo il Marketplace richiede un account. Tutto il resto gira sul
+     computer di chi usa l'applicazione.};
+
+\end{tikzpicture}

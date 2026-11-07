@@ -1,0 +1,47 @@
+% ===========================================================================
+%  figure/tikz/composizione-ensemble.tex
+%  Come si compone un ensemble: dagli stream grezzi al PnL finale.
+%  I due punti in cui si innestano i plugin sono marcati.
+% ===========================================================================
+\begin{tikzpicture}[x = 1mm, y = 1mm]
+
+  % ---------- gli stream in ingresso --------------------------------------
+  \foreach \i/\y in {1/10, 2/0, 3/-10} {
+    \node[archivio, minimum width = 24mm, minimum height = 8mm] at (12,\y)
+      (s\i) {stream \i};
+  }
+
+  \node[motore, minimum width = 30mm, minimum height = 14mm] at (50,0) (norm)
+    {normalizzazione\\{\scriptsize vol trailing, per stream}};
+
+  \node[motore, minimum width = 30mm, minimum height = 14mm] at (92,0) (pesi)
+    {pesatura\\{\scriptsize 14 modalità}};
+
+  \node[motore, minimum width = 30mm, minimum height = 14mm] at (92,-30) (over)
+    {overlay\\{\scriptsize 7, moltiplicativi}};
+
+  \node[archivio, minimum width = 26mm, minimum height = 9mm] at (44,-30) (out)
+    {PnL\\dell'ensemble};
+
+  \foreach \i in {1,2,3} \draw[flusso] (s\i) -- (norm);
+  \draw[flusso] (norm) -- (pesi);
+  \draw[flusso] (pesi) -- (over);
+  \draw[flusso] (over) -- (out);
+
+  % ---------- i due punti d'innesto ---------------------------------------
+  \node[astratto, minimum width = 32mm, minimum height = 8mm] at (132,0) (plA)
+    {\codT{weights/}};
+  \node[astratto, minimum width = 32mm, minimum height = 8mm] at (132,-30) (plB)
+    {\codT{overlays/}};
+  \draw[dipendenza] (plA) -- (pesi);
+  \draw[dipendenza] (plB) -- (over);
+
+  % ---------- le due note che spiegano la differenza ----------------------
+  \node[nota, anchor = north, text width = 50mm, align = center] at (92,-9)
+    {Distribuisce il capitale.\\Somma \codT{1}.};
+  \node[nota, anchor = north, text width = 50mm, align = center] at (92,-39)
+    {Scala l'esposizione.\\Prodotto dei moltiplicatori:\\l'ordine non conta.};
+  \node[nota, anchor = north, text width = 42mm, align = center] at (50,-9)
+    {Ogni stream portato\\alla stessa vol obiettivo.};
+
+\end{tikzpicture}

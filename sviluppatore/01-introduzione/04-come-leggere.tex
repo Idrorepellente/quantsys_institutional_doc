@@ -1,0 +1,60 @@
+% ===========================================================================
+%  sviluppatore/01-introduzione/04-come-leggere.tex
+% ===========================================================================
+\section{Da dove cominciare, secondo cosa si deve fare}\label{sez:percorsi}
+
+Questa guida non va letta tutta. Quattro percorsi, a seconda del motivo per
+cui si è qui.
+
+\begin{center}
+\begin{tabular}{@{}L{48mm}L{98mm}@{}}
+\toprule
+\textbf{Si deve\ldots} & \textbf{Leggere} \\
+\midrule
+\rigaTenue
+far partire una copia e
+guardarsi intorno
+  & \vediCap{ambiente}. Un'ora, e si ha il sistema che gira. \\
+
+aggiungere una strategia,
+un overlay, una pesatura
+  & \vediCap{motore} per capire che cosa decide che cosa, poi il
+    \vediCap{estendere}, che è una procedura da seguire con il codice
+    aperto. \\
+
+\rigaTenue
+toccare l'interfaccia
+  & \vediCap{dashboard}. Prima però \vediSez{strangler}: c'è un motivo
+    se ci sono due applicazioni web e non una. \\
+
+mettere mano a pagamenti,
+abbonamenti, marketplace
+  & \vediCap{marketplace}, e la parte sui permessi nel
+    \vediCap{architettura}. È l'area dove un errore costa denaro vero. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{pratica}{Il minimo indispensabile}
+Chi ha fretta e deve comunque toccare il codice legga due sole cose: la
+separazione fra decisione ed esecuzione (\vediSez{decisione-esecuzione}) e le
+due forme del sistema a plugin (\vediSez{due-forme}). Sono i due punti in cui
+un errore non dà errore: produce un numero sbagliato, o un artefatto che non
+compare.
+\end{pratica}
+
+\section{Che cosa questa guida non copre}\label{sez:fuori-perimetro}
+
+\begin{itemize}
+  \item \textbf{Il contenuto finanziario delle strategie.} Perché il momentum
+        12-1 funzioni, se il PEAD sia ancora sfruttabile, come si tari un
+        \emph{vol target}: sono domande di merito, e questo è un documento di
+        ingegneria. Dove una scelta numerica è codificata nel sistema, la
+        guida dice dov'è e che cosa cambia, non se sia giusta.
+  \item \textbf{L'uso dell'applicazione.} Dove si clicca per lanciare un
+        backtest sta nel \emph{Manuale utente}, documento separato nella
+        stessa cartella.
+  \item \textbf{Il codice del sito, riga per riga.} Il sito è documentato qui
+        per ciò che espone alla metà locale: endpoint, formato dei token,
+        regole dei permessi. Il resto è un'applicazione Next.js ordinaria.
+\end{itemize}

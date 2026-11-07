@@ -1,0 +1,90 @@
+% ===========================================================================
+%  sviluppatore/06-dashboard/01-anatomia.tex
+% ===========================================================================
+\section{Anatomia di \pkgDashboard}\label{sez:anatomia-dashboard}
+
+Trentasei file Python, \num{35} template Jinja, un centinaio di file
+JavaScript e CSS. È l'oggetto più grande del progetto, e il modo più rapido
+per orientarsi è guardare le dimensioni: dicono dove sta il peso.
+
+\begin{center}
+\begin{tabular}{@{}L{42mm}R{16mm}L{80mm}@{}}
+\toprule
+\textbf{File} & \textbf{KB} & \textbf{Di che cosa si occupa} \\
+\midrule
+\rigaTenue
+\file{app.py}            & \num{213} & Il montaggio e \num{134} rotte. \\
+\file{agent.py}          & \num{132} & L'assistente che scrive artefatti. \\
+\rigaTenue
+\file{community.py}      & \num{132} & Marketplace, contestazioni, account,
+                                       messaggi, abbonamento. \\
+\file{web\_db.py}        & \num{90}  & L'accesso al Postgres del sito. \\
+\rigaTenue
+\file{agent\_tools\_sistema.py} & \num{80} & Gli strumenti con cui l'agente
+                                       agisce sul sistema vivo. \\
+\file{auth.py}           & \num{71}  & Accesso, registrazione, guardia
+                                       globale, pagine HTML in linea. \\
+\rigaTenue
+\file{autopubblica.py}   & \num{49}  & Pubblicazione automatica degli
+                                       artefatti, in un thread. \\
+\file{genetic.py}        & \num{49}  & Strategie per programmazione genetica. \\
+\rigaTenue
+\file{visual\_debug.py}  & \num{45}  & Il debug visivo sui grafici. \\
+\file{studio.py}         & \num{42}  & Editor, grafo a nodi, generazione. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Le quattro generazioni di codice, tutte vive}
+
+Guardando come una rotta è registrata si capisce quando è stata scritta, e
+quale stile seguire per estenderla.
+
+\begin{center}
+\begin{tabular}{@{}L{32mm}L{40mm}L{66mm}@{}}
+\toprule
+\textbf{Generazione} & \textbf{Dove} & \textbf{Come si riconosce} \\
+\midrule
+\rigaTenue
+1 --- tutto in \file{app.py}
+  & \cod{@app.route} dentro \simbolo{create\_app} & \num{134} rotte in un
+    file di \num{213}~KB. \\
+2 --- blueprint
+  & \file{studio}, \file{community}, \file{agent}, \file{genetic}
+  & \cod{Blueprint(...)}, nessun \cod{url\_prefix}. \\
+\rigaTenue
+3 --- estensioni v2
+  & \file{ui\_ext\_*.py} & \simbolo{register(app, data\_layer, base\_path)},
+    caricate da sole. \\
+4 --- il guscio
+  & \pkgApi{} + \pkgApplicazione & Non è nella dashboard: è l'altra
+    applicazione (\vediSez{strangler}). \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{pratica}{Quale stile usare oggi}
+Per una rotta nuova che serve a una pagina: un modulo \file{ui\_ext\_*.py}.
+Per una capacità nuova del sistema: un caso d'uso nel guscio, esposto
+dall'API, chiamato dalla dashboard. In nessun caso si aggiunge una rotta a
+\file{app.py}: è il file che tutte e tre le generazioni successive sono
+servite a non far crescere.
+\end{pratica}
+
+\subsection{I template}
+
+Trentadue pagine, tutte figlie di \file{base.html}, più tre frammenti
+inclusi e \file{serve\_account.html}, che non è servito da nessuna rotta ma
+dalla guardia di autenticazione.
+
+Le pagine di accesso sono l'eccezione: \file{auth.py} non usa i template, ma
+HTML in linea renderizzato con \simbolo{render\_template\_string}
+(\cod{\_LOGIN\_HTML}, \cod{\_REGISTER\_HTML}, \cod{\_VERIFY\_HTML},
+\cod{\_RESET\_HTML}, \cod{\_ATTESA\_HTML}). Chi cerca la pagina di login in
+\file{templates/} non la trova.
+
+\begin{nota}{Dove sta l'interfaccia del Live}
+\file{live.html} non è servito da \percorsoHTTP{/live}: è servito da
+\percorsoHTTP{/studio/runner-live}, cioè dal blueprint \cod{studio}. È il nome di
+percorso più fuorviante del progetto (\vediSez{rotte}).
+\end{nota}

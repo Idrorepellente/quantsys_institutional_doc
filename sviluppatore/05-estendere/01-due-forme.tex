@@ -1,0 +1,84 @@
+% ===========================================================================
+%  sviluppatore/05-estendere/01-due-forme.tex
+% ===========================================================================
+\section{Non c'è un contratto solo: ce ne sono due}\label{sez:due-forme}
+
+È la prima cosa da sapere prima di scrivere un plugin, e non è scritta da
+nessuna parte nel codice: le cinque famiglie di artefatti si dividono in due
+forme, con contratti, meccanismi di scoperta e modi di fallire diversi.
+
+\figuraTikz{plugin-due-forme}
+  {Le due forme. Scegliere la famiglia significa scegliere la forma, e con
+   essa il modo in cui l'artefatto può non comparire.}
+  {plugin-due-forme}
+
+\begin{center}
+\begin{tabular}{@{}L{22mm}L{34mm}L{36mm}L{40mm}@{}}
+\toprule
+ & \textbf{Famiglie} & \textbf{Oggetto esposto} & \textbf{Punto d'ingresso} \\
+\midrule
+\rigaTenue
+\textbf{Forma A} & \pkgStrategie, \pkgApprocci
+  & \cod{DESCRIPTOR},\newline\cod{APPROACH\_DESCRIPTOR}
+  & \cod{factory(params)},\newline\cod{build(params)} \\
+\textbf{Forma B} & \pkgPesi, \pkgOverlay, \pkgRegime
+  & \cod{META} (dict di soli letterali)
+  & \cod{compute(...)} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Come si differenziano i due registri}
+
+\begin{center}
+\begin{tabular}{@{}L{34mm}L{50mm}L{52mm}@{}}
+\toprule
+ & \textbf{Forma A} & \textbf{Forma B} \\
+\midrule
+\rigaTenue
+Quando si costruisce & A richiesta: \cod{discover\_*()} restituisce un dict
+  nuovo ogni volta & All'import del package, una volta sola \\
+Come trova i file & \cod{importlib}, cartella per cartella & \cod{pkgutil},
+  più un ripiego sulle cartelle senza \file{\_\_init\_\_.py} \\
+\rigaTenue
+File atteso & \file{strategy.py}, \file{approach.py} &
+  \file{weight\_mode.py}, \file{overlay.py}, o un modulo \file{.py} \\
+Se un plugin è rotto & Avviso nel registro, saltato & Avviso, saltato \\
+\rigaTenue
+Se un plugin è \emph{scritto male} & Spesso un errore all'uso &
+  \textbf{Invisibile}, senza un rigo da nessuna parte \\
+Per vederne uno nuovo & Basta richiamare \cod{discover\_*()} &
+  Serve \cod{reload\_registry()}, o un riavvio \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{attenzione}{Il modo tipico di fallire è l'invisibilità}
+Vale per tutta la forma~B: un \cod{META} che non è fatto di soli letterali,
+una \cod{key} che non coincide con il nome del file, un
+\cod{APPROACH\_DESCRIPTOR} messo in \pkgOverlay, un \cod{compute} mancante.
+Nessuno di questi solleva un'eccezione. Il plugin semplicemente non appare
+nell'elenco, e non c'è niente da cercare nel registro perché non è successo
+niente.
+
+Chi scrive un artefatto e non lo vede comparire non ha un bug da trovare: ha
+un contratto da rileggere. Il \vediSez{trappole} elenca i casi uno per uno.
+\end{attenzione}
+
+\subsection{Il nome canonico è il nome della cartella}
+
+In entrambe le forme, e vale la pena insistere: il nome con cui il sistema
+conosce un artefatto è il nome della sua cartella, non quello dichiarato
+dentro il file. Il registro delle strategie arriva a sovrascriverlo:
+
+\begin{codiceInterno}{python}{Il nome della cartella vince}{strategies/registry.py:106}
+        if descriptor.name != name:
+            # il nome CARTELLA vince sempre
+            descriptor.name = name
+\end{codiceInterno}
+
+\noindent
+Per la forma~B la regola è ancora più stretta: la \cod{key} del \cod{META}
+\emph{deve} coincidere con il nome del file, e per le regole di regime il
+controllo è esplicito. Negli altri casi il disallineamento non dà errore:
+l'artefatto compare con un nome e si cerca con un altro.

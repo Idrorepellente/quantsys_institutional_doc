@@ -1,0 +1,59 @@
+% ===========================================================================
+%  figure/tikz/mappa-sistema.tex
+%  Le due metà del sistema e le tre sole cose che le attraversano.
+% ===========================================================================
+%  SOLO il disegno: nessun \documentclass. L'involucro per la compilazione
+%  singola lo genera il Makefile (`make figure`).
+%
+%  Coordinate esplicite in millimetri, non `right = 9mm of ...`: i tre canali
+%  in mezzo devono stare a tre altezze fisse e il posizionamento relativo li
+%  faceva finire uno sull'altro.
+% ===========================================================================
+\begin{tikzpicture}[x = 1mm, y = 1mm]
+
+  % ---------- metà sinistra: la macchina dell'utente -----------------------
+  \node[motore,      minimum width = 44mm] at (22,  0)  (motore) {Motore quantitativo\\{\scriptsize\pkg{core/ backtest/ live/}}};
+  \node[interfaccia, minimum width = 44mm] at (22,-17)  (dash)   {Interfaccia locale\\{\scriptsize\pkg{dashboard/} (Flask)}};
+  \node[archivio,    minimum width = 30mm] at (22,-36)  (disco)  {parquet\\su disco};
+
+  \lyrastrato[inner sep = 10pt]{(motore)(dash)(disco)}%
+             {SUL COMPUTER DELL'UTENTE}
+
+  % ---------- metà destra: il sito ----------------------------------------
+  \node[sito,        minimum width = 36mm] at (128, -6) (next) {Sito\\{\scriptsize\pkg{sito/} (Next.js)}};
+  \node[persistenza, minimum width = 36mm] at (128,-24) (pg)   {Postgres\\{\scriptsize (Neon)}};
+
+  \lyrastrato[inner sep = 10pt]{(next)(pg)}{IN RETE}
+
+  % ---------- il mondo esterno --------------------------------------------
+  \node[esterno, minimum width = 34mm] at (22, 22)  (broker)   {Broker (IBKR, TEST)};
+  \node[esterno, minimum width = 34mm] at (22,-54)  (provider) {Provider dati (Polygon, FRED)};
+  \node[esterno, minimum width = 28mm] at (128, 14) (stripe)   {Stripe};
+
+  \draw[flusso] (broker)   -- (motore);
+  \draw[flusso] (provider) -- (disco);
+  \draw[flusso] (stripe)   -- (next);
+
+  % ---------- i tre canali, uno sopra l'altro ------------------------------
+  %  Sono TRE, e sono questi. Tutto ciò che non è qui non attraversa il
+  %  confine: è l'informazione che la figura esiste per dare.
+  %  La coppia \xa/\xb porta anche il VERSO: il canale 2 va da destra a
+  %  sinistra, ed è l'unico.
+  \foreach \y/\n/\xa/\xb/\testo in {
+      -3/1/50/106/{identità e permessi},
+     -12/2/106/50/{chiavi e impostazioni},
+     -21/3/50/106/{artefatti}} {
+    \draw[flusso] (\xa,\y) -- (\xb,\y);
+    \node[passo] at (46,\y) {\n};
+    \node[etichetta, anchor = south] at (78,\y) {\testo};
+  }
+
+  % ---------- le due note che chiudono il discorso -------------------------
+  \node[nota, text width = 50mm, align = center] at (22,-66)
+    {I dati di mercato e i risultati dei backtest\\
+     non lasciano mai questa metà.};
+  \node[nota, text width = 44mm, align = center] at (128,-40)
+    {Qui stanno gli account, i pagamenti\\
+     e il catalogo del marketplace.};
+
+\end{tikzpicture}

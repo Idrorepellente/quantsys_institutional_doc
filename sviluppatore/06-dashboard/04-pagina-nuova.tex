@@ -1,0 +1,108 @@
+% ===========================================================================
+%  sviluppatore/06-dashboard/04-pagina-nuova.tex
+% ===========================================================================
+\section{Aggiungere una pagina o una rotta}\label{sez:pagina-nuova}
+
+\begin{pratica}{La procedura}
+\begin{enumerate}
+  \item Creare \file{dashboard/ui\_ext\_<lettera>.py}. La lettera decide
+        l'ordine di caricamento; \file{c} e \file{d} sono libere.
+  \item Esporre \simbolo{register(app, data\_layer, base\_path)} ---
+        \emph{quella firma esatta}: è il contratto che il caricatore si
+        aspetta.
+  \item Dentro, registrare le rotte con \cod{@app.route}.
+  \item Se serve una pagina, aggiungere il template in
+        \file{dashboard/templates/} con \cod{\{\% extends "base.html" \%\}}.
+  \item Se la rotta tocca l'account, metterla sotto uno dei prefissi di
+        \cod{\_SERVE\_ACCOUNT} (\vediSez{permessi}).
+  \item Riavviare. Non c'è nessun elenco da aggiornare.
+\end{enumerate}
+\end{pratica}
+
+\subsection{Il modello da copiare}
+
+\file{ui\_ext\_e.py} è l'esempio migliore, per due ragioni che valgono per
+qualunque rotta nuova.
+
+\subsubsection{Il docstring dichiara il contratto}
+
+\begin{commento}{dashboard/ui\_ext\_e.py}
+Rotte del gruppo E (Marketplace: vetrina, Sell yours, messaggi, feedback,
+account) per la UI v2.
+
+    GET  /api/e/sell-status   chi puo' pubblicare: piano (livello e nome),
+                              amministratore, lucchetto del marketplace e, se
+                              non si puo', il motivo nelle parole del sito.
+    GET  /api/e/account-data  per la pagina My account, in una richiesta sola:
+                              prodotti pubblicati, acquisti, richieste di
+                              rimborso proprie e messaggi non letti.
+
+Solo letture, e mai un errore verso la pagina: se il sito non risponde la
+rotta dice «non so» (\cod{unknown: true}) e la pagina lo mostra come tale, invece
+di far credere che il piano manchi.
+\end{commento}
+
+\subsubsection{«Non so» non è «no»}
+
+È la regola di progetto più utile di tutto il capitolo, e vale ben oltre
+questo file. Quando la dashboard interroga il sito e il sito non risponde,
+la risposta sbagliata è \cod{can\_publish: false}: l'utente vede «non puoi
+pubblicare», che è un'affermazione, e va a cercare un problema nel proprio
+abbonamento. La risposta giusta è \cod{unknown: true}, che la pagina mostra
+come incertezza.
+
+Lo stesso schema ritorna in \percorsoHTTP{/api/e/account-data}, che riporta un campo
+\cod{errors}: «se una lettura fallisce lo dice, così la pagina non scambia
+\emph{non riuscito} per \emph{nessun acquisto}».
+
+\begin{attenzione}{Un elenco vuoto è un'affermazione}
+Restituire \cod{[]} quando non si è riusciti a leggere significa dire
+all'utente «non hai acquisti». Per chi ne ha, è un errore che preoccupa, e
+che porta ad aprire una contestazione. La distinzione fra «zero» e «non so»
+va mantenuta fino alla pagina.
+\end{attenzione}
+
+\subsection{Una funzione di servizio che vale la pena copiare}
+
+Le risposte JSON della dashboard contengono spesso date e \cod{Decimal} che
+arrivano dal Postgres del sito, e che \cod{jsonify} non sa serializzare:
+
+\begin{codiceInterno}{python}{Serializzazione difensiva}{dashboard/ui\_ext\_e.py:30}
+def _plain(v):
+    """Valori serializzabili in JSON (date in ISO, Decimal in float)."""
+    if isinstance(v, (str, int, float, bool, type(None))):
+        return v
+    if isinstance(v, dict):
+        return {str(k): _plain(x) for k, x in v.items()}
+    if isinstance(v, (list, tuple, set)):
+        return [_plain(x) for x in v]
+    iso = getattr(v, "isoformat", None)
+    if callable(iso):
+        try:
+            return iso()
+        except Exception:  # noqa: BLE001
+            pass
+    try:
+        return float(v)
+    except Exception:  # noqa: BLE001
+        return str(v)
+\end{codiceInterno}
+
+\noindent
+L'ultimo ripiego è \cod{str(v)}: qualunque cosa arrivi, la pagina riceve
+qualcosa invece di un \cod{500}. In una rotta di sola lettura è la scelta
+giusta.
+
+\subsection{Le due pagine speciali}
+
+\begin{description}[leftmargin = 1.6em, style = nextline, itemsep = 5pt]
+  \item[\file{ui\_ext\_b.py} fa un redirect in un \cod{before\_request}]
+    Una richiesta a \percorsoHTTP{/ensemble\_custom?project=<id>} viene rediretta a
+    \percorsoHTTP{/projects/<id>}. È il modo in cui i collegamenti vecchi continuano a
+    funzionare dopo che una pagina ha cambiato indirizzo. Chi cerca perché un
+    URL si trasforma in un altro lo trova lì, non nelle rotte.
+  \item[\file{ui\_ext\_a.py} intercetta le installazioni in un \cod{after\_request}]
+    Annota le installazioni fatte dallo Studio per i tutorial. Un
+    \cod{after\_request} che osserva le risposte altrui è potente e
+    invisibile: va dichiarato nel docstring del modulo, come lì è fatto.
+\end{description}

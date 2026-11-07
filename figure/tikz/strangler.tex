@@ -1,0 +1,31 @@
+% ===========================================================================
+%  figure/tikz/strangler.tex
+%  Le due applicazioni che convivono, e il motore unico sotto.
+% ===========================================================================
+\begin{tikzpicture}
+
+  \node[persona]                              (browser) {browser};
+
+  \node[interfaccia, below left = 11mm and 6mm of browser, minimum width = 42mm]
+    (flask) {\pkg{dashboard/app.py}\\{\scriptsize Flask · porta 5000}\\{\scriptsize 246 rotte, pagine + JSON}};
+  \node[motore, below right = 11mm and 6mm of browser, minimum width = 42mm]
+    (fastapi) {\pkg{api/app.py}\\{\scriptsize FastAPI · porta 8000}\\{\scriptsize 13 router, solo JSON}};
+
+  \node[astratto, below = 13mm of browser, yshift = -13mm, minimum width = 96mm]
+    (porte) {\pkgPorte\ + \pkgComposizione};
+
+  \node[motore, below = 9mm of porte, minimum width = 96mm]
+    (core) {\pkgCore\quad\pkgBacktest\quad\pkgStrategie\quad\pkgReport\quad\pkgLive};
+
+  \draw[flusso] (browser.south west) -- (flask.north);
+  \draw[flusso] (browser.south east) -- (fastapi.north);
+  \draw[dipendenza] (flask.south)   -- (flask.south |- porte.north);
+  \draw[dipendenza] (fastapi.south) -- (fastapi.south |- porte.north);
+  \draw[dipendenza] (porte) -- (core);
+
+  \node[nota, right = 5mm of fastapi, text width = 30mm, anchor = west]
+    {Nuovo. Cresce\\verso sinistra.};
+  \node[nota, left = 5mm of flask, text width = 28mm, anchor = east, align = right]
+    {Storico. Si\\assottiglia.};
+
+\end{tikzpicture}

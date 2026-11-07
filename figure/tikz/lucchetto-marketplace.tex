@@ -1,0 +1,38 @@
+% ===========================================================================
+%  figure/tikz/lucchetto-marketplace.tex
+%  I due strati del permesso di pubblicare: il lucchetto, e sotto l'abbonamento.
+% ===========================================================================
+\begin{tikzpicture}[x = 1mm, y = 1mm]
+
+  \node[persona, minimum width = 40mm] at (0,0) (utente) {«voglio pubblicare»};
+
+  \node[decisione, minimum width = 44mm] at (0,-22) (lucc)
+    {marketplace\\bloccato?};
+  \node[decisione, minimum width = 44mm] at (0,-50) (adm)
+    {amministratore?};
+  \node[decisione, minimum width = 44mm] at (0,-78) (tier)
+    {livello $\geq 1$?};
+
+  \node[esterno, minimum width = 40mm, anchor = west] at (36,-22) (no1)
+    {no, e nemmeno\\un abbonamento serve};
+  \node[motore, minimum width = 40mm, anchor = west] at (36,-50) (ok1)
+    {sì, senza restrizioni};
+  \node[sito, minimum width = 40mm, anchor = west] at (36,-78) (paga)
+    {si chiede uno dei\\tre abbonamenti};
+  \node[motore, minimum width = 40mm] at (0,-100) (ok2) {sì};
+
+  \draw[flusso] (utente) -- (lucc);
+  \draw[flusso] (lucc) -- (adm)  node[etichetta, pos = 0.45] {no};
+  \draw[flusso] (adm)  -- (tier) node[etichetta, pos = 0.45] {no};
+  \draw[flusso] (tier) -- (ok2)  node[etichetta, pos = 0.45] {sì};
+
+  \draw[bloccato] (lucc.east) -- (no1) node[etichetta, pos = 0.45] {sì};
+  \draw[flusso]   (adm.east)  -- (ok1) node[etichetta, pos = 0.45] {sì};
+  \draw[flusso]   (tier.east) -- (paga) node[etichetta, pos = 0.45] {no};
+
+  \node[nota, anchor = north west, text width = 108mm] at (-26,-112)
+    {Il lucchetto è lo strato esterno: chiuso, non esiste nessun abbonamento
+     che permetta di caricare. In fase di beta è chiuso, e i prodotti già in
+     vetrina restano visibili.};
+
+\end{tikzpicture}

@@ -1,0 +1,104 @@
+% ===========================================================================
+%  sviluppatore/07-marketplace/02-lucchetto.tex
+% ===========================================================================
+\section{I due strati del permesso di pubblicare}\label{sez:lucchetto}
+
+Chi può caricare un artefatto sul marketplace è deciso da due condizioni in
+cascata, e confonderle è il modo tipico di sbagliare una modifica in
+quest'area.
+
+\figuraTikz{lucchetto-marketplace}
+  {I due strati, nell'ordine in cui si valutano.}
+  {lucchetto-marketplace}
+
+\subsection{Primo strato: il lucchetto}
+
+\begin{commento}{dashboard/community.py:30 $\cdot$ \cod{marketplace\_bloccato()}}
+Il marketplace e' chiuso?
+
+E' il PRIMO dei due strati che regolano la pubblicazione, e durante la
+beta e' quello che conta: chiuso significa che nessuno carica niente — ne'
+gratis ne' a pagamento — e nessuno compra. Prima al suo posto c'era un
+interruttore che, spento, lasciava pubblicare gratis: non bastava, perche'
+cio' che entra in vetrina ci resta e il filtro che decide cosa merita
+starci (l'abbonamento) non era ancora in piedi.
+
+Lo decide il sito, non l'applicazione: e' l'unico punto che chi usa il
+programma non puo' modificare. In caso di dubbio risponde CHIUSO.
+\end{commento}
+
+\noindent
+Tre proprietà, tutte deliberate:
+
+\begin{itemize}
+  \item \textbf{Lo decide il sito.} È l'unico permesso che chi usa il
+        programma non può modificare agendo sulla propria macchina --- tutto
+        il resto della dashboard è aperto (\vediSez{permessi}), questo no.
+  \item \textbf{In caso di dubbio: chiuso.} Il \cod{except} finale restituisce
+        \cod{True}.
+  \item \textbf{Gli acquisti ne derivano.} \simbolo{vendite\_attive()} non è
+        più un interruttore a sé: è \cod{not marketplace\_bloccato()}. Il
+        commento dice perché resta come funzione: «due nomi per la stessa
+        domanda sono due occasioni di rispondere diversamente».
+\end{itemize}
+
+\subsection{Secondo strato: l'abbonamento}
+
+A marketplace aperto, serve uno dei tre livelli. I livelli sono quattro
+contando chi non è abbonato:
+
+\begin{codiceInterno}{python}{I quattro livelli}{dashboard/community.py:98}
+# I QUATTRO LIVELLI, con i nomi che l'interfaccia mostra. Il livello 0 non e'
+# un ripiego: e' un utente pieno, che sfoglia, scarica, compra e usa. Non
+# mette soltanto roba in vetrina.
+NOMI_LIVELLO = {0: "Free", 1: "Author", 2: "Studio", 3: "Desk"}
+\end{codiceInterno}
+
+\begin{center}
+\begin{tabular}{@{}R{10mm}L{20mm}L{108mm}@{}}
+\toprule
+\textbf{Liv.} & \textbf{Nome} & \textbf{Che cosa può fare} \\
+\midrule
+\rigaTenue
+\num{0} & Free & Tutto il sistema: sfoglia, scarica, compra, usa. \emph{Non}
+  pubblica. \\
+\num{1} & Author & In più: pubblicare sul marketplace. \\
+\rigaTenue
+\num{2} & Studio & Idem, prezzo diverso. \\
+\num{3} & Desk & Idem, prezzo diverso. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{nota}{Perché oggi i tre piani fanno la stessa cosa}
+È uno stato intermedio dichiarato, non una dimenticanza. Durante la beta i
+tre livelli concedono solo la pubblicazione e differiscono per prezzo; la
+decisione su che cosa aggiungere a Studio e Desk --- o se ridurli a uno solo
+--- è rimandata all'uscita dalla beta. I prezzi attuali sono segnaposto e si
+cambiano dal pannello di amministrazione senza toccare il codice.
+\end{nota}
+
+\subsection{Gli amministratori}
+
+\begin{commento}{dashboard/community.py:111 $\cdot$ \cod{livello\_utente()}}
+La categoria dell'utente: 0 se non abbonato, 1..3 secondo il piano.
+
+Gli amministratori risultano al livello massimo, perche' possono fare
+tutto cio' che fa il livello massimo e anche di piu'. Non sono un livello
+vero — un livello scade, loro no — ma all'interfaccia serve un numero.
+\end{commento}
+
+\noindent
+Un amministratore può inoltre installare un artefatto a pagamento senza
+comprarlo (\rotta{POST}{/api/marketplace/<id>/installa-admin}) e,
+simmetricamente, può scegliere di pagarlo comunque --- il che per un
+amministratore equivale a una donazione all'autore, visto che non ne avrebbe
+bisogno.
+
+\begin{attenzione}{Gli amministratori non attraversano i percorsi d'errore}
+È il motivo per cui il difetto del token (\vediSez{ponte}) è rimasto
+invisibile per mesi: in beta gli unici a pubblicare erano gli
+amministratori, che passano da un'altra strada. Chi collauda una modifica in
+quest'area deve farlo con un utente \emph{non} amministratore, altrimenti
+collauda il ramo sbagliato.
+\end{attenzione}

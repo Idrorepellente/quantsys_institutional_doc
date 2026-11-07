@@ -1,0 +1,161 @@
+% ===========================================================================
+%  sviluppatore/05-estendere/05-regime.tex
+% ===========================================================================
+\section{Un regime: due file, in quest'ordine}\label{sez:nuovo-regime}
+
+\pkgRegime{} è l'unica famiglia divisa in due artefatti distinti, ed è la
+divisione giusta: \emph{una regola serve più mercati}. Azioni e cripto usano
+entrambe \cod{trend\_vol}, con parametri diversi.
+
+\figuraTikz{catena-regime}
+  {Dal simbolo allo stato. I due riquadri con il file sotto sono le due cose
+   che si scrivono.}
+  {catena-regime}
+
+\subsection{La regola}
+
+\begin{codiceInterno}{python}{Il contratto della regola}{regime/logics/\_\_init\_\_.py:7}
+    META = {
+        "key": "mia_regola",
+        "label": "La mia regola",
+        "description": "a cosa serve",
+        "defaults": {"finestra": 60},
+    }
+
+    def compute(close: pd.Series, p: dict) -> pd.Series:
+        ...   # Series di 'bull' / 'neutral' / 'bear'
+
+Due vincoli non negoziabili:
+
+1. **Causalita'**: il valore al tempo t usa solo dati fino a t. Niente
+   statistiche sull'intero campione (quantili full-sample = look-ahead).
+2. **Etichette**: sempre ``bull``/``neutral``/``bear``, cosi' i
+   ``regime_weights`` gia' dichiarati dalle strategie continuano a valere.
+\end{codiceInterno}
+
+\noindent
+Gli helper causali condivisi stanno in \file{regime/logics/\_base.py}:
+\simbolo{\_realized\_vol}, \simbolo{\_expanding\_median},
+\simbolo{\_hysteresis}. Vanno usati: riscrivere un quantile a mano è il modo
+più comune di introdurre una statistica full-sample senza volerlo.
+
+Le tre regole installate:
+
+\begin{center}
+\begin{tabular}{@{}L{26mm}L{54mm}L{58mm}@{}}
+\toprule
+\textbf{Chiave} & \textbf{Che cosa misura} & \textbf{Che cosa significano le
+  etichette} \\
+\midrule
+\rigaTenue
+\cod{trend\_vol} & Posizione rispetto alla media mobile lunga, corretta per
+  volatilità realizzata & bull = sopra il trend e volatilità accettabile;
+  bear = sotto il trend, o volatilità alta \\
+\cod{vol\_state} & Volatilità realizzata contro i quantili espansivi della
+  propria storia & bull = calmo; bear = sotto stress. Per attività senza
+  deriva \\
+\rigaTenue
+\cod{trend\_range} & Rapporto di varianza sui rendimenti: la persistenza, non
+  la direzione & bull = in tendenza; bear = laterale. Indipendente dalla
+  deriva \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Il mercato}
+
+\begin{codiceInterno}{python}{Il contratto del mercato}{regime/markets/\_\_init\_\_.py:12}
+    META = {
+        "key": "equity",
+        "label": "Azioni",
+        "logic": "trend_vol",          # regola ereditata da regime/logics.py
+        "driver": ["SPY"],             # serie che GUIDA il regime (in ordine)
+        "match": [r"^[A-Z]{1,5}$"],    # simboli assegnati a questo mercato
+        "priority": 50,                # match piu' bassa = valutata prima
+        "enabled": True,
+        "params": {"trend_window": 200},   # override sui default della logica
+    }
+\end{codiceInterno}
+
+\noindent
+Un esempio reale, che mostra come si usa \cod{priority} e che cosa
+significa \cod{"self"} fra i driver:
+
+\begin{codiceInterno}{python}{Il mercato valutato per primo}{regime/markets/forex.py:17}
+META = {
+    "key": "forex",
+    "label": "Forex",
+    "logic": "vol_state",
+    "driver": ["DXY", "self"],
+    "match": [r"^(EUR|USD|GBP|JPY|CHF|AUD|NZD|CAD|SEK|NOK)"
+              r"(EUR|USD|GBP|JPY|CHF|AUD|NZD|CAD|SEK|NOK)$",
+              r"^[A-Z]{3}/[A-Z]{3}$",
+              r"^DXY$"],
+    "priority": 10,          # valutato per primo: pattern molto specifico
+    "enabled": True,
+    "params": {
+        "vol_window": 21,
+        "min_obs": 252,
+        # banda ampia + isteresi lunga: un regime deve essere uno STATO, non
+        # una reazione. Valori strutturali, non tarati sui dati.
+        "calm_quantile": 0.30,      # sotto questo quantile: risk-on
+        "stress_quantile": 0.80,    # sopra questo quantile: risk-off
+        "hysteresis_days": 10,
+    },
+}
+\end{codiceInterno}
+
+\begin{nota}{\cod{driver} è una lista di ripieghi}
+Si valutano in ordine: il primo disponibile vince. \cod{"self"} significa «il
+simbolo stesso». Se nessuno dei driver è disponibile il mercato non modula
+--- cioè si comporta come neutro --- e lo dichiara in un avviso nel registro,
+non in un errore. Un mercato che non modula non si distingue da un mercato
+che modula con pesi \num{1}, se non leggendo il registro.
+\end{nota}
+
+\subsection{\cod{META} di soli letterali: qui è un vincolo vero}
+
+Per le regole di regime il sistema legge il \cod{META} con
+\simbolo{ast.literal\_eval}, cioè \textbf{senza eseguire il file}. La
+conseguenza è netta: un valore come \cod{"x": np.pi} non è un letterale, la
+lettura fallisce, e la regola diventa invisibile.
+
+\begin{attenzione}{La \cod{key} deve coincidere con il nome del file}
+Per le regole di regime il controllo è esplicito ed è l'unico caso in cui il
+disallineamento viene rifiutato. Negli altri casi non lo è, e il plugin
+compare con un nome e si cerca con un altro.
+\end{attenzione}
+
+\subsection{Il merge dei parametri}
+
+I \cod{params} dichiarati dal mercato scavalcano i \cod{defaults} dichiarati
+dalla regola, e il punto in cui accade è uno solo:
+
+\begin{codiceInterno}{python}{Dove i due artefatti si incontrano}{regime/logics/\_\_init\_\_.py:89}
+def apply(logic_key: str, close, params: dict | None = None):
+    if logic_key not in REGISTRY:
+        raise KeyError(f"unknown regime rule: '{logic_key}' "
+                       f"(available: {sorted(REGISTRY)})")
+    entry = REGISTRY[logic_key]
+    p = dict(entry["defaults"])
+    p.update(params or {})
+    return entry["fn"](close, p)
+\end{codiceInterno}
+
+\begin{pratica}{Aggiungere un regime}
+\begin{enumerate}
+  \item \file{regime/logics/mia\_regola.py}: \cod{META} di soli letterali con
+        \cod{key} uguale al nome del file, e \cod{compute(close, p)} che
+        restituisce \cod{'bull'}/\cod{'neutral'}/\cod{'bear'} allineati a
+        \cod{close}, causali, con isteresi.
+  \item \file{regime/markets/mio\_mercato.py}: \cod{META} con almeno
+        \cod{key} e \cod{logic}; la regola nominata deve \emph{già} esistere.
+  \item Scaricare le serie dei driver:
+        \file{python scripts/download\_regime\_drivers.py}.
+  \item Scorciatoia: \cod{regime.logics.scaffold(key)} genera lo scheletro
+        corretto, ed è quello che usa l'editor dell'interfaccia.
+\end{enumerate}
+Le guide sono \file{regime/GUIDE\_REGIMI.md} («come costruirne uno») e
+\file{strategies/GUIDE\_REGIME.md} («come usarlo dentro una strategia»): sono
+due documenti distinti e si rimandano a vicenda.
+\end{pratica}

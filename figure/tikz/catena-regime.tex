@@ -1,0 +1,40 @@
+% ===========================================================================
+%  figure/tikz/catena-regime.tex
+%  simbolo -> mercato -> driver -> regola -> serie di stati.
+%  I due artefatti che si scrivono sono il mercato e la regola.
+% ===========================================================================
+\begin{tikzpicture}[x = 1mm, y = 1mm]
+
+  \node[persona,     minimum width = 26mm, minimum height = 9mm] at (0,0)  (sym)  {AAPL};
+  \node[sito,        minimum width = 30mm, minimum height = 11mm] at (36,0) (merc)
+    {mercato\\{\scriptsize \codT{equity}}};
+  \node[archivio,    minimum width = 26mm, minimum height = 9mm]  at (76,0) (driver)
+    {driver\\{\scriptsize SPY}};
+  \node[motore,      minimum width = 30mm, minimum height = 11mm] at (114,0) (reg)
+    {regola\\{\scriptsize \codT{trend\_vol}}};
+  \node[interfaccia, minimum width = 32mm, minimum height = 11mm] at (114,-26) (serie)
+    {serie di stati\\{\scriptsize bull / neutral / bear}};
+  \node[motore,      minimum width = 32mm, minimum height = 11mm] at (56,-26) (pesi)
+    {\codT{regime\_weights}\\{\scriptsize della strategia}};
+
+  \draw[flusso] (sym)    -- (merc)   node[etichetta, pos = 0.5] {\codT{match}};
+  \draw[flusso] (merc)   -- (driver) node[etichetta, pos = 0.5] {\codT{driver}};
+  \draw[flusso] (driver) -- (reg)    node[etichetta, pos = 0.5] {\codT{logic}};
+  \draw[flusso] (reg)    -- (serie);
+  \draw[flusso] (serie)  -- (pesi);
+
+  \draw[dipendenza] (merc.south) .. controls (36,-25) and (84,-25) .. (reg.south)
+    node[etichetta, pos = 0.5] {\codT{params} scavalcano i \codT{defaults}};
+
+  % --- i due file che si scrivono ----------------------------------------
+  \node[nota, anchor = north, text width = 40mm, align = center] at (36,-8)
+    {\codT{regime/markets/equity.py}};
+  \node[nota, anchor = south, text width = 40mm, align = center] at (114,7)
+    {\codT{regime/logics/trend\_vol.py}};
+
+  \node[nota, anchor = north, text width = 112mm] at (56,-38)
+    {Una regola serve più mercati: azioni e cripto usano entrambe
+     \codT{trend\_vol}, con parametri diversi. Si scrive prima la regola: un
+     mercato che ne nomina una inesistente viene rifiutato.};
+
+\end{tikzpicture}

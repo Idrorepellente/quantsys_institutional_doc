@@ -1,0 +1,76 @@
+% ===========================================================================
+%  sviluppatore/01-introduzione/01-cosa-e.tex
+% ===========================================================================
+\section{Il problema che risolve}\label{sez:cosa-e}
+
+\Lyra{} è una piattaforma per costruire strategie di investimento sistematiche,
+provarle sui dati del passato e farle girare su un conto reale. Le tre cose
+sono una sola: il motivo per cui il sistema è grande è che il \term{backtest} e
+l'operatività \term{live} devono produrre la stessa decisione a partire dagli
+stessi dati, e tenere allineate due strade che calcolano la stessa cosa costa
+più codice che scriverne una.
+
+Tre numeri, per dare la scala prima dei dettagli:
+
+\begin{center}
+\begin{tabular}{@{}L{44mm}R{20mm}L{62mm}@{}}
+\toprule
+\textbf{Misura} & \textbf{Valore} & \textbf{Dove sta} \\
+\midrule
+\rigaTenue
+File, in tutto        & \num{806}      & dei quali \num{544} Python \\
+Righe Python          & \num{119084}   & \num{28494} nella sola \pkgDashboard \\
+\rigaTenue
+Righe di sorgente     & \num{175225}   & Python, JavaScript, CSS, HTML,
+                                         YAML, Markdown \\
+Rotte HTTP            & \num{246}      & \pkgDashboard, undici moduli \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+Circa il \num{40}\,\% del sorgente è interfaccia: \num{28494} righe di Python
+più \num{42072} fra template e file statici. Non è uno squilibrio. Il valore
+del prodotto sta nel poter costruire una strategia senza scrivere Python, e
+quella possibilità costa pagine, editor, validatori e un sistema a plugin.
+
+\subsection*{Che cosa fa, in ordine di uso}
+
+\begin{enumerate}
+  \item \textbf{Scarica i dati.} Prezzi, fondamentali, tassi, notizie. Finiscono
+        in file \file{parquet} su disco, in una gerarchia fissa.
+  \item \textbf{Costruisce una strategia.} Scrivendo Python, disegnando un
+        grafo di nodi, o descrivendola a parole a un modello locale.
+  \item \textbf{La prova.} Un \term{walk-forward} che riaddestra e rivaluta a
+        finestre successive, mai sull'intero campione in una volta.
+  \item \textbf{Combina più strategie.} Ogni strategia produce uno \term{stream}
+        di profitti e perdite; un \term{ensemble} li pesa, e come pesarli è esso
+        stesso un plugin --- quattordici modalità, dall'equiponderato al
+        meta-allocatore addestrato.
+  \item \textbf{Riduce l'esposizione quando serve.} Gli \term{overlay} tagliano
+        l'esposizione in regime di stress, e sono anch'essi plugin: sette.
+  \item \textbf{Esegue.} Lo stesso ensemble, lo stesso codice di decisione,
+        collegato a un broker invece che ai dati storici.
+  \item \textbf{Pubblica.} Una strategia può essere messa nel marketplace:
+        qualcun altro la compra e se la installa nel proprio sistema.
+\end{enumerate}
+
+\begin{perche}{Perché il marketplace cambia l'architettura}
+Finché una strategia è un file sul proprio computer, può essere qualunque
+cosa. Dal momento in cui può essere \emph{venduta e installata altrove},
+diventa un artefatto con un contratto: deve dichiarare che cosa gli serve,
+deve poter essere verificata senza essere eseguita, e deve poter essere
+confrontata con ciò che il venditore aveva promesso. Buona parte dei vincoli
+che nel codice sembrano eccessivi --- i descrittori obbligatori, i validatori
+\simbolo{AST}, i \cod{META} fatti di soli letterali --- esiste per questo, e
+non per rigore astratto.
+\end{perche}
+
+\subsection*{Che cosa non fa}
+
+Non è un broker, non custodisce denaro e non esegue ordini per conto di
+nessuno: si collega al conto che l'utente ha già. Non è un fornitore di dati:
+usa le chiavi API dell'utente verso Polygon, FRED e simili. Non dà consigli
+d'investimento, e nessun numero prodotto dal sistema è una previsione --- un
+backtest dice come una strategia si \emph{sarebbe} comportata, con i costi
+stimati, sui dati che esistevano.

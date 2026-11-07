@@ -1,0 +1,127 @@
+% ===========================================================================
+%  utente/05-projects/00-capitolo.tex
+% ===========================================================================
+\chapter{Projects}\label{cap:projects}
+
+Un \voce{project} è una combinazione di più strategie, con il criterio che
+decide quanto pesa ciascuna e gli eventuali freni. È ciò che si manda in
+produzione: raramente conviene far girare una strategia sola.
+
+\figuraSchermata{1.0}{figure/schermate/projects.png}
+  {L'elenco dei project salvati.}
+  {projects}
+
+\section{Il costruttore, in quattro passi}\label{sez:costruttore}
+
+Si apre con \voce{Ensemble builder}, oppure con \pulsantesec{Use in
+Ensemble} dalla scheda di uno stream. I quattro passi in alto dicono sempre
+a che punto si è.
+
+\subsection{Passo 1 --- Strategies}
+
+Si scelgono gli stream da combinare. Ne servono almeno due: con uno solo non
+c'è niente da combinare, e il pulsante \pulsante{Next} resta spento finché
+non se ne sono scelti due.
+
+\figuraSchermata{1.0}{figure/schermate/composizione.png}
+  {La scelta degli stream. Accanto a ciascuno ci sono Sharpe e rendimento,
+   per non doverli cercare altrove.}
+  {composizione}
+
+\begin{perche}{Non scegliere i tre migliori}
+La tentazione è prendere i tre Sharpe più alti. Quasi sempre è l'errore: se
+le tre strategie fanno la stessa scommessa, metterle insieme non riduce
+niente --- la si sta solo facendo in tre modi. La colonna \voce{Corr} nella
+schermata iniziale serve a questo: due strategie con correlazione bassa, pur
+con Sharpe modesti, insieme fanno meglio di tre strategie brave e uguali.
+\end{perche}
+
+\subsection{Passo 2 --- Weighting}
+
+Come distribuire il capitale fra gli stream scelti. Quattordici metodi,
+raggruppati per famiglia.
+
+\figuraSchermata{1.0}{figure/schermate/composizione-pesi.png}
+  {I metodi di pesatura, per famiglia. Ciascuno porta la sua riga di
+   spiegazione.}
+  {composizione-pesi}
+
+\begin{center}
+\begin{tabular}{@{}L{36mm}L{102mm}@{}}
+\toprule
+\textbf{Famiglia} & \textbf{L'idea} \\
+\midrule
+\rigaTenue
+\voce{Naive} & Tutti uguali. \voce{Equal}, un mezzo a testa. Da provare
+  sempre: è il riferimento contro cui misurare gli altri. \\
+\voce{Risk / covariance} & Pesa in base a quanto ciascuno oscilla e a quanto
+  si muovono insieme. Chi oscilla meno pesa di più. \\
+\rigaTenue
+\voce{Robust} & Come sopra, ma senza fidarsi troppo delle correlazioni
+  stimate --- che su pochi dati sono instabili. \\
+\voce{Tail-risk} & Guarda le perdite estreme invece dell'oscillazione
+  media. \\
+\rigaTenue
+\voce{Return-aware} & Tiene conto anche di quanto ci si aspetta che ciascuno
+  renda, non solo di quanto rischia. \\
+\voce{Regime-adaptive} & Cambia i pesi secondo lo stato del mercato. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{pratica}{Da dove partire}
+\voce{Equal}. Poi si prova \voce{Min-Variance LW} o \voce{ERC} e si guarda
+se il drawdown scende davvero. Se un metodo complicato non batte l'equamente
+pesato, l'equamente pesato è la risposta: ha un parametro in meno da
+sbagliare.
+\end{pratica}
+
+\subsection{Passo 3 --- Overlay}
+
+Gli overlay riducono l'esposizione quando succede qualcosa. Si possono
+attivare più overlay insieme: i loro effetti si moltiplicano, e l'ordine in
+cui li si sceglie non cambia il risultato.
+
+\begin{center}
+\begin{tabular}{@{}L{34mm}L{104mm}@{}}
+\toprule
+\textbf{Overlay} & \textbf{Riduce l'esposizione quando\ldots} \\
+\midrule
+\rigaTenue
+\voce{Vol-Regime} & la volatilità realizzata sale. \\
+\voce{Jump-Vol} & c'è un salto improvviso: reagisce in un giorno. \\
+\rigaTenue
+\voce{Corr-Gate} & le strategie cominciano a muoversi tutte insieme, cioè
+  quando la diversificazione sparisce. \\
+\voce{Regime-GMM}, \voce{Iso-Stress} & le condizioni di mercato somigliano a
+  quelle dei periodi di stress passati. \\
+\rigaTenue
+\voce{Macro-Regime} & i segnali macroeconomici peggiorano. \\
+\voce{News-Pressure} & il volume di notizie supera la norma. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{attenzione}{Un overlay toglie anche i guadagni}
+Un freno che riduce l'esposizione riduce tutto: le perdite e i guadagni.
+Vale la pena guardare i due numeri insieme --- di quanto è sceso il
+drawdown, e di quanto è sceso il rendimento. Attivarne cinque perché «male
+non fa» porta a un portafoglio quasi sempre fuori mercato.
+\end{attenzione}
+
+\subsection{Passo 4 --- Costs}
+
+I costi: commissioni e slippage. Il backtest li sottrae.
+
+\begin{nota}{Alzare i costi è il controllo più onesto che si possa fare}
+Una strategia che resta buona raddoppiando i costi è robusta. Una che
+smette di funzionare stava guadagnando dentro lo spread, e su un conto vero
+non guadagnerà.
+\end{nota}
+
+\section{Salvare}\label{sez:projects-salvare}
+
+Alla fine si dà un nome e si salva. Da quel momento il project compare
+nell'elenco, il suo andamento è quello che la schermata iniziale disegna,
+e --- cosa più importante --- si può scegliere nella pagina \voce{Live}
+(\vediCap{live}).

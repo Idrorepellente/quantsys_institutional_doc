@@ -1,0 +1,45 @@
+% ===========================================================================
+%  figure/tikz/esagonale.tex
+%  L'architettura esagonale: la direzione delle frecce è il punto.
+% ===========================================================================
+\begin{tikzpicture}
+
+  % ---------- il centro ----------------------------------------------------
+  \node[riquadro, fill = white, draw = lyraInchiostro!45, minimum width = 44mm]
+    (dominio) {\pkgDominio\\[1pt]{\scriptsize dataclass congelate}};
+
+  \node[astratto, above = 11mm of dominio, minimum width = 58mm]
+    (porte) {\pkgPorte\\[1pt]{\scriptsize 32 contratti \codT{Protocol}}};
+
+  \node[motore, above = 11mm of porte, minimum width = 58mm]
+    (casi) {\pkgApplicazione\\[1pt]{\scriptsize i casi d'uso}};
+
+  % ---------- gli adattatori, intorno -------------------------------------
+  \node[interfaccia, left = 14mm of porte, minimum width = 26mm]
+    (adaSx) {\pkgAdattatori\\{\scriptsize repository,}\\{\scriptsize dati, broker}};
+  \node[interfaccia, right = 14mm of porte, minimum width = 26mm]
+    (adaDx) {\pkgAdattatori\\{\scriptsize report,}\\{\scriptsize pubblicazione}};
+
+  \node[persona, above = 11mm of casi, minimum width = 44mm]
+    (fuori) {dashboard, API, script};
+
+  \node[persistenza, below = 11mm of dominio, minimum width = 30mm]
+    (concreti) {disco, Postgres,\\broker reale};
+
+  % ---------- le dipendenze: tutte verso il centro -------------------------
+  \draw[dipendenza] (casi)      -- (porte) node[etichetta, pos = 0.5] {usa};
+  \draw[dipendenza] (adaSx.east |- porte.west) -- (porte.west)
+    node[etichetta, pos = 0.5] {soddisfa};
+  \draw[dipendenza] (adaDx.west |- porte.east) -- (porte.east)
+    node[etichetta, pos = 0.5] {soddisfa};
+  \draw[dipendenza] (porte)     -- (dominio);
+  \draw[flusso]     (fuori)     -- (casi);
+  \draw[flusso]     (adaSx.south) |- (concreti.west);
+  \draw[flusso]     (adaDx.south) |- (concreti.east);
+
+  % ---------- la regola, scritta -----------------------------------------
+  \node[nota, right = 6mm of adaDx, text width = 32mm, anchor = west]
+    {Nessuna freccia esce\\dal centro verso fuori.\\
+     È l'unica regola\\da non violare.};
+
+\end{tikzpicture}

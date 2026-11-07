@@ -1,0 +1,37 @@
+% ===========================================================================
+%  figure/tikz/pagamento.tex
+%  Chi concede l'accesso dopo un pagamento: il webhook, e nessun altro.
+% ===========================================================================
+\begin{tikzpicture}[x = 1mm, y = 1mm]
+
+  \node[persona,     minimum width = 30mm, minimum height = 10mm] at (0,0)   (ut)  {utente};
+  \node[interfaccia, minimum width = 32mm, minimum height = 11mm] at (38,0)  (dash){dashboard};
+  \node[sito,        minimum width = 30mm, minimum height = 11mm] at (78,0)  (sito){sito};
+  \node[esterno,     minimum width = 28mm, minimum height = 11mm] at (116,0) (str) {Stripe};
+
+  \node[esterno,     minimum width = 30mm, minimum height = 11mm] at (116,-26) (hook)
+    {webhook};
+  \node[persistenza, minimum width = 34mm, minimum height = 11mm] at (70,-26) (lic)
+    {licenza\\{\scriptsize nel database}};
+  \node[interfaccia, minimum width = 34mm, minimum height = 11mm] at (16,-26) (ret)
+    {ritorno dal browser\\{\scriptsize \codT{/marketplace/acquisto/<id>}}};
+
+  \draw[flusso] (ut)   -- (dash) node[etichetta, pos = 0.5] {compra};
+  \draw[flusso] (dash) -- (sito) node[etichetta, pos = 0.5] {\codT{buy}};
+  \draw[flusso] (sito) -- (str)  node[etichetta, pos = 0.5] {sessione};
+  \draw[flusso] (str)  -- (hook) node[etichetta, pos = 0.5] {incassato};
+  \draw[accento] (hook) -- (lic) node[etichettaAccento, pos = 0.5] {concede};
+  \draw[ritorno] (lic) -- (ret)  node[etichetta, pos = 0.5] {legge};
+
+  % la freccia che NON esiste
+  \draw[bloccato] (ret.north) .. controls (16,-10) and (16,-6) .. (ret.north |- 0,-5);
+  \node[font = \sffamily\scriptsize\bfseries, text = lyraNegativo,
+        anchor = south west] at (20,-13) {non concede niente};
+
+  \node[nota, anchor = north west, text width = 120mm] at (-14,-38)
+    {Prima il ritorno dal browser creava l'acquisto fidandosi della sessione
+     indicata nell'indirizzo: chiunque lo aprisse otteneva gratis qualunque
+     artefatto. Oggi l'unica autorità è il webhook; il ritorno si limita a
+     leggere, e se la licenza non c'è ancora dice di attendere.};
+
+\end{tikzpicture}

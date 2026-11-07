@@ -1,0 +1,42 @@
+% ===========================================================================
+%  figure/tikz/pipeline-motore.tex
+%  Che cosa accade a ogni barra del backtest, in ordine.
+% ===========================================================================
+\begin{tikzpicture}[node distance = 4mm]
+
+  \node[archivio]                           (dati)  {parquet\\OHLCV};
+  \node[motore, right = 11mm of dati, minimum width = 26mm]
+    (ind)  {indicatori\\{\scriptsize pre-calcolati}};
+  \node[motore, right = 11mm of ind, minimum width = 26mm]
+    (strat) {strategie\\{\scriptsize \codT{generate\_signals}}};
+  \node[motore, right = 11mm of strat, minimum width = 26mm]
+    (allo) {allocator\\{\scriptsize dai segnali ai pesi}};
+
+  \node[motore, below = 9mm of allo, minimum width = 26mm]
+    (risk) {rischio\\{\scriptsize leva, vol target}};
+  \node[motore, left = 11mm of risk, minimum width = 26mm]
+    (exec) {esecuzione\\{\scriptsize slippage, costi}};
+  \node[motore, left = 11mm of exec, minimum width = 26mm]
+    (port) {portafoglio\\{\scriptsize posizioni, equity}};
+  \node[archivio, left = 11mm of port]      (out)   {parquet\\PnL};
+
+  \draw[flusso] (dati)  -- (ind);
+  \draw[flusso] (ind)   -- (strat);
+  \draw[flusso] (strat) -- (allo) node[etichetta, above, pos = 0.5] {\codT{Signal}};
+  \draw[flusso] (allo)  -- (risk);
+  \draw[flusso] (risk)  -- (exec);
+  \draw[flusso] (exec)  -- (port) node[etichetta, above, pos = 0.5] {\codT{Fill}};
+  \draw[flusso] (port)  -- (out);
+
+  \node[passo] at ([shift = {(-3mm,3mm)}]ind.north west)   {1};
+  \node[passo] at ([shift = {(-3mm,3mm)}]strat.north west)  {2};
+  \node[passo] at ([shift = {(-3mm,3mm)}]allo.north west)   {3};
+  \node[passo] at ([shift = {(3mm,3mm)}]risk.north east)    {4};
+  \node[passo] at ([shift = {(3mm,3mm)}]exec.north east)    {5};
+  \node[passo] at ([shift = {(3mm,3mm)}]port.north east)    {6};
+
+  \node[nota, below = 6mm of port, text width = 92mm, align = center]
+    {I passi 1--3 decidono con i dati fino alla chiusura di $T-1$.
+     I passi 4--6 eseguono all'apertura di $T$.};
+
+\end{tikzpicture}

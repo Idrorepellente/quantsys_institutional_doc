@@ -1,0 +1,161 @@
+% ===========================================================================
+%  sviluppatore/05-estendere/03-approccio.tex
+% ===========================================================================
+\section{Un approccio}\label{sez:nuovo-approccio}
+
+Un approccio \emph{scavalca il motore}. Non implementa
+\simbolo{AtomicStrategy}, non emette \simbolo{Signal}, non passa per
+allocatore, rischio ed esecuzione. Costruisce il proprio calcolo e consegna
+direttamente la serie dei rendimenti.
+
+\begin{center}
+\begin{tabular}{@{}L{28mm}L{52mm}L{54mm}@{}}
+\toprule
+ & \textbf{Strategia} & \textbf{Approccio} \\
+\midrule
+\rigaTenue
+File & \file{strategy.py} & \file{approach.py} \\
+Oggetto & \cod{DESCRIPTOR} & \cod{APPROACH\_DESCRIPTOR} \\
+\rigaTenue
+Entrata & \cod{factory(params)} \freccia{} istanza & \cod{build(params)}
+  \freccia{} \cod{pd.Series} \\
+Chi esegue & il motore di backtest & l'approccio stesso \\
+\rigaTenue
+Produce & segnali, poi posizioni & rendimenti giornalieri \\
+Runner & \file{execution/run\_walkforward.py} &
+  \file{execution/run\_approach.py} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Il contratto}
+
+\begin{codiceInterno}{python}{Dichiarato nel docstring del modulo}{approaches/descriptor.py:17}
+CONTRATTO della funzione build:
+    build(params: dict) -> pandas.Series
+        - index = date (tz-naive); valori = rendimenti DAILY (frazione)
+        - usa SOLO dati fino a t per ogni t (niente lookahead)
+\end{codiceInterno}
+
+\noindent
+«Tz-naive» non è pignoleria: una serie con fuso orario e una senza non si
+allineano, e il risultato è un ensemble che perde silenziosamente le
+osservazioni di uno stream. Per questo gli approcci installati chiudono tutti
+allo stesso modo:
+
+\begin{codiceInterno}{python}{La chiusura obbligata di build}{approaches/momentum\_ema\_approach/approach.py:74}
+    # Assicuriamo che l'indice sia tz-naive come richiesto
+    pnl.index = pd.to_datetime(pnl.index).tz_localize(None)
+    return pnl
+\end{codiceInterno}
+
+\subsection{Il descrittore}
+
+Più corto di quello delle strategie, e con tre campi che si derivano da soli
+se li si omette:
+
+\begin{codiceInterno}{python}{I default derivati}{approaches/descriptor.py:79}
+        if not self.label:
+            self.label = self.name
+        if not self.output_path_pattern:
+            self.output_path_pattern = f"output/strategies/{self.name}_pnl_daily.parquet"
+        if not self.backtest_script:
+            self.backtest_script = f"approaches/{self.name}/run_backtest.py"
+\end{codiceInterno}
+
+\noindent
+Due campi hanno invece una lista chiusa di valori ammessi, e un valore fuori
+lista solleva \cod{ValueError} al caricamento:
+
+\begin{codiceInterno}{python}{Le due allowlist}{approaches/descriptor.py:31}
+APPROACH_STREAM_TYPES = ("pnl_daily", "pnl_sparse", "equity_curve")
+APPROACH_STREAM_CATEGORIES = ("ml", "d1", "intraday", "ml_overlay")
+\end{codiceInterno}
+
+\noindent
+Un esempio completo:
+
+\begin{codiceInterno}{python}{Un descrittore di approccio}{approaches/momentum\_ema\_approach/approach.py:79}
+APPROACH_DESCRIPTOR = ApproachDescriptor(
+    name=NAME,
+    label="EMA Momentum Approach",
+    description=("Generates weights from the distance between the closing "
+                 "price and its exponential moving average (EMA)."),
+    build=build,
+    default_params={"lookback_ema": 12, "short_lookback": 20},
+    stream_type="pnl_daily",
+    stream_category="d1",
+    tags=["momentum", "ema", "d1"],
+)
+\end{codiceInterno}
+
+\subsection{Approcci e overlay: lo stesso registro, due elenchi}
+
+Il registro degli approcci serve \emph{due} cartelle, \pkgApprocci{} e
+\pkgOverlay, e il package si deduce da dove viene la cartella:
+
+\begin{codiceInterno}{python}{Il package dipende dalla provenienza}{approaches/registry.py:56}
+    # il package dipende dalla cartella di provenienza: approaches/ oppure overlays/
+    pkg = approach_dir.parent.name if approach_dir.parent.name in ("approaches", "overlays") else "approaches"
+    module_dotted = f"{pkg}.{name}.approach"
+\end{codiceInterno}
+
+\noindent
+Di conseguenza ci sono tre funzioni pubbliche con semantiche distinte:
+
+\begin{center}
+\begin{tabular}{@{}L{32mm}L{106mm}@{}}
+\toprule
+\textbf{Funzione} & \textbf{Che cosa restituisce, e perché} \\
+\midrule
+\rigaTenue
+\cod{discover\_approaches()} & Solo \pkgApprocci. Sono quelli eseguibili dal
+  pulsante \pulsante{Run backtest}. \\
+\cod{discover\_overlays()} & Solo le cartelle \file{overlays/*/approach.py}.
+  Non sono eseguibili da sole. \\
+\rigaTenue
+\cod{discover\_all()} & L'unione, \textbf{solo per risolvere un nome}, mai
+  per costruire un elenco da mostrare. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{perche}{Perché gli elenchi sono separati}
+Il razionale è scritto nel registro: mettere gli overlay fra i backtest
+lanciabili «li faceva comparire fra i backtest lanciabili, dove sarebbero
+falliti o --- peggio --- avrebbero prodotto uno stream vuoto senza dirlo». Uno
+stream vuoto che non si lamenta è peggio di un errore, perché entra
+nell'ensemble e lo cambia.
+\end{perche}
+
+\begin{nota}{Il campo \cod{family} non esiste nella dataclass}
+\cod{\_scansiona} attacca all'oggetto un attributo \cod{family} che non è
+dichiarato in \simbolo{ApproachDescriptor} e non compare in \cod{to\_dict()}:
+
+\begin{codiceInterno}{python}{}{approaches/registry.py:113}
+        # Da dove viene: e' l'unico modo affidabile per distinguere un
+        # approccio da un overlay, perche' il contratto del file e' identico.
+        try:
+            desc.family = etichetta
+        except Exception:      # dataclass congelata: non e' un problema
+            pass
+\end{codiceInterno}
+
+\noindent
+Funziona perché la dataclass non è congelata. Chi legge
+\file{descriptor.py} non sa che esiste.
+\end{nota}
+
+\begin{pratica}{Aggiungere un approccio}
+\begin{enumerate}
+  \item Cartella senza \cod{\_}, con \file{approach.py} e
+        \file{\_\_init\_\_.py}.
+  \item \cod{def build(params: dict) -> pd.Series}: indice di date tz-naive,
+        valori di rendimento giornaliero in frazione, causale.
+  \item \cod{APPROACH\_DESCRIPTOR} con almeno \cod{name}, \cod{description},
+        \cod{build}.
+  \item Controllare che \cod{stream\_type} e \cod{stream\_category} stiano
+        nelle due allowlist.
+  \item Provarlo: \file{python -m execution.run\_approach <nome>}.
+\end{enumerate}
+\end{pratica}

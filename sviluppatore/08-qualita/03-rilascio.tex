@@ -1,0 +1,108 @@
+% ===========================================================================
+%  sviluppatore/08-qualita/03-rilascio.tex
+% ===========================================================================
+\section{Impacchettare e rilasciare}\label{sez:rilascio}
+
+\subsection{Un comando solo}
+
+\begin{codiceInterno}{console}{Dalla radice del progetto}{build/build\_app.py}
+python build/build_app.py                # backend + app per il sistema corrente
+python build/build_app.py --backend-only # solo l'eseguibile del backend
+python build/build_app.py --app-only     # solo Electron (backend gia' pronto)
+\end{codiceInterno}
+
+\noindent
+Tre passi, in ordine: PyInstaller produce un backend autonomo che non
+richiede Python sulla macchina di chi riceve l'app; il risultato viene
+copiato dove electron-builder lo cerca; electron-builder produce
+l'installatore per il sistema corrente (\file{.exe}, \file{.dmg},
+\file{AppImage}).
+
+\subsection{Dove finiscono i dati dell'utente}
+
+Non dentro l'applicazione. Il bundle è di sola lettura e ogni aggiornamento
+lo sovrascrive: al primo avvio il backend crea uno spazio di lavoro nella
+cartella utente e vi copia le librerie iniziali --- strategie, approcci,
+modalità di pesatura. È lo stesso meccanismo di \simbolo{PROJECT\_ROOT}
+descritto nel \vediSez{dati}, visto dall'altro capo.
+
+\begin{attenzione}{Le librerie iniziali si copiano una volta}
+Al primo avvio, non a ogni aggiornamento. Un artefatto nuovo aggiunto a una
+versione nuova dell'applicazione \emph{non} compare automaticamente nello
+spazio di lavoro di chi ha già installato: quello spazio è suo, e
+sovrascriverlo cancellerebbe le sue modifiche. È una conseguenza voluta del
+punto precedente, e va tenuta presente quando si aggiunge un artefatto di
+serie.
+\end{attenzione}
+
+\subsection{Gli aggiornamenti automatici}
+
+Chi ha già installato riceve le versioni nuove da solo: all'avvio
+\pkg{electron-updater} interroga le release di GitHub, scarica in silenzio e
+mostra la notifica «aggiornamento pronto» nella campanella. L'utente riavvia
+quando gli fa comodo. Il repository si ricava dal remote git, o si dichiara
+con \cod{GH\_REPO}.
+
+\section{Il manifesto delle query}\label{sez:manifesto}
+
+È il meccanismo di sicurezza più importante fra la metà locale e il sito, e
+merita di essere capito prima di toccare qualunque cosa interroghi il
+database.
+
+\figuraTikz{manifest-query}
+  {Il rapporto di fiducia, prima e dopo.}
+  {manifest-query}
+
+\begin{codiceInterno}{python}{Il motivo, dal generatore}{build/gen\_query\_manifest.py}
+Perche' esiste
+--------------
+Finora l'app inviava SQL libero a ``/api/dashboard/query``, protetto da un
+segreto uguale per tutte le installazioni. Chi estraeva quel segreto poteva
+eseguire qualsiasi comando sul database di produzione.
+
+Con questo file il rapporto si rovescia: il sito conosce in anticipo l'elenco
+esatto delle query ammesse e l'app puo' solo chiederne una per NOME (un hash
+del testo SQL). Qualunque altra cosa viene rifiutata, segreto o no.
+\end{codiceInterno}
+
+\subsection{L'identificativo di una query}
+
+\cod{op\_id} è l'impronta SHA-256 del testo SQL normalizzato negli spazi,
+troncata a \num{32} cifre esadecimali. Conseguenza diretta: \textbf{cambiare
+una query cambia il suo identificativo}. Una query modificata e non
+rigenerata nel manifesto viene rifiutata, segreto o no.
+
+\subsection{La legatura all'utente}
+
+Limitare le query non basta: chi è autenticato potrebbe chiedere i dati di un
+altro passando un identificativo diverso. Per ogni query il generatore
+individua il parametro che rappresenta l'utente, in due forme:
+
+\begin{codiceInterno}{sql}{Le due forme riconosciute}{build/gen\_query\_manifest.py}
+    WHERE "userId" = %s              -> conta i %s che lo precedono
+    INSERT INTO t(id, "userId", ...) -> posizione nella lista delle colonne
+\end{codiceInterno}
+
+\noindent
+Il sito \emph{sovrascrive} quel parametro con l'identificativo ricavato dal
+token. Anche mentendo, il client ottiene solo i propri dati.
+
+\begin{pratica}{Quando si tocca una query}
+\begin{enumerate}
+  \item Modificare l'SQL.
+  \item \file{python build/gen\_query\_manifest.py} --- riscrive il JSON nel
+        sito.
+  \item \file{python build/gen\_query\_manifest.py --check} --- verifica che
+        sia aggiornato. È il comando da mettere in una verifica automatica.
+  \item Rilasciare \emph{prima} il sito, poi l'app: un'app che chiede un
+        \cod{op\_id} che il sito non conosce ancora viene rifiutata.
+\end{enumerate}
+\end{pratica}
+
+\begin{attenzione}{L'ordine di rilascio non è simmetrico}
+Il sito accetta sia gli identificativi vecchi sia quelli nuovi finché il
+manifesto li contiene entrambi; l'app no. Aggiornare l'app prima del sito
+rompe le installazioni appena aggiornate, e il sintomo è un rifiuto senza
+spiegazione --- perché dal punto di vista del sito è esattamente ciò che
+deve succedere a una query sconosciuta.
+\end{attenzione}

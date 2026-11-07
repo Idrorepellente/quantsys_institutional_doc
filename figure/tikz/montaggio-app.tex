@@ -1,0 +1,33 @@
+% ===========================================================================
+%  figure/tikz/montaggio-app.tex
+%  L'ordine in cui create_app() monta i pezzi dell'applicazione Flask.
+%  L'ordine conta per gli hook before_request/after_request, che girano nella
+%  sequenza in cui sono stati registrati.
+% ===========================================================================
+\begin{tikzpicture}[x = 1mm, y = 1mm]
+
+  \foreach \i/\y/\st/\testo/\riga in {
+      1/  0/interfaccia/{\codT{\_register\_visual\_debug\_routes()} \quad 11 rotte}/4307,
+      2/-13/interfaccia/{blueprint \codT{studio} \quad 43 rotte}/4309,
+      3/-26/interfaccia/{blueprint \codT{community} + \codT{marketplace\_routes} \quad 55 rotte}/4313,
+      4/-39/interfaccia/{blueprint \codT{agent} \quad 10 rotte}/4314,
+      5/-52/interfaccia/{blueprint \codT{genetic} \quad 8 rotte}/4359,
+      6/-65/motore/{\codT{init\_auth(app)} \quad 8 rotte, piu' la guardia globale}/4360,
+      7/-78/sito/{autoload dei moduli \codT{ui\_ext\_*} \quad 9 rotte}/4365,
+      8/-91/esterno/{\codT{autopubblica.in\_sottofondo()} \quad nessuna rotta}/4382} {
+    \node[\st, minimum width = 100mm, minimum height = 8.5mm,
+          anchor = west, align = left] at (12,\y) (n\i) {\testo};
+    \node[passo] at (6,\y) {\i};
+    \node[nota, anchor = west] at (116,\y) {\codT{app.py:\riga}};
+  }
+
+  \foreach \y in {-4.3, -17.3, -30.3, -43.3, -56.3, -69.3, -82.3}
+    \draw[flusso] (20,\y) -- (20,\y-4.4);
+
+  \node[nota, anchor = north west, text width = 112mm] at (6,-99)
+    {La guardia di \codT{auth} vale per \emph{tutte} le rotte, anche per
+     quelle registrate prima di lei: un \codT{before\_request} non guarda
+     l'ordine. Ciò che l'ordine decide è la sequenza fra gli hook --- quello di
+     \codT{ui\_ext\_b} gira dopo \codT{\_require\_login}, e non prima.};
+
+\end{tikzpicture}

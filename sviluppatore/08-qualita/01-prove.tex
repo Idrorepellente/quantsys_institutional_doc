@@ -1,0 +1,87 @@
+% ===========================================================================
+%  sviluppatore/08-qualita/01-prove.tex
+% ===========================================================================
+\section{Come sono scritte le prove}\label{sez:prove}
+
+Non c'è un \pkg{pytest} con mille asserzioni minute. Ci sono cinque suite,
+ciascuna dedicata a un \emph{contratto} del sistema, che si lanciano come
+script e stampano un resoconto leggibile. La scelta ha una conseguenza utile:
+ogni suite si apre con un docstring che dice quale problema sorveglia, e
+quello è il posto giusto dove cercare prima di modificare l'area che copre.
+
+\begin{center}
+\begin{tabular}{@{}L{48mm}R{14mm}L{76mm}@{}}
+\toprule
+\textbf{Suite} & \textbf{Righe} & \textbf{Che contratto sorveglia} \\
+\midrule
+\rigaTenue
+\file{prova\_normalizzazione\_stream.py} & \num{691}
+  & Backtest e live devono produrre lo \emph{stesso libro}
+    (\vediSez{live}). \\
+\file{prova\_beta\_accesso.py} & \num{614}
+  & L'accesso riservato in beta, \textbf{contro il sito vero}. \\
+\rigaTenue
+\file{prova\_covarianza.py} & \num{489}
+  & Lo shrinkage di Ledoit--Wolf e la modalità \cod{covariance}. \\
+\file{prova\_pesi\_dichiarati.py} & \num{484}
+  & Il contratto di \cod{Signal.target\_weight} e la modalità
+    \cod{explicit}. \\
+\rigaTenue
+\file{prova\_permessi\_marketplace.py} & \num{429}
+  & I due strati del permesso di pubblicare, \textbf{contro il sito vero}. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Due suite girano contro il sito vero}
+
+Non usano finti. Avviano un Next.js e un Postgres reali e interrogano gli
+endpoint veri. È più lento e più fastidioso da far partire, e la ragione è
+dichiarata nel docstring: i permessi e l'accesso non vivono nel codice
+Python, vivono nelle regole del sito. Una prova con dei finti verificherebbe
+che la dashboard sa leggere una risposta --- cosa che non è mai stata il
+problema --- e non che la risposta è quella giusta.
+
+\subsection{Le proprietà che una prova deve avere qui}
+
+Tre, e tutte e tre sono state imparate rompendole.
+
+\begin{description}[leftmargin = 1.6em, style = nextline, itemsep = 6pt]
+
+\item[Ripetibile]
+  Una suite che modifica lo stato (prezzi dei piani, elenchi di ammessi) deve
+  azzerarlo all'inizio, non alla fine: se una esecuzione si interrompe a metà,
+  la pulizia finale non viene eseguita e la successiva parte da uno stato
+  sporco. \file{prova\_permessi\_marketplace.py} comincia con una
+  reimpostazione in SQL; \file{prova\_beta\_accesso.py} ha una funzione
+  \simbolo{azzera\_prova()} e un elenco fisso di indirizzi.
+
+\item[Senza soglie indovinate]
+  Un'asserzione come \cod{assert scala < 1.3} è una soglia inventata: passa o
+  fallisce per ragioni che nessuno ha verificato. La forma corretta è
+  relativa --- \cod{assert scala\_degenere < 0.75 * scala\_corretta} --- perché
+  confronta due cose che il sistema produce, invece di confrontarne una con
+  un numero scritto a mano.
+
+\item[Che isola ciò che misura]
+  Misurare la proporzionalità confrontando due chiamate complete non
+  funziona se ciascuna chiamata registra un'osservazione in più e cambia lo
+  stato. Il confronto va fatto sulla funzione che si vuole misurare, da sola.
+
+\end{description}
+
+\begin{attenzione}{Una prova che non è ripetibile è peggio di nessuna prova}
+Passa la prima volta, fallisce la seconda, e chi la vede fallire conclude
+che la prova è inaffidabile --- non che il codice lo sia. Da quel momento il
+risultato di quella suite viene ignorato, cioè la suite ha smesso di
+esistere pur continuando a girare.
+\end{attenzione}
+
+\subsection{Il resto di \file{tests/}}
+
+Oltre alle cinque suite ci sono: prove end-to-end (\file{e2e\_hedging.py},
+\file{e2e\_regime\_modulation.py}), confronti A/B fra strategie, diagnosi
+specifiche per singole strategie (\file{diagnose\_ising.py},
+\file{diagnose\_regime\_signals.py}), un server SMTP finto
+(\file{posta\_finta.py}) usato dalla prova dell'accesso, e verifiche
+numeriche di migrazione (\file{verify\_migration\_numbers.py}).

@@ -1,0 +1,52 @@
+% ===========================================================================
+%  comune/colori.tex — la tavolozza
+% ===========================================================================
+%
+%  Sono i colori del PRODOTTO, non colori scelti per la documentazione: gli
+%  stessi valori che stanno in dashboard/static/css/ui-v2.css e nella landing.
+%  Documentare un prodotto con i colori di qualcun altro costringe chi legge a
+%  tradurre due volte — una figura verde acqua qui e un pulsante verde acqua
+%  nell'app sono la stessa cosa, e si deve vedere.
+%
+%  Chi cambia la tavolozza del prodotto cambia QUESTO file e nient'altro:
+%  nessun altro file della documentazione nomina un colore per esteso.
+% ===========================================================================
+\RequirePackage{xcolor}
+
+% --- i colori di base della landing -----------------------------------------
+\definecolor{lyraInchiostro}{HTML}{111318}  % testo, titoli
+\definecolor{lyraPannello}{HTML}{F5F5F2}    % fondo dei riquadri
+\definecolor{lyraBordo}{HTML}{ECECEA}       % filetti e bordi
+\definecolor{lyraAccento}{HTML}{2BB59A}     % verde acqua: l'unico accento
+\definecolor{lyraPositivo}{HTML}{0F7A62}    % numeri in utile
+\definecolor{lyraNegativo}{HTML}{9A3412}    % numeri in perdita
+
+% --- i pastelli, usati per distinguere gli strati nelle figure --------------
+\definecolor{lyraCielo}{HTML}{D9F1F7}
+\definecolor{lyraMenta}{HTML}{DDF3E4}
+\definecolor{lyraPesca}{HTML}{FFE4D4}
+\definecolor{lyraLavanda}{HTML}{E6DEFF}
+\definecolor{lyraCrema}{HTML}{FFF1C9}
+
+% --- derivati, per bordi e testi sopra i pastelli ---------------------------
+%  Si ricavano dai precedenti invece di essere scritti a mano: cambiando un
+%  pastello, il suo bordo lo segue.
+\colorlet{lyraCieloBordo}{lyraCielo!55!lyraInchiostro}
+\colorlet{lyraMentaBordo}{lyraMenta!55!lyraInchiostro}
+\colorlet{lyraPescaBordo}{lyraPesca!55!lyraInchiostro}
+\colorlet{lyraLavandaBordo}{lyraLavanda!55!lyraInchiostro}
+\colorlet{lyraCremaBordo}{lyraCrema!55!lyraInchiostro}
+
+\colorlet{lyraGrigio}{lyraInchiostro!55}
+\colorlet{lyraGrigioChiaro}{lyraInchiostro!28}
+\colorlet{lyraAccentoScuro}{lyraAccento!70!lyraInchiostro}
+\colorlet{lyraAccentoTenue}{lyraAccento!14!white}
+
+% --- i colori del codice ----------------------------------------------------
+\colorlet{codFondo}{lyraPannello}
+\colorlet{codBordo}{lyraBordo}
+\colorlet{codCommento}{lyraInchiostro!45}
+\colorlet{codParola}{lyraAccentoScuro}
+\colorlet{codStringa}{lyraNegativo!85}
+\colorlet{codNumero}{lyraInchiostro!70}
+\colorlet{codRiga}{lyraInchiostro!35}

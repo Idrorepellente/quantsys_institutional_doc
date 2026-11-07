@@ -1,0 +1,310 @@
+% ===========================================================================
+%  comune/preambolo.tex — impostazioni comuni ai due documenti
+% ===========================================================================
+%
+%  Lo includono sia guida-sviluppatore.tex sia manuale-utente.tex. Ciò che
+%  vale per uno solo dei due NON va qui: va nel suo file principale, altrimenti
+%  fra sei mesi nessuno sa più perché una cosa è dove è.
+%
+%  Motore: pdfLaTeX. Non lualatex, non xelatex, e la scelta è deliberata —
+%  questo preambolo usa solo pacchetti di una TeX Live di base, così chi riceve
+%  la cartella compila senza installare nulla. Nessun font di sistema, nessun
+%  --shell-escape, nessuna dipendenza da Python.
+% ===========================================================================
+
+% --- lingua e codifica ------------------------------------------------------
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+
+%  L'italiano in due modi, perché non tutte le installazioni hanno il pacchetto
+%  babel-italian (le immagini Docker di TeX Live «base» tipicamente no, e una
+%  documentazione che non compila lì è inutile metà delle volte che serve).
+%    - c'è italian.ldf  -> si usa quello, è la via normale;
+%    - non c'è          -> babel >= 3.75 costruisce la lingua dal proprio file
+%                          locale/it/babel-it.ini, che è sempre presente.
+%  In entrambi i casi si ottengono «Capitolo», «Indice», «Figura», «Tabella».
+%  La sillabazione italiana è un'altra cosa: sta nel FORMATO, non nel pacchetto,
+%  e se manca si vede subito (parole spezzate all'inglese). Il controllo è in
+%  fondo a questo file.
+\IfFileExists{italian.ldf}
+  {\usepackage[italian]{babel}}
+  {\usepackage[italian, provide = *]{babel}}
+
+\usepackage{csquotes}
+
+% --- caratteri --------------------------------------------------------------
+%  Palatino per il testo e per la matematica (mathpazo): la documentazione ha
+%  formule — vol targeting, restringimento della covarianza — e un testo con la
+%  matematica di un'altra famiglia si legge come due documenti incollati.
+%  Helvetica ridotta per i titoli, monospazio di Latin Modern per il codice.
+\usepackage{mathpazo}
+\usepackage[scaled=0.90]{helvet}
+\usepackage{lmodern}
+\renewcommand{\ttdefault}{lmtt}
+
+\usepackage{microtype}
+
+% --- composizione del paragrafo ---------------------------------------------
+%  Un documento pieno di nomi di file e di simboli in monospazio ha molte
+%  parole che non si possono spezzare: `diagnose_regime_signals.py` e' lungo
+%  quattro centimetri e non ha punti di sillabazione. Con i valori standard
+%  TeX preferisce far sbordare la riga nel margine piuttosto che allargare
+%  gli spazi, e il risultato si vede.
+%
+%  Questi tre valori invertono la preferenza: meglio una riga un po' larga di
+%  spazi che una riga che esce dalla giustezza. `hbadness` alza la soglia di
+%  segnalazione di conseguenza, cosi' il log continua a riportare i problemi
+%  veri e non le righe lente che abbiamo appena autorizzato.
+\tolerance = 1500
+\emergencystretch = 3em
+\hbadness = 2000
+
+% --- impaginazione ----------------------------------------------------------
+\usepackage[
+  a4paper,
+  inner = 28mm, outer = 24mm, top = 26mm, bottom = 28mm,
+  headsep = 7mm, footskip = 12mm,
+]{geometry}
+
+\usepackage{emptypage}      % le pagine lasciate bianche restano davvero bianche
+\usepackage{setspace}
+\setstretch{1.06}
+
+% --- colori, codice, figure -------------------------------------------------
+\usepackage{etoolbox}
+\input{comune/colori}
+\input{comune/stile-tikz}
+\input{comune/stile-codice}
+
+% --- numeri -----------------------------------------------------------------
+%  In italiano il separatore delle migliaia sarebbe il punto, ma in un
+%  documento pieno di valori numerici (soglie, quantili, prezzi) il punto
+%  decimale inglese del codice e il punto delle migliaia del testo si
+%  confondono. Spazio fine: non si confonde con niente.
+\usepackage{siunitx}
+\sisetup{group-separator = {\,}, group-minimum-digits = 4, detect-all}
+
+% --- tabelle ----------------------------------------------------------------
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{colortbl}
+
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcolumntype{C}[1]{>{\centering\arraybackslash}p{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\arraybackslash}p{#1}}
+\newcolumntype{M}{>{\ttfamily\footnotesize}l}
+
+% Righe alternate tenui: su una tabella di venti righe l'occhio perde la riga,
+% e un colore appena percepibile costa meno di una griglia piena.
+\newcommand{\rigaTenue}{\rowcolor{lyraPannello!55!white}}
+
+% --- elenchi ----------------------------------------------------------------
+\usepackage{enumitem}
+\setlist{itemsep = 1pt, parsep = 2pt, topsep = 4pt}
+\setlist[itemize]{label = \textcolor{lyraAccento}{\textbullet}}
+\setlist[enumerate]{label = \textcolor{lyraAccentoScuro}{\arabic*.}}
+
+% --- figure -----------------------------------------------------------------
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage[font = small, labelfont = {bf, sf}, textfont = sf,
+            labelsep = period, skip = 7pt]{caption}
+\usepackage{subcaption}
+\usepackage{adjustbox}
+\graphicspath{{figure/}{figure/tikz/}{figure/schermate/}}
+
+% --- intestazioni e piè di pagina -------------------------------------------
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{titletoc}
+
+% --- riferimenti ------------------------------------------------------------
+\usepackage[
+  colorlinks = true,
+  linkcolor  = lyraAccentoScuro,
+  citecolor  = lyraAccentoScuro,
+  urlcolor   = lyraAccentoScuro,
+  filecolor  = lyraAccentoScuro,
+  breaklinks = true,
+  bookmarksnumbered = true,
+  bookmarksopen = true,
+  bookmarksopenlevel = 1,
+]{hyperref}
+\usepackage{url}
+\urlstyle{sf}
+
+% --- indice analitico -------------------------------------------------------
+\usepackage{imakeidx}
+
+% ===========================================================================
+%  Stile dei titoli
+% ===========================================================================
+%  I capitoli si aprono con il numero grande a sinistra e un filetto verde
+%  acqua: è il segno che si gira pagina in una sezione nuova, e lo si vede
+%  sfogliando senza leggere.
+\titleformat{\chapter}[display]
+  {\sffamily\LARGE\bfseries\color{lyraInchiostro}}
+  {\raggedright\normalfont\sffamily\fontsize{52}{52}\selectfont
+   \color{lyraAccento!35!lyraPannello}\thechapter}
+  {-6pt}
+  {\raggedright}
+  [\vspace{4pt}{\color{lyraAccento}\rule{\textwidth}{1.2pt}}]
+\titlespacing*{\chapter}{0pt}{-24pt}{26pt}
+
+\titleformat{\section}
+  {\sffamily\large\bfseries\color{lyraInchiostro}}
+  {\color{lyraAccentoScuro}\thesection}{0.7em}{}
+\titlespacing*{\section}{0pt}{18pt}{7pt}
+
+\titleformat{\subsection}
+  {\sffamily\normalsize\bfseries\color{lyraInchiostro!88}}
+  {\color{lyraAccentoScuro}\thesubsection}{0.6em}{}
+\titlespacing*{\subsection}{0pt}{13pt}{4pt}
+
+\titleformat{\subsubsection}[runin]
+  {\sffamily\small\bfseries\color{lyraInchiostro!80}}
+  {}{0pt}{}[\;---\;]
+\titlespacing*{\subsubsection}{0pt}{9pt}{0.5em}
+
+\setcounter{secnumdepth}{3}
+\setcounter{tocdepth}{2}
+
+% ===========================================================================
+%  Indice
+% ===========================================================================
+%  L'indice è composto con titletoc, non con tocloft: i due pacchetti si
+%  contendono le stesse macro e caricarli insieme rompe l'indice in modi che
+%  si vedono solo a documento finito.
+\titlecontents{chapter}[0pt]
+  {\addvspace{9pt}\sffamily\bfseries}
+  {\color{lyraAccentoScuro}\contentslabel{1.6em}}
+  {}
+  {\color{lyraInchiostro!55}\titlerule*[0.6pc]{.}\contentspage}
+\titlecontents{section}[1.9em]
+  {\sffamily\small}
+  {\color{lyraInchiostro!70}\contentslabel{2.3em}}
+  {}
+  {\color{lyraInchiostro!45}\titlerule*[0.6pc]{.}\contentspage}
+
+% ===========================================================================
+%  I riquadri del testo
+% ===========================================================================
+%  Quattro soli, e ciascuno ha un lavoro preciso. Un documento con nove tipi di
+%  riquadro è un documento in cui nessun riquadro significa qualcosa.
+%
+%    \begin{nota}{titolo}        un chiarimento utile, saltabile
+%    \begin{attenzione}{titolo}  qui si rompe qualcosa
+%    \begin{perche}{titolo}      perché è così e non altrimenti
+%    \begin{pratica}{titolo}     cosa fare, passo per passo
+% ===========================================================================
+\newtcolorbox{nota}[1]{
+  enhanced, breakable,
+  colback = lyraCielo!35!white, colframe = lyraCieloBordo,
+  boxrule = 0pt, leftrule = 2.2pt, arc = 2pt,
+  left = 8pt, right = 8pt, top = 6pt, bottom = 6pt,
+  fonttitle = \sffamily\bfseries\small,
+  coltitle = lyraInchiostro,
+  title = {#1}, titlerule = 0pt, colbacktitle = lyraCielo!35!white,
+  toptitle = 1pt, bottomtitle = 1pt,
+  before skip = 10pt, after skip = 10pt,
+}
+
+\newtcolorbox{attenzione}[1]{
+  enhanced, breakable,
+  colback = lyraPesca!40!white, colframe = lyraNegativo!70,
+  boxrule = 0pt, leftrule = 2.2pt, arc = 2pt,
+  left = 8pt, right = 8pt, top = 6pt, bottom = 6pt,
+  fonttitle = \sffamily\bfseries\small,
+  coltitle = lyraNegativo,
+  title = {#1}, titlerule = 0pt, colbacktitle = lyraPesca!40!white,
+  toptitle = 1pt, bottomtitle = 1pt,
+  before skip = 10pt, after skip = 10pt,
+}
+
+\newtcolorbox{perche}[1]{
+  enhanced, breakable,
+  colback = lyraPannello, colframe = lyraGrigioChiaro,
+  boxrule = 0pt, leftrule = 2.2pt, arc = 2pt,
+  left = 8pt, right = 8pt, top = 6pt, bottom = 6pt,
+  fonttitle = \sffamily\bfseries\small,
+  coltitle = lyraInchiostro!75,
+  title = {#1}, titlerule = 0pt, colbacktitle = lyraPannello,
+  toptitle = 1pt, bottomtitle = 1pt,
+  before skip = 10pt, after skip = 10pt,
+}
+
+\newtcolorbox{pratica}[1]{
+  enhanced, breakable,
+  colback = lyraMenta!45!white, colframe = lyraAccento,
+  boxrule = 0pt, leftrule = 2.2pt, arc = 2pt,
+  left = 8pt, right = 8pt, top = 6pt, bottom = 6pt,
+  fonttitle = \sffamily\bfseries\small,
+  coltitle = lyraAccentoScuro,
+  title = {#1}, titlerule = 0pt, colbacktitle = lyraMenta!45!white,
+  toptitle = 1pt, bottomtitle = 1pt,
+  before skip = 10pt, after skip = 10pt,
+}
+
+% ===========================================================================
+%  Macro del progetto
+% ===========================================================================
+\input{comune/macro}
+
+% ===========================================================================
+%  Le macro dentro i segnalibri del PDF
+% ===========================================================================
+%  hyperref deve trasformare il titolo di ogni capitolo e sezione in una
+%  stringa semplice per il pannello dei segnalibri. Le macro che compongono
+%  qualcosa — una scatola colorata, un ciclo sui caratteri — lo mandano in
+%  tilt: l'errore e' «TeX capacity exceeded [input stack size]» su una riga
+%  che non ha niente di strano, tipo
+%      \subsection{Che cosa c'e' sotto \file{data/}}
+%
+%  Qui si dice a hyperref di considerarle, nei soli segnalibri, come
+%  «stampa il contenuto e basta».
+\pdfstringdefDisableCommands{%
+  \makeatletter
+  \let\file\@firstofone
+  \let\cod\@firstofone
+  \let\pkg\@firstofone
+  \let\simbolo\@firstofone
+  \let\percorsoHTTP\@firstofone
+  \let\voce\@firstofone
+  \let\campo\@firstofone
+  \let\pulsante\@firstofone
+  \let\pulsantesec\@firstofone
+  \let\percorso\@firstofone
+  \let\term\@firstofone
+  \let\termdef\@firstofone
+  \def\rotta#1#2{#1 #2}%
+  \def\freccia{ > }%
+  \def\Lyra{Lyra}%
+  \def\LyraCapital{Lyra Capital}%
+  \makeatother
+}
+
+% ===========================================================================
+%  Controllo: la sillabazione italiana c'è davvero?
+% ===========================================================================
+%  I pattern di sillabazione si caricano quando si GENERA il formato, non
+%  quando si compila: se mancano, babel non fallisce — ripiega sull'inglese, e
+%  il documento esce con le parole spezzate nei punti sbagliati. È un difetto
+%  che si vede solo guardando la pagina, quindi vale la pena dirlo nel log.
+%
+%  Per rimediare, su una TeX Live completa: `tlmgr install hyphen-italian`;
+%  su Debian/Ubuntu: `apt install texlive-lang-italian`; poi `fmtutil-sys
+%  --byfmt pdflatex`.
+%
+%  Il controllo guarda \language, che è un parametro intero del motore e si
+%  può sempre confrontare: 0 è la lingua di partenza (inglese). Se dopo aver
+%  selezionato l'italiano siamo ancora lì, i pattern non ci sono.
+\AtBeginDocument{%
+  \ifnum\language = 0
+    \PackageWarningNoLine{lyra}{%
+      Pattern di sillabazione ITALIANI assenti: il testo sara' spezzato\MessageBreak
+      con le regole inglesi. Installare hyphen-italian e rigenerare il\MessageBreak
+      formato (fmtutil-sys --byfmt pdflatex)}%
+  \fi}

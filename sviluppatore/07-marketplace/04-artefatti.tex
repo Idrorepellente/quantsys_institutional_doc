@@ -1,0 +1,91 @@
+% ===========================================================================
+%  sviluppatore/07-marketplace/04-artefatti.tex
+% ===========================================================================
+\section{Pubblicare e installare}\label{sez:pubblicare}
+
+\subsection{Nessuna moderazione, un filtro all'ingresso}
+
+\begin{codiceInterno}{python}{La scelta, scritta dove si applica}{dashboard/community.py:1537}
+        # CHI PUO' PUBBLICARE
+        # Solo amministratori e abbonati, anche per gli artefatti
+        # gratuiti. Il motivo non e' il denaro: e' che chi pubblica
+        # mette il proprio nome accanto a una strategia che altri
+        # faranno girare sui propri soldi. Un filtro all'ingresso vale
+        # piu' di qualunque moderazione a valle.
+        #
+        # Chi non e' abbonato resta un utente pieno: sfoglia, scarica,
+        # compra e usa. Non puo' soltanto mettere roba in vetrina.
+\end{codiceInterno}
+
+\noindent
+Un artefatto pubblicato va online subito: nessuna coda di approvazione. La
+difesa è a monte --- serve un abbonamento --- e a valle le contestazioni
+(\vediSez{pagamenti}), non in mezzo.
+
+\subsection{I conflitti si dicono prima}
+
+\rotta{GET}{/api/marketplace/<id>/conflicts} risponde a «che cosa esiste già con
+lo stesso nome». Si chiama \emph{prima} di installare, e serve a non scoprire
+dopo che un'installazione ha scavalcato una strategia su cui si stava
+lavorando. Il nome canonico di un artefatto è il nome della sua cartella
+(\vediSez{due-forme}): due artefatti con lo stesso nome sono la stessa
+cartella.
+
+\subsection{La pubblicazione automatica}
+
+\file{dashboard/autopubblica.py} gira in un thread dall'avvio e pubblica da
+sé gli artefatti che superano una soglia.
+
+\begin{codiceInterno}{python}{Che cosa fa}{dashboard/autopubblica.py}
+COSA FA
+Ogni volta che una strategy viene scritta, e ogni volta che un project viene
+creato, si guarda lo Sharpe out-of-sample del walk-forward. Sopra 2.0 e non
+ancora in vetrina, l'artefatto va online GRATIS da solo. Per un project la
+regola e' piu' articolata (vedi `valuta_progetto`): dipende da quante strategie
+lo compongono e da cosa e' gia' pubblicato.
+\end{codiceInterno}
+
+\subsubsection{Il file di tracciamento}
+
+Senza, ogni avvio rifarebbe gli stessi controlli e --- peggio ---
+riproverebbe le stesse pubblicazioni. Il file registra, per ogni artefatto,
+se è stato visionato e con quale conclusione. È un JSON indentato, leggibile
+a mano: non un formato interno.
+
+\subsubsection{Quando una voce viene riesaminata}
+
+Tre casi, e solo questi:
+
+\begin{enumerate}
+  \item non c'è (artefatto nuovo, o file di tracciamento appena nato);
+  \item \textbf{la conclusione non era definitiva} --- mancava il backtest,
+        mancava la rete, nessuno era connesso;
+  \item l'impronta del codice o quella dei risultati è cambiata.
+\end{enumerate}
+
+\begin{perche}{La distinzione fra un ostacolo e un giudizio}
+Il commento del modulo la enuncia meglio di qualunque parafrasi: gli
+ostacoli «non sono giudizi sull'artefatto: sono ostacoli, e un ostacolo che
+passa deve poter cambiare l'esito. Una soglia non superata, invece, è un
+giudizio: resta tale finché il codice o i risultati non cambiano».
+
+È il criterio per decidere se un esito negativo vada riprovato o meno, e si
+applica ben oltre questo modulo: ogni volta che un sistema registra un
+«no», la domanda è se quel no dipendeva dall'oggetto o dalle circostanze.
+\end{perche}
+
+\begin{attenzione}{Un artefatto può finire in vetrina da solo}
+È un comportamento attivo che agisce sul mondo esterno senza che nessuno lo
+chieda in quel momento. Chi lavora su \file{autopubblica.py} tenga presente
+che un errore qui non produce un messaggio: produce una pubblicazione. Il
+file di tracciamento, essendo leggibile a mano, è lo strumento per
+verificare che cosa il modulo abbia deciso e perché.
+\end{attenzione}
+
+\subsection{L'identità di chi pubblica}
+
+Il marketplace ammette due identità diverse per lo stesso artefatto: il conto
+dell'utente e la macchina. «Già caricata» ha senso solo rispetto a una delle
+due, ed è la ragione per cui il pannello di amministrazione conta gli
+artefatti \emph{per conto e per macchina}
+(\rotta{GET}{/api/admin/artefatti}), non solo in totale.

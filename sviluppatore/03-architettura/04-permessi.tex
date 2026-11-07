@@ -1,0 +1,153 @@
+% ===========================================================================
+%  sviluppatore/03-architettura/04-permessi.tex
+% ===========================================================================
+\section{Chi può fare che cosa}\label{sez:permessi}
+
+Cercando un decoratore \cod{@login\_required} sulle rotte della dashboard non
+se ne trova quasi nessuno. Non è una dimenticanza: il controllo è uno solo,
+globale, e sta in \file{dashboard/auth.py}.
+
+\begin{codiceInterno}{python}{La guardia, ridotta all'osso}{dashboard/auth.py:1474}
+@app.before_request
+def _require_login():
+    if request.endpoint in _PUBLIC_ENDPOINTS or request.path.startswith("/static/"):
+        return None
+    if not session.get("uid") and (not _serve_account(request.path)
+                                   or request.path in _ANONIMO_AMMESSO):
+        g.user = None
+        return None            # <-- si lavora ANONIMI
+    if not session.get("uid"):
+        if "/api/" in request.path or ...:
+            return jsonify({"error": "not signed in"}), 401
+        return render_template("serve_account.html", destinazione=request.path), 200
+    g.user = {...}
+\end{codiceInterno}
+
+\figuraTikz{guardia-auth}
+  {Il percorso di una richiesta. Il ramo di destra è quello che prende la
+   grande maggioranza delle rotte.}
+  {guardia-auth}
+
+\subsection{Le tre liste}
+
+\begin{description}[leftmargin = 0pt, style = nextline, itemsep = 6pt]
+
+\item[\cod{\_SERVE\_ACCOUNT} --- i prefissi che richiedono un account]
+  L'elenco è scritto a mano, e il confronto avviene per segmenti:
+  \percorsoHTTP{/marketplace}, \percorsoHTTP{/profile}, \percorsoHTTP{/security}, \percorsoHTTP{/admin},
+  \percorsoHTTP{/messages}, \percorsoHTTP{/api/market}, \percorsoHTTP{/api/marketplace},
+  \percorsoHTTP{/api/account}, \percorsoHTTP{/api/admin}, \percorsoHTTP{/api/messages},
+  \percorsoHTTP{/api/community}, \percorsoHTTP{/claim}.
+
+\item[\cod{\_PUBLIC\_ENDPOINTS} --- gli esenti]
+  \cod{auth\_login}, \cod{auth\_logout}, \cod{auth\_register},
+  \cod{auth\_verify}, \cod{auth\_reset}, \cod{static}, più i quattro
+  dell'accesso con Google. Sono nomi di \emph{endpoint}, non percorsi.
+
+\item[\cod{\_ANONIMO\_AMMESSO} --- l'eccezione dentro l'eccezione]
+  Una voce sola: \percorsoHTTP{/api/marketplace/claim/aperte}. Alimenta il contatore
+  nella barra laterale, e senza account deve restituire un elenco vuoto
+  invece di un \cod{401} --- altrimenti ogni pagina mostrerebbe un errore a
+  chi non ha fatto l'accesso.
+
+\end{description}
+
+\subsection{I quattro livelli, sopra la guardia}
+
+\begin{center}
+\begin{tabular}{@{}L{26mm}L{44mm}L{72mm}@{}}
+\toprule
+\textbf{Livello} & \textbf{Come si verifica} & \textbf{Che cosa succede se manca} \\
+\midrule
+\rigaTenue
+anonimo  & ---                           & Si lavora: tutto il motore è accessibile. \\
+con account & \cod{session["uid"]}       & Pagina \file{serve\_account.html} con
+                                           stato \cod{200}, oppure \cod{401} in JSON. \\
+\rigaTenue
+amministratore & \cod{auth.is\_admin()}  & \cod{403}, oppure \cod{404} per le
+                                           sezioni che non devono rivelare di
+                                           esistere. \\
+super-amministratore & \cod{auth.is\_super\_admin()} & \cod{403}. È l'unico che
+                                           può nominare o togliere un
+                                           amministratore. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{perche}{Perché \cod{404} e non \cod{403} su alcune rotte di amministrazione}
+Un \cod{403} dice «esiste, e non puoi». Un \cod{404} dice «non c'è». Per le
+sezioni che elencano utenti, feedback e artefatti di tutti, la seconda
+risposta non concede nemmeno l'informazione che quella sezione esista. La
+distinzione è usata in modo consapevole: \percorsoHTTP{/admin}, \percorsoHTTP{/api/admin/users},
+\percorsoHTTP{/api/admin/feedback}, \percorsoHTTP{/api/admin/artefatti} e \percorsoHTTP{/api/admin/beta}
+rispondono \cod{404}; le altre rotte di amministrazione, che riguardano
+impostazioni di cui l'esistenza non è un segreto, rispondono \cod{403}.
+\end{perche}
+
+\subsection{La scelta di fondo, e il suo prezzo}
+
+L'applicazione gira sul computer di chi la usa. Obbligare all'accesso avrebbe
+significato chiedere un account per entrare in casa propria --- per questo
+\file{app.py} (tranne la parte di amministrazione), \file{studio.py},
+\file{genetic.py} e \file{agent.py} sono aperti per intero.
+
+Il prezzo è che \textbf{la porta \num{5000} va considerata una console di
+amministrazione}: chi la raggiunge può lanciare backtest, leggere le
+credenziali del broker e scrivere file sul disco. È una decisione, non una
+falla, ma implica che l'applicazione non vada esposta in rete.
+
+\subsection{Quattro punti dove la protezione non è dove ci si aspetta}
+
+Conseguenze dirette del fatto che \cod{\_SERVE\_ACCOUNT} è un elenco scritto
+a mano: ciò che non è elencato nasce aperto.
+
+\begin{center}
+\begin{tabular}{@{}L{42mm}L{102mm}@{}}
+\toprule
+\textbf{Percorso} & \textbf{Stato} \\
+\midrule
+\rigaTenue
+\rotta{GET}{/subscription}
+  & La pagina «Il mio abbonamento» non è fra i prefissi e non fa controlli:
+    si apre senza account. I dati però arrivano da \percorsoHTTP{/api/abbonamento*} e
+    \percorsoHTTP{/api/f/subscription/invoices}, che rispondono \cod{401}: si vede
+    l'impalcatura vuota. \\
+\rotta{GET}{/feedback},\newline\rotta{GET}{/account}
+  & Chiamano \cod{\_uid()} senza verificarne l'esito. Si aprono, ed
+    elencano niente. \\
+\rigaTenue
+\percorsoHTTP{/api/abbonamento*},\newline\percorsoHTTP{/api/e/*}, \percorsoHTTP{/api/f/*},\newline\percorsoHTTP{/api/feedback}
+  & Fuori dai prefissi: \emph{ciascuno si difende da sé} con un controllo
+    scritto nella rotta. Funziona, ma un endpoint nuovo aggiunto a queste
+    famiglie nasce senza protezione. \\
+\rotta{POST}{/api/feedback} e\newline\rotta{POST}{/api/community/feedback}
+  & Due endpoint per la stessa cosa, con autenticazione diversa: il primo si
+    difende da sé, il secondo è coperto dal prefisso. Il secondo prima si
+    chiamava come il primo. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{pratica}{Aggiungere una rotta che tocca l'account}
+\begin{enumerate}
+  \item Metterla sotto uno dei prefissi già elencati in
+        \cod{\_SERVE\_ACCOUNT}. È il modo che non si dimentica.
+  \item Se il percorso non può stare lì, aggiungere il prefisso nuovo a
+        quella lista --- non un controllo dentro la rotta.
+  \item Decidere se la rotta debba rispondere \cod{403} o \cod{404} a chi non
+        è amministratore, e usare \simbolo{\_require\_admin()} per il secondo
+        caso.
+  \item Se la risposta deve esserci anche per gli anonimi (un contatore, un
+        badge), aggiungerla a \cod{\_ANONIMO\_AMMESSO} e restituire un
+        risultato vuoto, non un errore.
+\end{enumerate}
+\end{pratica}
+
+\subsection{Gli endpoint sull'account sono quattro}
+
+\rotta{GET}{/api/account/security} in \file{app.py}, \rotta{GET}{/api/f/account} in
+\file{ui\_ext\_f.py}, \rotta{GET}{/api/e/account-data} in \file{ui\_ext\_e.py} e
+\rotta{POST}{/api/account} in \file{community.py}. Tre moduli, quattro percorsi,
+tre stili di autenticazione diversi. Non è un difetto che rompa qualcosa, ma
+è il posto dove cercare quando un dato dell'account è aggiornato in una
+schermata e vecchio in un'altra.

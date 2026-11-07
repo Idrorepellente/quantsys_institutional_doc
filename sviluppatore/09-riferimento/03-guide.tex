@@ -1,0 +1,107 @@
+% ===========================================================================
+%  sviluppatore/09-riferimento/03-guide.tex
+% ===========================================================================
+\section{Le guide dentro il progetto}\label{sez:guide}
+
+Il progetto porta con sé una trentina di file Markdown. Non sono ridondanti
+rispetto a questa guida: sono \emph{riferimenti di dettaglio} per chi sta già
+scrivendo un artefatto, mentre questo documento spiega come il sistema sta in
+piedi. Dove i due divergono, vince il codice --- e quando è stato possibile,
+questa guida lo dice (\vediSez{forma-b}).
+
+\begin{center}
+\begin{longtable}{@{}L{54mm}R{12mm}L{72mm}@{}}
+\toprule
+\textbf{File} & \textbf{Righe} & \textbf{A che serve} \\
+\midrule\endfirsthead
+\toprule
+\textbf{File} & \textbf{Righe} & \textbf{A che serve} \\
+\midrule\endhead
+
+\multicolumn{3}{@{}l}{\textit{\small Architettura}}\\[2pt]
+\rigaTenue
+\file{ARCHITETTURA.md} & \num{1220} & Il documento di architettura originale. \\
+\file{README.md} & \num{122} & Il ragionamento dietro il guscio a strati. \\
+\rigaTenue
+\file{MODIFICHE\_QUANTSYS.md} & \num{358} & Storia delle modifiche al motore. \\
+\file{dashboard/MODIFICHE.md} & \num{778} & Storia delle modifiche
+  all'interfaccia. \\
+\rigaTenue
+\file{dashboard/MODIFICHE-UI.md} & \num{494} & Idem, lato grafico. \\
+\file{MODIFICHE\_DASHBOARD\_V2.md} & \num{118} & Che cosa ha portato la v2:
+  pagine nuove, finestra dei pagamenti, marchio. \\
+
+\addlinespace
+\multicolumn{3}{@{}l}{\textit{\small Strategie}}\\[2pt]
+\rigaTenue
+\file{GUIDE\_STRATEGIE\_CUSTOM.md} & \num{2281} & \textbf{Il riferimento
+  principale.} Contratto completo, avvio rapido, descrittore campo per
+  campo. \\
+\file{GUIDE\_STRATEGIE\_BLUEPRINT.md} & \num{288} & La strategia come grafo
+  di nodi invece che in Python. Alternativo, non complementare. \\
+\rigaTenue
+\file{GUIDE\_REGIME.md} & \num{487} & Come \emph{usare} i regimi dentro una
+  strategia: \cod{regime\_weights}, anti-pattern, validazione. \\
+\file{GUIDE\_HEDGING.md} & \num{248} & Posizioni multiple sullo stesso
+  simbolo (il default è il netting). \\
+\rigaTenue
+\file{GUIDE\_STRATEGIE\_MMS.md} & \num{625} & Le feature della heatmap di
+  liquidità, via \cod{required\_mms\_features}. \\
+\file{GUIDE\_VOLUME\_PROFILE.md} & \num{526} & Le zone di supporto e
+  resistenza, via \cod{required\_volume\_profile}. \\
+\rigaTenue
+\file{STRATEGIE\_FX\_CANDIDATE.md} & \num{231} & Un documento di
+  \emph{proposta}: strategie in valuta scrivibili nel framework attuale. Non
+  è implementazione. \\
+
+\addlinespace
+\multicolumn{3}{@{}l}{\textit{\small Approcci}}\\[2pt]
+\rigaTenue
+\file{approaches/README.md} & \num{303} & Che cos'è un approccio e perché
+  scavalca il motore. \\
+\file{GUIDE\_APPROCCI\_CUSTOM.md} & \num{359} & Il riferimento. Si apre con la
+  tabella di confronto strategia/approccio. \\
+\rigaTenue
+\file{GUIDE\_APPROCCI\_BLUEPRINT.md} & \num{76} & L'approccio a nodi; copre
+  solo le differenze dalla guida delle strategie. \\
+
+\addlinespace
+\multicolumn{3}{@{}l}{\textit{\small Artefatti di forma B}}\\[2pt]
+\rigaTenue
+\file{weights/WEIGHT\_MODE\_TEMPLATE.md} & \num{197} & Contratto, import
+  ammessi e vietati, esempio funzionante. \textbf{Attenzione al valore di
+  \cod{kind}} (\vediSez{ensemble}). \\
+\file{overlays/OVERLAY\_TEMPLATE.md} & \num{212} & Si apre con una tabella
+  che separa overlay e approccio su sei assi. \\
+\rigaTenue
+\file{indicators/INDICATOR\_TEMPLATE.md} & \num{127} & Modello di un
+  indicatore. \\
+\file{metrics/METRIC\_TEMPLATE.md} & \num{114} & Modello di una metrica. \\
+
+\addlinespace
+\multicolumn{3}{@{}l}{\textit{\small Regimi}}\\[2pt]
+\rigaTenue
+\file{regime/GUIDE\_REGIMI.md} & \num{190} & Come \emph{costruire} un regime:
+  i due artefatti, la catena, l'isteresi. \\
+\file{logics/LOGIC\_TEMPLATE.md} & \num{84} & Modello della regola. \\
+\rigaTenue
+\file{markets/MARKET\_TEMPLATE.md} & \num{80} & Modello del mercato. \\
+
+\addlinespace
+\multicolumn{3}{@{}l}{\textit{\small Rilascio}}\\[2pt]
+\rigaTenue
+\file{build/README.md} & \num{289} & L'impacchettamento. \\
+\file{build/RILASCIO.md} & \num{186} & Pubblicare un aggiornamento. \\
+\rigaTenue
+\file{DOCKER.md} & \num{153} & Avviare con Docker. \\
+
+\bottomrule
+\end{longtable}
+\end{center}
+
+\begin{nota}{Due guide che sembrano la stessa e non lo sono}
+\file{regime/GUIDE\_REGIMI.md} è «come costruirne uno»;
+\file{strategies/GUIDE\_REGIME.md} è «come usarlo dentro una strategia». Il
+nome quasi identico è infelice, la distinzione è reale, e i due documenti si
+rimandano a vicenda.
+\end{nota}

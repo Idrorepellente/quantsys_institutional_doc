@@ -1,0 +1,173 @@
+% ===========================================================================
+%  sviluppatore/03-architettura/01-esagonale.tex
+% ===========================================================================
+\section{L'architettura esagonale, in concreto}\label{sez:esagonale}
+
+Il guscio a strati occupa \num{4546} righe su \num{119084}: meno del
+\num{4}\,\% del Python del progetto. Non ha riscritto niente. Avvolge il
+codice che c'era --- \pkgStrategie, \pkgReport, \pkgEsecuzione, \pkgLive,
+\pkgDati{} --- e gli mette davanti un confine.
+
+\figuraTikz{esagonale}
+  {I cinque strati. L'unica regola è la direzione delle frecce.}
+  {esagonale}
+
+\subsection{La regola, e perché è una sola}
+
+Si dipende solo verso l'interno. \pkgApplicazione{} non conosce nessun
+concreto: conosce solo le porte. I concreti si scelgono in un file solo,
+\file{composition/container.py}.
+
+\begin{perche}{Perché il confine vale la pena}
+L'ecosistema che \Lyra{} vuole essere --- applicazione scaricabile, sito
+community, marketplace --- è fatto di \emph{tre client dello stesso motore}.
+Finché il motore è una libreria che ciascun client importa a modo suo, ogni
+client ne vede una parte diversa e ogni cambiamento ne rompe due. Rendendolo
+un servizio con un contratto stabile, i client tornano a essere consumatori, e
+l'inversione delle dipendenze non è più una buona pratica da ricordarsi: è
+imposta dal confine di processo.
+\end{perche}
+
+\subsection{\pkgDominio: i tipi, e basta}
+
+Quattrocentosettantotto righe di \cod{dataclass} congelate. Nessuna
+dipendenza --- nemmeno pandas. \simbolo{StrategyInfo}, \simbolo{StreamInfo},
+\simbolo{RunReport}, \simbolo{OrderRequest}, \simbolo{SecurityReport},
+\simbolo{LiveRunnerConfig} e una trentina d'altri.
+
+Sono il vocabolario che attraversa gli strati. Un caso d'uso restituisce un
+\simbolo{StrategyInfo}, non un \simbolo{DataFrame} e non un
+\simbolo{StrategyDescriptor} --- che è un oggetto del motore, con dentro una
+\cod{factory} richiamabile.
+
+\subsection{\pkgPorte: trentadue contratti}
+
+Il file da leggere per primo in tutto il progetto, e sono
+\num{239} righe. Ogni porta è un \cod{Protocol} marcato
+\cod{@runtime\_checkable}.
+
+\begin{codiceInterno}{python}{Due porte intere, non un estratto}{ports/\_\_init\_\_.py}
+@runtime_checkable
+class StrategyRepository(Protocol):
+    """Sorgente delle strategie disponibili (mappate a StrategyInfo)."""
+    def list(self) -> list[StrategyInfo]: ...
+    def get(self, name: str) -> Optional[StrategyInfo]: ...
+
+
+@runtime_checkable
+class WalkForwardRunner(Protocol):
+    """Esegue un walk-forward per una strategia. Ritorna l'exit code."""
+    def run(self, strategy_name: str) -> int: ...
+\end{codiceInterno}
+
+\noindent
+Sono \cod{Protocol}, non classi base astratte, e la differenza conta:
+
+\begin{description}[leftmargin = 1.6em, style = nextline, itemsep = 4pt]
+  \item[Tipizzazione strutturale] Un concreto soddisfa la porta
+    \emph{senza ereditarla}. Non deve importare \pkgPorte, non deve
+    dichiarare niente: le basta avere i metodi giusti. L'accoppiamento è il
+    minimo possibile, e si può avvolgere codice preesistente senza
+    toccarlo.
+  \item[Porte piccole e separate] \simbolo{DataSource} $\neq$
+    \simbolo{Broker} $\neq$ \simbolo{StrategyRepository} $\neq$
+    \simbolo{Clock}. Un adattatore implementa quello che gli serve. È
+    l'\emph{Interface Segregation} preso sul serio: una porta
+    «\simbolo{Everything}» avrebbe costretto ogni finto a implementare
+    trenta metodi per provarne uno.
+  \item[Sostituibilità verificata] Nei test i casi d'uso girano con
+    repository e runner finti. Non è una proprietà sperata: è il modo in cui
+    le prove sono scritte.
+\end{description}
+
+\begin{nota}{La porta \simbolo{Broker} è ri-esportata, non riscritta}
+\simbolo{live.broker.LiveBroker} era già una classe base astratta, cioè già
+una porta, scritta prima del guscio. \pkgPorte{} la ri-esporta invece di
+duplicarla:
+
+\begin{codiceInterno}{python}{}{ports/\_\_init\_\_.py}
+try:
+    from live.broker import LiveBroker as Broker  # noqa: F401
+except Exception:  # pragma: no cover
+    Broker = object  # type: ignore
+\end{codiceInterno}
+
+\noindent
+È la mossa corretta: due definizioni della stessa interfaccia divergono, e
+quando divergono nessuno se ne accorge finché un broker non si comporta in un
+modo in un posto e in un altro altrove.
+\end{nota}
+
+\subsection{\pkgApplicazione: i casi d'uso}
+
+Ogni caso d'uso è una classe con una responsabilità, riceve le porte dal
+costruttore e non conosce nessun concreto. Sono brevi --- spesso tre righe --- e
+devono restarlo: il caso d'uso orchestra, non calcola.
+
+\begin{codiceInterno}{python}{Tre casi d'uso, per intero}{application/\_\_init\_\_.py}
+class ListStrategies:
+    def __init__(self, repo: StrategyRepository) -> None:
+        self._repo = repo
+
+    def execute(self) -> list[StrategyInfo]:
+        return self._repo.list()
+
+
+class RunWalkForward:
+    """Esegue un walk-forward e (se c'e' un sink) ne registra il report."""
+    def __init__(self, runner: WalkForwardRunner,
+                 report_sink: Optional[ReportSink] = None) -> None:
+        self._runner = runner
+        self._sink = report_sink
+\end{codiceInterno}
+
+\begin{attenzione}{Il calcolo non va qui}
+La tentazione, aggiungendo una funzionalità, è di metterne «un pezzetto» nel
+caso d'uso: un filtro, una media, una conversione. Il giorno in cui succede,
+quel pezzetto esiste solo nel percorso che passa per l'API e non in quello
+che passa per la dashboard, e i due danno numeri diversi. Il calcolo sta nel
+motore; il caso d'uso lo chiama e basta.
+\end{attenzione}
+
+\subsection{\pkgComposizione: centonove righe, e sono quelle decisive}
+
+\file{composition/container.py} è un \cod{dataclass} con venti campi --- un
+caso d'uso ciascuno --- e una funzione che lo costruisce.
+
+\begin{codiceInterno}{python}{L'unico punto di scelta dei concreti}{composition/container.py}
+    # --- unico punto di scelta dei CONCRETI ---
+    repo = RegistryStrategyRepository(Path(strategies_dir) if strategies_dir else None)
+    weighting = EnsembleWeightingModeProvider()
+    runner = InProcessWalkForwardRunner()
+    registry = FileModelRegistryAdapter(model_dir)
+    sink = FileReportSink(report_dir)
+    ...
+    return Container(
+        list_strategies=ListStrategies(repo),
+        get_strategy=GetStrategy(repo),
+        run_walkforward=RunWalkForward(runner, sink),
+        ...
+    )
+\end{codiceInterno}
+
+\noindent
+Per cambiare sorgente dati, broker o registro dei modelli si tocca questo
+file, e nessun altro. Per far girare i casi d'uso nei test con dei finti si
+costruisce un \simbolo{Container} diverso, senza toccare né i casi d'uso né
+le porte.
+
+\begin{pratica}{Come si aggiunge una capacità, nell'ordine giusto}
+\begin{enumerate}
+  \item Un tipo in \pkgDominio, se serve un dato nuovo che attraversa il
+        confine.
+  \item Una porta in \pkgPorte: che cosa deve saper fare il mondo.
+  \item Un caso d'uso in \pkgApplicazione: tre righe, nessun calcolo.
+  \item Un adattatore in \pkgAdattatori{} che avvolge il codice del motore
+        che fa davvero la cosa.
+  \item Una riga in \file{composition/container.py} che li collega.
+  \item Un router in \pkgApi{} che lo espone, se serve via HTTP.
+\end{enumerate}
+Saltare il passo~\num{2} è l'errore tipico: si collega il caso d'uso
+direttamente all'adattatore, «tanto è uno solo», e da quel momento il caso
+d'uso non è più verificabile senza l'infrastruttura.
+\end{pratica}

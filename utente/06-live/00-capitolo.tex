@@ -1,0 +1,106 @@
+% ===========================================================================
+%  utente/06-live/00-capitolo.tex
+% ===========================================================================
+\chapter{Live}\label{cap:live}
+
+È la pagina in cui una strategia smette di essere un esercizio. Tutto quello
+che si è fatto finora non muove denaro; da qui in poi sì.
+
+\figuraSchermata{1.0}{figure/schermate/live.png}
+  {La pagina Live. In alto lo stato, sotto i tre passi per creare un runner,
+   a destra il riepilogo di ciò che manca.}
+  {live}
+
+\section{Che cos'è un runner}\label{sez:runner}
+
+Un \voce{runner} è la cosa che fa girare una strategia su un conto. Si
+compone di tre pezzi, ed è esattamente quello che chiedono i tre passi:
+
+\begin{enumerate}
+  \item \textbf{Un nome.} Serve solo a riconoscerlo nell'elenco.
+  \item \textbf{Che cosa fa girare.} Un project (con i suoi pesi e i suoi
+        overlay), oppure una strategia singola.
+  \item \textbf{Dove gira.} Quale broker.
+\end{enumerate}
+
+\noindent
+Il riquadro a destra mostra quali dei tre sono a posto: il pulsante
+\pulsante{Save runner} resta spento finché non lo sono tutti e tre.
+
+\section{I tre broker}\label{sez:broker}
+
+\begin{center}
+\begin{tabular}{@{}L{34mm}L{104mm}@{}}
+\toprule
+\textbf{Broker} & \textbf{Che cosa fa} \\
+\midrule
+\rigaTenue
+\voce{TEST} & Un mondo simulato con dati sintetici e tempo accelerato.
+  Non serve nessun conto e nessuna credenziale. Mostra se la macchina gira
+  --- riaddestramento, composizione, ordini --- senza aspettare mesi. \\
+\voce{MetaTrader 5} & Gli ordini passano dal terminale MT5 installato sul
+  computer. Il conto lo gestisce MetaTrader: a Lyra non servono
+  credenziali. All'avvio verifica solo che MT5 ci sia. \\
+\rigaTenue
+\voce{Interactive Brokers} & Gli ordini vanno al conto IBKR attraverso TWS o
+  IB Gateway. Servono le credenziali di connessione, chieste all'avvio. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{pratica}{L'ordine da seguire, senza eccezioni}
+\begin{enumerate}
+  \item \textbf{TEST} per qualche giorno simulato. Serve a scoprire che la
+        macchina parte, che gli ordini escono, che i registri si scrivono.
+  \item \textbf{Conto demo} del broker vero. Serve a scoprire le differenze
+        fra la simulazione e il mondo: orari, strumenti non disponibili,
+        ordini rifiutati.
+  \item \textbf{Conto vero}, con una frazione del capitale.
+\end{enumerate}
+Saltare il primo passo non fa risparmiare tempo: fa scoprire gli stessi
+problemi più tardi e con il denaro dentro.
+\end{pratica}
+
+\section{Il simulatore}\label{sez:simulatore}
+
+Il riquadro \voce{TEST SIMULATOR} in alto dice quanto dura una giornata
+simulata --- nella schermata, due secondi --- e quanto tempo coprirà in
+tutto. Premendo \pulsantesec{Config} si cambia il ritmo.
+
+\begin{nota}{A che serve accelerare il tempo}
+Una strategia che si riaddestra ogni trenta giorni, su un conto vero, si
+riaddestra la prima volta fra trenta giorni. Nel simulatore succede in un
+minuto, e se il riaddestramento ha un problema lo si scopre subito invece
+che il mese prossimo.
+\end{nota}
+
+\section{Le credenziali}\label{sez:credenziali}
+
+Le credenziali del broker restano \textbf{sul computer di chi usa
+l'applicazione}, in un file locale. Non passano dal sito, non finiscono in
+nessun database e non lasciano la macchina.
+
+\begin{attenzione}{Due conseguenze}
+La prima: nessuno può recuperarle al posto dell'utente: perse quelle, si
+rifanno dal broker. La seconda, più importante: chi ha accesso a quel
+computer ha accesso al conto. L'applicazione è pensata per girare su una
+macchina personale, non su un server raggiungibile da altri.
+\end{attenzione}
+
+\section{Avviare e fermare}\label{sez:avviare}
+
+Salvato il runner, compare nell'elenco in basso a destra con i comandi per
+avviarlo e fermarlo. I due contatori in alto --- \voce{RUNNING} e
+\voce{STOPPED} --- dicono quanti ce ne sono in ciascuno stato.
+
+\begin{nota}{Fermare non interrompe a metà}
+Il comando di arresto chiude il ciclo in corso e poi si ferma. Non lascia
+una decisione presa a metà o un ordine inviato senza che il portafoglio ne
+sappia nulla.
+\end{nota}
+
+\begin{attenzione}{Un solo broker per runner}
+Due runner sullo stesso conto si contendono le posizioni: il primo apre, il
+secondo vede una posizione che non si aspetta e la chiude. La pagina lo dice
+nel passo~\num{3}, e vale la pena prenderlo sul serio.
+\end{attenzione}

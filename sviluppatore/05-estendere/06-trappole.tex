@@ -1,0 +1,138 @@
+% ===========================================================================
+%  sviluppatore/05-estendere/06-trappole.tex
+% ===========================================================================
+\section{«L'ho scritto e non compare»}\label{sez:trappole}
+
+Questa sezione è un elenco di cause, ordinate per frequenza. Serve quando un
+artefatto è stato scritto, il file è al suo posto, e nell'interfaccia non
+c'è.
+
+\begin{center}
+\begin{tabular}{@{}L{54mm}L{84mm}@{}}
+\toprule
+\textbf{Causa} & \textbf{Come si riconosce} \\
+\midrule
+\rigaTenue
+Il registro è vecchio
+  & Il processo era già avviato. Il registro di forma~B si costruisce
+    all'import: chiamare \cod{reload\_registry()}, o riavviare. \\
+Il nome della cartella comincia con \cod{\_}
+  & È l'interruttore di spegnimento. Si vede guardando, ma è anche la cosa
+    che non si guarda. \\
+\rigaTenue
+Manca il file atteso
+  & \file{strategy.py}, \file{approach.py}, \file{weight\_mode.py},
+    \file{overlay.py}. Il filtro delle cartelle lo richiede per nome. \\
+Manca \cod{META} o \cod{compute}
+  & La condizione di ammissione al registro li richiede entrambi. Senza, il
+    modulo viene scartato senza una riga di registro. \\
+\rigaTenue
+\cod{META} non è fatto di soli letterali
+  & Vale per i regimi, letti con \cod{ast.literal\_eval}: un \cod{np.pi}
+    dentro i \cod{defaults} rende la regola invisibile. \\
+La \cod{key} non coincide col nome del file
+  & Rifiutata per i regimi; altrove l'artefatto compare con un nome diverso
+    da quello che si sta cercando. \\
+\rigaTenue
+In \pkgOverlay{} si è esposto \cod{APPROACH\_DESCRIPTOR}
+  & Il registro degli overlay cerca \cod{META}+\cod{compute}. Quel file è un
+    \emph{approccio}, e come overlay non esiste. \\
+\cod{stream\_type} fuori allowlist
+  & Per gli approcci è l'unico caso che dà un \cod{ValueError} chiaro al
+    caricamento. \\
+\rigaTenue
+\cod{output\_path\_pattern} vuoto
+  & L'artefatto c'è, ma lo \emph{stream} non compare in \voce{Streams}: la
+    dashboard salta i descrittori senza pattern. \\
+Un altro modulo \file{ui\_ext\_*} è rotto
+  & Se l'artefatto si vede ma manca il pannello che lo mostra, è questo
+    (\vediSez{ui-ext}). \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Il nodo della ricarica}
+
+Il registro di forma~B si costruisce una volta, all'import del package. Un
+artefatto scritto a runtime --- dallo Studio, dall'agente, dal marketplace ---
+esiste su disco e non compare. \cod{reload\_registry()} risolve, ma deve fare
+due cose che non sono ovvie:
+
+\begin{codiceInterno}{python}{Le due accortezze}{overlays/\_\_init\_\_.py:144}
+    Due accortezze necessarie perche' la ricarica sia davvero visibile:
+    - COMPUTERS viene aggiornato SUL POSTO: `reporting.ensemble` ne tiene un
+      riferimento preso all'import, e rilegarlo qui non lo aggiornerebbe;
+    - EnsembleEngine.OVERLAY_REGISTRY e' un attributo di classe legato alla
+      creazione della classe: va riassegnato esplicitamente.
+\end{codiceInterno}
+
+\noindent
+Per le modalità di pesatura c'è un terzo punto, ed è quello che produce il
+sintomo più sconcertante:
+
+\begin{codiceInterno}{python}{Il terzo oggetto da aggiornare}{weights/\_\_init\_\_.py:117}
+    try:                      # l'attributo di classe e' legato alla creazione
+        from reporting.ensemble import EnsembleEngine
+        EnsembleEngine.WEIGHTING_MODE_REGISTRY = REGISTRY
+        # WEIGHTING_MODES e' una tupla DERIVATA dal registro alla creazione
+        # della classe ed e' quella usata per validare le richieste: senza
+        # aggiornarla, un weight mode nuovo compare nell'elenco ma il compute
+        # risponde 400 "Invalid weighting_mode".
+        EnsembleEngine.WEIGHTING_MODES = tuple(m["key"] for m in REGISTRY)
+\end{codiceInterno}
+
+\begin{attenzione}{Compare nell'elenco e risponde \cod{400}}
+È il sintomo di una ricarica parziale: l'elenco che l'interfaccia mostra
+viene da \cod{WEIGHTING\_MODE\_REGISTRY}, la validazione della richiesta da
+\cod{WEIGHTING\_MODES}. Aggiornare il primo e non il secondo produce una voce
+cliccabile che risponde «modalità non valida». Chi aggiunge un registro
+nuovo di forma~B deve chiedersi quali altri oggetti ne derivino una copia al
+momento della creazione della classe.
+\end{attenzione}
+
+\subsection{Due package che sono solo rinvii}
+
+\file{reporting/weighting/} e \file{reporting/gates/} non contengono logica:
+ri-esportano \pkgPesi{} e \pkgOverlay. Sono il ricordo di dove quelle due
+famiglie stavano prima. Non vanno estesi, e il codice nuovo importa dalle
+cartelle vere.
+
+\subsection{Un modulo morto da non seguire}
+
+Accanto al package \file{regime/logics/} esiste un file
+\file{regime/logics.py}, \num{237} righe, con una bella tabella della
+semantica delle etichette nel docstring. \textbf{Non è raggiungibile}: a
+parità di nome il package vince sempre, e \cod{regime.logics} risolve a
+\file{regime/logics/\_\_init\_\_.py}. Chi lo modifica non cambia niente e non
+se ne accorge.
+
+\subsection{Due incoerenze nelle mappe dell'interfaccia}
+
+\begin{itemize}
+  \item \file{dashboard/studio\_browser.py} dichiara \cod{overlay} e
+        \cod{weightmode} come artefatti «a file», mentre tutti e ventuno
+        quelli installati sono a cartella.
+  \item \file{dashboard/agent.py} ha la stessa incoerenza al suo interno, e i
+        suoi commenti la annotano già: «\emph{Qui indicava un file singolo, e
+        altrove \cod{approach.py}: tre posti, tre risposte diverse alla stessa
+        domanda}».
+\end{itemize}
+
+\noindent
+Non rompono niente oggi, perché la scoperta accetta entrambe le forme. Vanno
+sapute quando si aggiunge una famiglia: la mappa canonica da seguire è
+\cod{\_FILE\_ZONA} in \file{dashboard/agent.py}.
+
+\begin{codiceInterno}{python}{Il file principale atteso per famiglia}{dashboard/agent.py:66}
+_FILE_ZONA = {"strategies": "strategy.py", "approaches": "approach.py",
+              "overlays": "overlay.py", "weights": "weight_mode.py",
+              "metrics": "metric.py", "indicators": "indicator.py"}
+\end{codiceInterno}
+
+\subsection{Un elenco obsoleto}
+
+\file{strategies/\_\_init\_\_.py} elenca nel docstring «momentum, quality\_lv,
+value, custom\_example». Delle quattro, due sono oggi spente (\cod{\_value},
+\cod{\_custom\_example}) e mancano le altre sette attive. È documentazione
+nel codice che ha smesso di essere vera, e il modo in cui ci si accorge è
+cercarvi una strategia che esiste e non trovarla.

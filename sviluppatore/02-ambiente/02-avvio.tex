@@ -1,0 +1,96 @@
+% ===========================================================================
+%  sviluppatore/02-ambiente/02-avvio.tex
+% ===========================================================================
+\section{I quattro modi di avviarla}\label{sez:avvio}
+
+Nella radice del progetto ci sono quattro punti d'ingresso, e fanno cose
+diverse. Si lanciano tutti \emph{dalla radice}, mai da dentro una
+sottocartella: gli import sono assoluti rispetto a quella.
+
+\begin{center}
+\begin{tabular}{@{}L{52mm}L{18mm}L{66mm}@{}}
+\toprule
+\textbf{Comando} & \textbf{Porta} & \textbf{Che cosa avvia} \\
+\midrule
+\rigaTenue
+\file{python scripts/run\_dashboard.py}
+  & \num{5000} & L'interfaccia completa. È questo che si usa nel
+                 \num{99}\,\% dei casi. \\
+\file{python run\_api.py}
+  & \num{8000} & Solo l'API FastAPI del motore. Nessuna pagina, solo JSON. \\
+\rigaTenue
+\file{python desktop\_app.py}
+  & \num{5000} & La stessa dashboard, in una finestra nativa invece che in una
+                 scheda del browser. Richiede \pkg{pywebview}. \\
+\file{npm run dev} (in \file{sito/})
+  & \num{3000} & Il sito. Indipendente dai tre precedenti. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{La dashboard}
+
+\begin{codiceInterno}{console}{Avvio normale}{}
+python scripts/run_dashboard.py
+# http://127.0.0.1:5000
+\end{codiceInterno}
+
+\noindent
+Host e porta si cambiano con le variabili d'ambiente \cod{FLASK\_HOST} e
+\cod{FLASK\_PORT}, oppure nei campi corrispondenti della configurazione. Il
+default è \cod{127.0.0.1}, cioè raggiungibile solo dalla macchina stessa, e
+questo non è un dettaglio di comodità.
+
+\begin{attenzione}{La dashboard non va esposta in rete}
+Quasi nessuna rotta della dashboard richiede un login, ed è una scelta
+deliberata: l'applicazione gira sul computer di chi la usa, e chiedere un
+account per entrare in casa propria non avrebbe senso. Il prezzo è che chi
+raggiunge la porta \num{5000} può fare tutto: lanciare backtest, leggere le
+credenziali del broker, scrivere file. Mettere \cod{FLASK\_HOST=0.0.0.0} su
+una macchina raggiungibile da fuori significa consegnarla. Le uniche aree
+protette sono quelle che toccano il sito --- marketplace, profilo,
+abbonamento, amministrazione --- e il \vediSez{permessi} spiega
+esattamente quali e perché.
+\end{attenzione}
+
+\subsection{L'API del motore}
+
+\begin{codiceInterno}{console}{Con ricaricamento automatico}{}
+uvicorn api.app:app --reload
+# http://127.0.0.1:8000/docs  -> la documentazione interattiva generata
+\end{codiceInterno}
+
+\noindent
+Gira \emph{accanto} alla dashboard, non al suo posto. Per lavorare
+sull'interfaccia non serve; serve quando si tocca un caso d'uso, perché
+l'API lo espone senza passare da Flask ed è il modo più rapido per provarlo.
+
+\subsection{Il sito}
+
+\begin{codiceInterno}{console}{Dalla cartella del sito}{}
+cd sito
+npm install
+npm run dev
+# http://localhost:3000
+\end{codiceInterno}
+
+\noindent
+Il sito ha bisogno di un Postgres e delle proprie variabili d'ambiente
+(\cod{DATABASE\_URL}, \cod{NEXTAUTH\_SECRET}, le chiavi Stripe e SMTP). In
+produzione queste non stanno in un file: si gestiscono dal pannello del
+sito, ed è lo stesso meccanismo che poi le passa alla metà locale attraverso
+il canale~\num{2} (\vediSez{due-meta}).
+
+\begin{pratica}{Il giro minimo per vedere qualcosa}
+\begin{enumerate}
+  \item \file{pip install -r requirements.txt}
+  \item \file{python scripts/download\_d1.py} --- scarica un po' di dati
+        giornalieri (\vediSez{dati}).
+  \item \file{python scripts/run\_dashboard.py}
+  \item Nel browser: \voce{Run} \freccia{} una strategia \freccia{}
+        \pulsante{Run backtest}. Alla fine compare uno stream in
+        \voce{Streams}.
+\end{enumerate}
+Senza il passo~\num{2} l'applicazione parte e le pagine sono vuote: non è un
+errore, è che non c'è niente da mostrare.
+\end{pratica}

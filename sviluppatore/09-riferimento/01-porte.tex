@@ -1,0 +1,119 @@
+% ===========================================================================
+%  sviluppatore/09-riferimento/01-porte.tex
+% ===========================================================================
+\section{Le porte}\label{sez:porte-tabella}
+
+Trentuno \cod{Protocol} in \file{ports/\_\_init\_\_.py}, più la porta
+\simbolo{Broker} ri-esportata da \file{live/broker.py}: trentadue contratti
+in tutto. Sono ciò che i casi d'uso conoscono del mondo
+(\vediSez{esagonale}).
+
+\begin{center}
+\begin{longtable}{@{}L{44mm}L{94mm}@{}}
+\toprule
+\textbf{Porta} & \textbf{Che cosa promette} \\
+\midrule\endfirsthead
+\toprule
+\textbf{Porta} & \textbf{Che cosa promette} \\
+\midrule\endhead
+
+\multicolumn{2}{@{}l}{\textit{\small Strategie e risultati}}\\[2pt]
+\rigaTenue
+\simbolo{StrategyRepository} & Le strategie disponibili, come
+  \simbolo{StrategyInfo}. \\
+\simbolo{WalkForwardRunner} & Esegue un walk-forward. Restituisce il codice
+  di uscita. \\
+\rigaTenue
+\simbolo{StreamCatalog} & Gli stream fuori campione disponibili. \\
+\simbolo{ReportSink} & Dove finiscono i report di una esecuzione. \\
+\rigaTenue
+\simbolo{StrategyStore} & Persistenza su filesystem, sotto
+  \file{strategies/<nome>/}. \\
+\simbolo{StrategyValidator} & Validazione di sicurezza statica del sorgente
+  (\simbolo{AST}). \\
+
+\addlinespace
+\multicolumn{2}{@{}l}{\textit{\small Composizione e analisi}}\\[2pt]
+\rigaTenue
+\simbolo{WeightingModeProvider} & L'elenco delle modalità di pesatura. \\
+\simbolo{EnsembleService} & Calcola l'ensemble di $N$ stream con una
+  pesatura scelta. \\
+\rigaTenue
+\simbolo{FactorAttributionService} & Scompone i rendimenti in alfa più beta
+  ai fattori standard. \\
+\simbolo{StressTestService} & Prova uno stream sulle crisi storiche
+  (\num{2018}, \num{2020}, \num{2022}\ldots). \\
+
+\addlinespace
+\multicolumn{2}{@{}l}{\textit{\small Dati, tempo, mercato}}\\[2pt]
+\rigaTenue
+\simbolo{DataSource} & Accesso agli OHLCV; avvolge i loader esistenti. \\
+\simbolo{Clock} & Orologio iniettabile. Esiste perché
+  \cod{datetime.now()} sparso nel codice rende i test non deterministici. \\
+\rigaTenue
+\simbolo{BrokerGateway} & Verso un broker, parlando in tipi di dominio:
+  l'adattatore traduce, e i casi d'uso non toccano i tipi
+  dell'infrastruttura. \\
+\simbolo{Broker} & \emph{Ri-esportata} da \simbolo{live.broker.LiveBroker}:
+  era già una classe base astratta, cioè già una porta. \\
+\rigaTenue
+\simbolo{ModelRegistryPort} & Registro versionato dei modelli ML, con
+  promozione. \\
+
+\addlinespace
+\multicolumn{2}{@{}l}{\textit{\small Generazione e compilazione degli artefatti}}\\[2pt]
+\rigaTenue
+\simbolo{CodeGenerator} & Generazione di codice. Il backend è Ollama in
+  locale o un modello proprietario; \cod{list\_models()} alimenta il menu. \\
+\simbolo{NodeCompiler} & Compila un grafo a nodi in sorgente Python. \\
+\rigaTenue
+\simbolo{FidelityScorer} & Confronta i trade disegnati a mano con quelli
+  della strategia. \\
+\simbolo{WeightModeValidator} & Sicurezza più struttura (\cod{META} e
+  \cod{compute}). \\
+\rigaTenue
+\simbolo{WeightModeStore} & \cod{exists(key)}, \cod{save(key, sorgente,
+  overwrite)}. \\
+\simbolo{WeightModeNodeCompiler} & Grafo a nodi \freccia{} modalità di
+  pesatura. \\
+\rigaTenue
+\simbolo{IndicatorValidator} & Come sopra, per un indicatore. \\
+\simbolo{IndicatorNodeCompiler} & Grafo a nodi \freccia{} indicatore. \\
+\rigaTenue
+\simbolo{OverlayValidatorPort} & Come sopra, per un overlay. \\
+\simbolo{OverlayStore} & \cod{exists(nome)}, \cod{save(nome, sorgente,
+  overwrite)}. \\
+\rigaTenue
+\simbolo{OverlayNodeCompiler} & Grafo a nodi \freccia{} overlay. \\
+
+\addlinespace
+\multicolumn{2}{@{}l}{\textit{\small Operatività dal vivo}}\\[2pt]
+\rigaTenue
+\simbolo{LiveRunnerValidatorPort} & \cod{validate(cfg)} \freccia{}
+  \simbolo{LiveRunnerValidation}. \\
+\simbolo{LiveRunnerStore} & \cod{exists}, \cod{save}, \cod{load},
+  \cod{list}. \\
+\rigaTenue
+\simbolo{LiveRunnerUploader} & Carica una configurazione di runner. \\
+
+\addlinespace
+\multicolumn{2}{@{}l}{\textit{\small Marketplace}}\\[2pt]
+\rigaTenue
+\simbolo{ArtifactPublisherPort} & Carica un artefatto sul proprio conto sul
+  sito. \\
+\simbolo{AccountArtifactsPort} & Legge gli artefatti già presenti sul conto
+  --- serve a non duplicarli. \\
+\rigaTenue
+\simbolo{ArtifactCodeSourcePort} & Legge il codice locale di un artefatto,
+  per tipo e nome. \\
+
+\bottomrule
+\end{longtable}
+\end{center}
+
+\begin{nota}{Dieci porte senza docstring}
+Le porte della famiglia \cod{WeightMode*}, \cod{Indicator*}, \cod{Overlay*} e
+\cod{LiveRunner*} non hanno un docstring: si capiscono dalla firma, che è di
+due o tre metodi. Non è grave --- la firma \emph{è} il contratto --- ma le
+altre ventuno ce l'hanno, e l'asimmetria si nota aprendo il file.
+\end{nota}

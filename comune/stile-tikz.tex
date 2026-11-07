@@ -1,0 +1,185 @@
+% ===========================================================================
+%  comune/stile-tikz.tex — il vocabolario grafico delle figure
+% ===========================================================================
+%
+%  Ogni figura del progetto disegna con QUESTI stili e non con parametri
+%  propri. La ragione e' leggibilita': se in una figura il riquadro di un
+%  modulo e' azzurro e in quella dopo e' dello stesso azzurro un archivio su
+%  disco, chi legge impara due volte e si fida zero. Qui un colore significa
+%  una cosa sola in tutto il documento:
+%
+%     cielo     il MOTORE di calcolo (Python, core/)
+%     menta     l'INTERFACCIA (Flask, dashboard/)
+%     pesca     il SITO (Next.js) e tutto cio' che sta in rete
+%     lavanda   i dati PERSISTENTI (disco, Postgres)
+%     crema     cio' che viene da FUORI (broker, Stripe, provider dati)
+%     bianco    strati astratti (porte, contratti, protocolli)
+%
+%  Questo file e' incluso sia dai documenti sia dalle figure compilate da sole
+%  (figure/tikz/*.tex con la classe standalone), percio' non deve dipendere da
+%  niente che esista solo dentro un documento.
+% ===========================================================================
+\RequirePackage{tikz}
+\usetikzlibrary{
+  arrows.meta, positioning, fit, backgrounds, calc, shapes.geometric,
+  shapes.multipart, shapes.symbols, decorations.pathreplacing,
+  decorations.pathmorphing, patterns, shadows.blur, matrix, chains, scopes
+}
+
+\tikzset{
+  % --- impostazioni generali ----------------------------------------------
+  every picture/.style = {
+    line width = 0.7pt,
+    font = \sffamily\small,
+  },
+  %
+  % --- RIQUADRI: un modulo, un componente, una responsabilita' -------------
+  riquadro/.style = {
+    rectangle, rounded corners = 3pt, draw,
+    minimum height = 9.5mm, minimum width = 30mm,
+    inner xsep = 6pt, inner ysep = 5pt,
+    align = center, font = \sffamily\small,
+    text = lyraInchiostro,
+  },
+  motore/.style    = {riquadro, fill = lyraCielo,   draw = lyraCieloBordo},
+  interfaccia/.style = {riquadro, fill = lyraMenta,  draw = lyraMentaBordo},
+  sito/.style      = {riquadro, fill = lyraPesca,   draw = lyraPescaBordo},
+  persistenza/.style = {riquadro, fill = lyraLavanda, draw = lyraLavandaBordo},
+  esterno/.style   = {riquadro, fill = lyraCrema,   draw = lyraCremaBordo},
+  astratto/.style  = {riquadro, fill = white, draw = lyraGrigio, dashed},
+  %
+  % Il riquadro piccolo: per gli elenchi fitti dove il nome basta.
+  minuto/.style = {riquadro, minimum height = 7mm, minimum width = 22mm,
+                   font = \sffamily\scriptsize, inner xsep = 4pt},
+  %
+  % --- FORME PARTICOLARI ---------------------------------------------------
+  archivio/.style = {
+    cylinder, shape border rotate = 90, aspect = 0.22, draw = lyraLavandaBordo,
+    fill = lyraLavanda, minimum height = 13mm, minimum width = 22mm,
+    inner xsep = 0pt, inner ysep = 4pt, align = center,
+    font = \sffamily\scriptsize, text = lyraInchiostro,
+  },
+  decisione/.style = {
+    diamond, draw = lyraInchiostro!60, fill = white, aspect = 1.9,
+    inner xsep = 2pt, inner ysep = 0pt, align = center,
+    font = \sffamily\scriptsize, text = lyraInchiostro,
+  },
+  persona/.style = {
+    rectangle, rounded corners = 10pt, draw = lyraInchiostro!70,
+    fill = white, minimum height = 9mm, minimum width = 24mm,
+    align = center, font = \sffamily\small\itshape,
+  },
+  %
+  % --- STRATI: il contenitore che raggruppa -------------------------------
+  strato/.style = {
+    rectangle, rounded corners = 5pt, draw = lyraGrigioChiaro,
+    fill = lyraPannello!55!white, inner sep = 9pt,
+  },
+  stratoTitolo/.style = {
+    font = \sffamily\scriptsize\bfseries, text = lyraInchiostro!65,
+    anchor = north west,
+  },
+  %
+  % --- FRECCE --------------------------------------------------------------
+  %  Tre tipi, e la differenza va vista senza leggere la legenda:
+  %    flusso      pieno    -> i dati passano di qui
+  %    dipendenza  tratteg. -> questo conosce quello (ma nulla scorre)
+  %    ritorno     grigio   -> la risposta che torna indietro
+  flusso/.style = {
+    -{Stealth[length = 2.4mm, width = 1.8mm]},
+    draw = lyraInchiostro!75, line width = 0.8pt,
+  },
+  dipendenza/.style = {
+    -{Stealth[length = 2.2mm, width = 1.6mm]}, dashed, dash pattern = on 2.4pt off 2pt,
+    draw = lyraInchiostro!55, line width = 0.6pt,
+  },
+  ritorno/.style = {
+    -{Stealth[length = 2.2mm, width = 1.6mm]},
+    draw = lyraGrigio, line width = 0.6pt,
+  },
+  accento/.style = {
+    -{Stealth[length = 2.6mm, width = 2mm]},
+    draw = lyraAccento, line width = 1pt,
+  },
+  bloccato/.style = {
+    -{Bar[width = 2.4mm]}, draw = lyraNegativo, line width = 0.9pt,
+  },
+  %
+  % --- ETICHETTE SULLE FRECCE ---------------------------------------------
+  etichetta/.style = {
+    font = \sffamily\scriptsize, text = lyraInchiostro!70,
+    fill = white, inner xsep = 2.5pt, inner ysep = 1pt,
+  },
+  etichettaAccento/.style = {etichetta, text = lyraAccentoScuro},
+  %
+  % --- NOTE A MARGINE ------------------------------------------------------
+  nota/.style = {
+    font = \sffamily\scriptsize\itshape, text = lyraInchiostro!60,
+    align = left, inner sep = 2pt,
+  },
+  notaAccento/.style = {nota, text = lyraAccentoScuro, font = \sffamily\scriptsize},
+  %
+  % --- SEGNAPOSTO NUMERICI (1) (2) (3) sulle figure a passi ---------------
+  passo/.style = {
+    circle, draw = lyraAccento, fill = white, text = lyraAccentoScuro,
+    font = \sffamily\scriptsize\bfseries, inner sep = 1.2pt,
+    minimum size = 4.6mm,
+  },
+}
+
+% --- la cornice con il titolo, usata dalle figure a strati -------------------
+%  #1 opzioni  #2 nodi da contenere  #3 titolo
+%  Il titolo sta SOPRA la cornice, non dentro: dentro finisce addosso al primo
+%  nodo ogni volta che il nodo è vicino al bordo, e lo si scopre solo guardando
+%  il PDF. Il nome del nodo è contato, così due strati nella stessa figura non
+%  si sovrascrivono a vicenda.
+\newcounter{lyrastratoN}
+\newcommand{\lyrastrato}[3][]{%
+  \stepcounter{lyrastratoN}%
+  \begin{scope}[on background layer]
+    \node[strato, fit = #2, #1] (cornice\thelyrastratoN) {};
+    \node[stratoTitolo, anchor = south west]
+      at ([shift={(1pt,1.5pt)}]cornice\thelyrastratoN.north west) {#3};
+  \end{scope}}
+
+% --- legenda compatta, da mettere sotto una figura ---------------------------
+%  Si usa solo quando la figura introduce un colore nuovo: ripeterla sotto ogni
+%  figura la fa diventare rumore che nessuno legge piu'.
+\newcommand{\lyralegenda}[1]{%
+  \begin{tikzpicture}[baseline]
+    \matrix[matrix of nodes, nodes = {anchor = west, font = \sffamily\scriptsize},
+            column sep = 3mm, row sep = 0.6mm] {#1\\};
+  \end{tikzpicture}}
+
+% ---------------------------------------------------------------------------
+%  DUE TRAPPOLE, scritte qui perché costano mezz'ora ciascuna e l'errore che
+%  producono indica sempre il punto sbagliato.
+%
+%  1. `\\` dentro un gruppo del contenuto di un nodo.
+%        {testo\\{\scriptsize una riga\\e un'altra}}   <-- SI ROMPE
+%        {testo\\{\scriptsize una riga}\\{\scriptsize e un'altra}}  <-- giusto
+%     TikZ raccoglie le righe guardando i `\\` al primo livello: quello dentro
+%     le graffe è il `\\` di LaTeX, che in un box orizzontale non ha senso.
+%     L'errore che ne esce è «\tikzscope@linewidth non definito», segnalato sul
+%     nodo DOPO quello colpevole.
+%
+%  2. Una tcolorbox dentro un nodo. Vale per \cod, \pulsante, \campo: sono
+%     tcbox, cioè figure TikZ annidate, e lasciano la figura esterna in uno
+%     stato incoerente. Stesso errore, stessa confusione. Nelle figure si usa
+%     \codT (qui sotto).
+% ---------------------------------------------------------------------------
+
+% --- il codice DENTRO una figura --------------------------------------------
+%  Nel testo un simbolo si scrive \cod{...}, che è un \tcbox: una tcolorbox,
+%  cioè una tikzpicture. Infilarla dentro il contenuto di un nodo TikZ rompe lo
+%  stato della figura che la contiene, e l'errore salta fuori sul nodo
+%  SUCCESSIVO (`\tikzscope@linewidth` non definito) — mezz'ora buttata a
+%  cercarlo nel posto sbagliato. Dentro le figure si usa questo, che è solo un
+%  cambio di carattere e non apre niente.
+%  \upshape serve davvero: dentro un nodo `nota`, che è in corsivo, un
+%  monospazio corsivo si legge male e sembra un'altra cosa.
+\newcommand{\codT}[1]{{\ttfamily\upshape\small\color{lyraInchiostro!85}#1}}
+
+\newcommand{\lyravoce}[2]{%
+  \tikz[baseline=-0.55ex]\node[#1, minimum width = 4.2mm, minimum height = 2.6mm,
+        inner sep = 0pt, rounded corners = 1.4pt]{};~#2}

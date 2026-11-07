@@ -1,0 +1,154 @@
+% ===========================================================================
+%  comune/macro.tex — le abbreviazioni del progetto
+% ===========================================================================
+%
+%  Servono a scrivere una cosa in un posto solo. Il nome di un pacchetto
+%  Python compare duecento volte nella guida: se un giorno `approaches/`
+%  diventa `overlays/`, si cambia qui e non duecento volte a mano — e
+%  soprattutto non si finisce con metà documento che dice una cosa e metà
+%  un'altra, che è il modo in cui la documentazione smette di essere creduta.
+% ===========================================================================
+
+% --- nomi del prodotto ------------------------------------------------------
+\newcommand{\Lyra}{\textsc{Lyra}}
+\newcommand{\LyraCapital}{\textsc{Lyra Capital}}
+\newcommand{\app}{l'applicazione}
+\newcommand{\App}{L'applicazione}
+\newcommand{\sito}{il sito}
+\newcommand{\Sito}{Il sito}
+
+% --- i pacchetti del motore -------------------------------------------------
+%  Si scrivono \pkgCore e non \file{core/}: così il giorno in cui una cartella
+%  cambia nome, cambia qui.
+\DeclareRobustCommand{\pkg}[1]{{\ttfamily\small\color{lyraInchiostro!78}#1}}
+\newcommand{\pkgCore}{\pkg{core/}}
+\newcommand{\pkgStrategie}{\pkg{strategies/}}
+\newcommand{\pkgApprocci}{\pkg{approaches/}}
+\newcommand{\pkgPesi}{\pkg{weights/}}
+\newcommand{\pkgOverlay}{\pkg{overlays/}}
+\newcommand{\pkgRegime}{\pkg{regime/}}
+\newcommand{\pkgDati}{\pkg{data/}}
+\newcommand{\pkgBacktest}{\pkg{backtest/}}
+\newcommand{\pkgLive}{\pkg{live/}}
+\newcommand{\pkgEsecuzione}{\pkg{execution/}}
+\newcommand{\pkgReport}{\pkg{reporting/}}
+\newcommand{\pkgDashboard}{\pkg{dashboard/}}
+\newcommand{\pkgDominio}{\pkg{domain/}}
+\newcommand{\pkgPorte}{\pkg{ports/}}
+\newcommand{\pkgApplicazione}{\pkg{application/}}
+\newcommand{\pkgAdattatori}{\pkg{adapters/}}
+\newcommand{\pkgComposizione}{\pkg{composition/}}
+\newcommand{\pkgApi}{\pkg{api/}}
+
+% --- termini del dominio, con la prima occorrenza indicizzata ---------------
+\newcommand{\term}[1]{\emph{#1}\index{#1}}
+\newcommand{\termdef}[1]{\textbf{#1}\index{#1}}
+
+% --- riferimenti a classi, funzioni, file -----------------------------------
+%  \simbolo{Nome}            una classe o una funzione
+%  \sorgente{file.py}{120}   un punto preciso del sorgente
+\DeclareRobustCommand{\simbolo}[1]{\cod{#1}}
+\newcommand{\sorgente}[2]{{\ttfamily\footnotesize\color{lyraInchiostro!60}#1:#2}}
+
+% --- tasti e voci dell'interfaccia, per il manuale utente -------------------
+%  \voce{Overview}           una voce di menu o una scheda
+%  \pulsante{Run backtest}   un pulsante da premere
+%  \campo{Target vol}        un campo da compilare
+%  \percorso{Settings > Data} un percorso di navigazione
+\newcommand{\voce}[1]{\textsf{\textbf{#1}}}
+\newcommand{\pulsante}[1]{%
+  \tcbox[on line, boxsep = 1pt, left = 3pt, right = 3pt, top = 0.5pt,
+         bottom = 0.5pt, arc = 3pt, boxrule = 0.5pt,
+         colback = lyraInchiostro, colframe = lyraInchiostro,
+         coltext = white]{\sffamily\scriptsize\bfseries #1}}
+\newcommand{\pulsantesec}[1]{%
+  \tcbox[on line, boxsep = 1pt, left = 3pt, right = 3pt, top = 0.5pt,
+         bottom = 0.5pt, arc = 3pt, boxrule = 0.5pt,
+         colback = white, colframe = lyraInchiostro!50,
+         coltext = lyraInchiostro]{\sffamily\scriptsize\bfseries #1}}
+\newcommand{\campo}[1]{\textsf{\itshape #1}}
+\newcommand{\percorso}[1]{\textsf{\small #1}}
+\newcommand{\freccia}{\;\textcolor{lyraAccento}{$\rightarrow$}\;}
+
+% --- una rotta HTTP ---------------------------------------------------------
+%  \rotta{GET}{/api/marketplace/<id>/perche-non-mio}
+%
+%  Esiste perche' \cod{} e' una scatola indivisibile: in una colonna di
+%  tabella larga cinque centimetri un percorso lungo sborda, e non c'e'
+%  niente che TeX possa fare. Qui il percorso e' testo normale e puo' andare
+%  a capo dopo ogni barra, che e' il punto naturale.
+%
+%  Il ciclo prende un carattere alla volta: funziona perche' un percorso non
+%  contiene spazi (un argomento non delimitato li mangerebbe) ed e' in ASCII
+%  (una lettera accentata e' un carattere attivo e manda in errore il ciclo).
+%  Per qualunque altra cosa si usa \cod{}.
+\makeatletter
+\def\lyra@finePercorso{\lyra@finePercorsoMARK}
+\def\lyra@percorso#1{%
+  \ifx#1\lyra@finePercorso
+    \let\lyra@prossimo\relax
+  \else
+    #1%
+    % Dopo questi quattro caratteri la riga puo' andare a capo. Sono i punti
+    % in cui un percorso o un nome di file si leggono comunque bene spezzati.
+    \ifx#1/\allowbreak\else
+      \ifx#1\_\allowbreak\else
+        \ifx#1.\allowbreak\else
+          \ifx#1-\allowbreak\fi\fi\fi\fi
+    \let\lyra@prossimo\lyra@percorso
+  \fi
+  \lyra@prossimo}
+\DeclareRobustCommand{\percorsoHTTP}[1]{%
+  {\ttfamily\small\color{lyraInchiostro!85}%
+   \lyra@percorso#1\lyra@finePercorso}}
+\makeatother
+
+\DeclareRobustCommand{\rotta}[2]{%
+  {\sffamily\scriptsize\bfseries\color{lyraAccentoScuro}#1}\,\percorsoHTTP{#2}}
+
+% --- la figura standard -----------------------------------------------------
+%  Centra, mette la didascalia sotto e l'etichetta. Esiste perché le tre righe
+%  scritte a mano ogni volta divergono: una figura senza \label non si può
+%  citare, e una citata per numero si rompe appena se ne aggiunge un'altra.
+%  #1 file da includere (senza estensione)  #2 didascalia  #3 etichetta
+%  `max width` e non `width`: una figura piccola resta della sua misura, una
+%  piu' larga della giustezza viene rimpicciolita invece di sbordare nel
+%  margine. Senza, ogni figura andrebbe dimensionata a mano e ridimensionata
+%  a ogni modifica del testo.
+\newcommand{\figuraTikz}[3]{%
+  \begin{figure}[htbp]
+    \centering
+    \begin{adjustbox}{max width = \linewidth}
+      \input{figure/tikz/#1}
+    \end{adjustbox}
+    \caption{#2}\label{fig:#3}
+  \end{figure}}
+
+%  Come sopra ma per un'immagine, con larghezza.
+%  #1 larghezza  #2 file  #3 didascalia  #4 etichetta
+\newcommand{\figuraImg}[4]{%
+  \begin{figure}[htbp]
+    \centering
+    \includegraphics[width = #1\linewidth]{#2}
+    \caption{#3}\label{fig:#4}
+  \end{figure}}
+
+%  Schermata con cornice: una schermata senza bordo si confonde con il fondo
+%  della pagina, e non si capisce dove finisce l'interfaccia.
+\newcommand{\figuraSchermata}[4]{%
+  \begin{figure}[htbp]
+    \centering
+    \setlength{\fboxsep}{0pt}\setlength{\fboxrule}{0.5pt}%
+    {\color{lyraGrigioChiaro}\fbox{\includegraphics[width = #1\linewidth]{#2}}}
+    \caption{#3}\label{fig:#4}
+  \end{figure}}
+
+% --- riferimenti incrociati con la parola davanti ---------------------------
+\newcommand{\vediFig}[1]{figura~\ref{fig:#1}}
+\newcommand{\vediTab}[1]{tabella~\ref{tab:#1}}
+\newcommand{\vediCap}[1]{capitolo~\ref{cap:#1}}
+\newcommand{\vediSez}[1]{\S\,\ref{sez:#1}}
+
+% --- numeri e unità ---------------------------------------------------------
+\newcommand{\perc}[1]{#1\,\%}
+\newcommand{\eur}[1]{#1\,\texteuro}

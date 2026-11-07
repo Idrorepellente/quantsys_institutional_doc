@@ -1,0 +1,105 @@
+% ===========================================================================
+%  sviluppatore/06-dashboard/03-job.tex
+% ===========================================================================
+\section{Il lavoro lungo: job e registro in diretta}\label{sez:job}
+
+Un backtest dura minuti o ore. Una richiesta HTTP non può aspettarlo, quindi
+tutto ciò che è lungo passa dal \simbolo{JobManager} di
+\file{execution/job\_manager.py}: la rotta restituisce subito un
+identificativo, il lavoro continua in un thread, e il registro arriva al
+browser man mano che viene prodotto.
+
+\begin{center}
+\begin{tabular}{@{}L{40mm}L{98mm}@{}}
+\toprule
+\textbf{Rotta} & \textbf{Che cosa fa} \\
+\midrule
+\rigaTenue
+\rotta{GET}{/api/jobs} & Elenco. \\
+\rotta{GET}{/api/job/<id>} & Stato di uno. \\
+\rigaTenue
+\rotta{GET}{/api/job/<id>/stream} & \textbf{SSE}: le righe di registro, in
+  diretta. \\
+\rotta{POST}{/api/job/<id>/cancel} & Annulla. \\
+\rigaTenue
+\rotta{DELETE}{/api/job/<id>} & Toglie dall'elenco un job concluso. \\
+\rotta{DELETE}{/api/jobs/conclusi} & Svuota tutti i conclusi. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Gli stati}
+
+\cod{PENDING} \freccia{} \cod{RUNNING} \freccia{} \cod{SUCCESS},
+\cod{FAILED} o \cod{CANCELLED}. Sono un \cod{str, Enum}, quindi il valore
+serializzato in JSON è direttamente la stringa minuscola.
+
+\subsection{Il registro in diretta}
+
+\begin{codiceInterno}{python}{Lo stream SSE}{dashboard/app.py:3720}
+    def api_job_stream(job_id):
+        """Server-Sent Events stream of log lines."""
+        job = job_manager.get(job_id)
+        if job is None:
+            return jsonify({"error": "Job not found"}), 404
+
+        def event_stream():
+            # Manda subito le log lines gia' esistenti
+            existing = list(job.log_lines)
+            for line in existing:
+                yield f"data: {line}\n\n"
+
+            # Subscribe via queue per nuove lines
+            q = Queue(maxsize=10000)
+            def listener(line):
+                try:
+                    q.put_nowait(line)
+                except Exception:
+                    pass
+            unsub = job.subscribe(listener)
+\end{codiceInterno}
+
+\noindent
+Due dettagli meritano di essere notati, perché sono la ragione per cui
+questo codice regge:
+
+\begin{description}[leftmargin = 1.6em, style = nextline, itemsep = 4pt]
+  \item[Prima lo storico, poi la sottoscrizione]
+    Chi apre la pagina a metà di un backtest vede subito tutto ciò che è già
+    successo, e poi il resto. Sottoscrivere senza mandare lo storico
+    mostrerebbe una finestra vuota fino alla riga successiva.
+  \item[La coda è limitata e il \cod{put} non blocca]
+    \cod{Queue(maxsize=10000)} con \cod{put\_nowait} dentro un
+    \cod{try/except} che ignora il fallimento. Se un browser smette di
+    leggere, la sua coda si riempie e le righe nuove vengono scartate --- ma
+    il backtest \emph{non} rallenta. L'alternativa (bloccare sulla coda
+    piena) farebbe sì che una scheda lasciata aperta fermi un calcolo.
+\end{description}
+
+\begin{nota}{Il registro è limitato a \num{5000} righe}
+\cod{deque(maxlen=5000)}: un backtest lungo ne produce molte di più, e le
+prime scorrono via. Per conservarle tutte si guarda il file di registro, non
+l'interfaccia.
+\end{nota}
+
+\subsection{Un lavoro per volta}
+
+Il \simbolo{JobManager} nasce con \cod{max\_workers=1}. È il default
+dichiarato del progetto, e vale sia per l'API FastAPI sia per la dashboard.
+Due backtest in parallelo si contenderebbero la stessa cache dei dati e gli
+stessi file di uscita.
+
+\begin{attenzione}{Alzare \cod{max\_workers} non è una ottimizzazione}
+La serializzazione non è un limite di prestazioni da togliere: è ciò che
+rende i risultati riproducibili. Due job concorrenti che scrivono sotto
+\file{output/strategies/} possono produrre uno stream mezzo di un
+calcolo e mezzo dell'altro, e il risultato non dà errore --- è un
+\file{parquet} valido con dentro numeri di due esecuzioni diverse.
+\end{attenzione}
+
+\subsection{Le notifiche}
+
+\rotta{GET}{/api/notifications} alimenta la campanella, e mette insieme due
+sorgenti: i job reali del \simbolo{JobManager} e i messaggi che arrivano dal
+sito. È il motivo per cui la campanella mostra sia «backtest finito» sia
+«hai una risposta su una contestazione»: una rotta, due origini.

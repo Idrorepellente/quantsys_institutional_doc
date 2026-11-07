@@ -1,7 +1,20 @@
-*.toc
-*.gz
-*.out
-*.log
-*.fls
-*.fdb_latexmk
+# Intermedi di LaTeX
 *.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.idx
+*.ilg
+*.ind
+*.lof
+*.log
+*.lot
+*.out
+*.toc
+*.synctex.gz
+*.run.xml
+*.listing
+
+# I PDF delle figure compilate da sole: si rigenerano con `make figure`
+figure/tikz/pdf/

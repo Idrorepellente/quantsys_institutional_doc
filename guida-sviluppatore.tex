@@ -1,0 +1,81 @@
+% ===========================================================================
+%  LYRA — GUIDA DELLO SVILUPPATORE
+% ===========================================================================
+%
+%  Uno dei due documenti del progetto. L'altro è manuale-utente.tex e
+%  condivide con questo tutto ciò che sta in comune/.
+%
+%  Compilazione:      make sviluppatore        (oppure: latexmk -pdf guida-sviluppatore)
+%  Entrambi:          make
+%  Pulizia:           make pulisci
+%
+%  STRUTTURA. Un capitolo per cartella sotto sviluppatore/, e dentro ogni
+%  cartella un file per sezione. Il file 00-capitolo.tex contiene SOLO il
+%  titolo del capitolo e l'elenco delle sue sezioni: nessun testo. Così si
+%  sposta una sezione spostando un file, e due persone scrivono due sezioni
+%  dello stesso capitolo senza toccare lo stesso file.
+% ===========================================================================
+\documentclass[11pt, a4paper, twoside, openright]{book}
+
+\input{comune/preambolo}
+
+\makeindex[intoc = true, title = Indice analitico]
+
+\hypersetup{
+  pdftitle  = {Lyra — Guida dello sviluppatore},
+  pdfauthor = {Lyra Capital},
+  pdfsubject = {Architettura, motore quantitativo, estensioni e rilascio},
+  pdfkeywords = {Lyra, quant, trading, architettura, Python, Flask, Next.js},
+}
+
+% --- intestazioni -----------------------------------------------------------
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\chaptermark}[1]{\markboth{\thechapter.\ #1}{}}
+\renewcommand{\sectionmark}[1]{\markright{\thesection\ #1}}
+\fancyhead[LE]{\sffamily\scriptsize\color{lyraInchiostro!55}\leftmark}
+\fancyhead[RO]{\sffamily\scriptsize\color{lyraInchiostro!55}\rightmark}
+\fancyfoot[LE,RO]{\sffamily\small\color{lyraInchiostro!70}\thepage}
+\fancyfoot[RE,LO]{\sffamily\scriptsize\color{lyraInchiostro!40}Lyra · Guida dello sviluppatore}
+
+\fancypagestyle{plain}{%
+  \fancyhf{}%
+  \renewcommand{\headrulewidth}{0pt}%
+  \fancyfoot[LE,RO]{\sffamily\small\color{lyraInchiostro!70}\thepage}%
+  \fancyfoot[RE,LO]{\sffamily\scriptsize\color{lyraInchiostro!40}Lyra · Guida dello sviluppatore}}
+
+\begin{document}
+
+\frontmatter
+\input{comune/frontespizio-sviluppatore}
+
+\tableofcontents
+
+\mainmatter
+
+% --- PARTE I — orientarsi ---------------------------------------------------
+\part{Orientarsi}
+\input{sviluppatore/01-introduzione/00-capitolo}
+\input{sviluppatore/02-ambiente/00-capitolo}
+
+% --- PARTE II — come è fatto ------------------------------------------------
+\part{Come è fatto}
+\input{sviluppatore/03-architettura/00-capitolo}
+\input{sviluppatore/04-motore/00-capitolo}
+
+% --- PARTE III — come si cambia ---------------------------------------------
+\part{Come si cambia}
+\input{sviluppatore/05-estendere/00-capitolo}
+\input{sviluppatore/06-dashboard/00-capitolo}
+\input{sviluppatore/07-marketplace/00-capitolo}
+
+% --- PARTE IV — tenerlo in piedi --------------------------------------------
+\part{Tenerlo in piedi}
+\input{sviluppatore/08-qualita/00-capitolo}
+\input{sviluppatore/09-riferimento/00-capitolo}
+
+\backmatter
+\printindex
+
+\end{document}

@@ -1,0 +1,123 @@
+% ===========================================================================
+%  sviluppatore/02-ambiente/04-cartelle.tex
+% ===========================================================================
+\section{La mappa delle cartelle}\label{sez:cartelle}
+
+Trentuno cartelle nella radice. Raggruppate per mestiere diventano sei
+famiglie, e la famiglia dice già quasi tutto su che cosa ci si può aspettare
+di trovarci dentro.
+
+\subsection{Il guscio a strati}
+
+Sono le cartelle introdotte con la migrazione all'architettura esagonale
+(\vediSez{esagonale}). Sono piccole: la loro dimensione non misura quanto
+lavoro fanno, ma quanto poco codice serve a tenere separato il resto.
+
+\begin{center}
+\begin{tabular}{@{}L{30mm}R{14mm}L{86mm}@{}}
+\toprule
+\textbf{Cartella} & \textbf{Righe} & \textbf{Che cosa contiene} \\
+\midrule
+\rigaTenue
+\pkgDominio      & \num{478}  & I tipi puri: \cod{dataclass} congelate, nessuna
+                                dipendenza, nemmeno da pandas. \\
+\pkgPorte        & \num{239}  & I trentadue contratti. È il file
+                                da leggere per primo di tutto il progetto. \\
+\rigaTenue
+\pkgApplicazione & \num{579}  & I casi d'uso. Conoscono solo le porte. \\
+\pkgAdattatori   & \num{2593} & Le implementazioni concrete, e i validatori
+                                \simbolo{AST} degli artefatti. \\
+\rigaTenue
+\pkgComposizione & \num{109}  & Centonove righe, ed è l'unico posto in tutto
+                                il sistema dove si sceglie un concreto. \\
+\pkgApi          & \num{548}  & L'applicazione FastAPI e i suoi tredici
+                                router. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Il motore}
+
+\begin{center}
+\begin{tabular}{@{}L{30mm}R{14mm}L{86mm}@{}}
+\toprule
+\textbf{Cartella} & \textbf{Righe} & \textbf{Che cosa contiene} \\
+\midrule
+\rigaTenue
+\pkgCore        & \num{7587} & Tipi del dominio quantitativo
+                               (\cod{Signal}, \cod{Portfolio}, \cod{Fill}),
+                               percorsi, manutenzione. \\
+\pkgBacktest    & \num{1567} & Due file. Uno è il motore di simulazione, ed è
+                               il punto in cui si decide che cosa è lecito
+                               guardare. \\
+\pkgEsecuzione  & \num{2428} & I runner: walk-forward, backtest singolo,
+                               approcci, gestione dei job. \\
+\rigaTenue
+\pkgDati        & \num{6251} & Caricamento, universo, categorie, qualità,
+                               sorgenti esterne. \\
+\pkgReport      & \num{2096} & \simbolo{EnsembleEngine}: la composizione degli
+                               stream, i pesi, gli overlay. \\
+\rigaTenue
+\pkgLive        & \num{4170} & Lo stesso calcolo, collegato a un broker. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Gli artefatti}
+
+Sono le cinque famiglie di plugin, più tre cartelle che ospitano artefatti
+minori. Ogni sottocartella è un artefatto, e il nome della cartella è il nome
+canonico --- non quello dichiarato dentro il file.
+
+\begin{center}
+\begin{tabular}{@{}L{30mm}R{18mm}L{82mm}@{}}
+\toprule
+\textbf{Cartella} & \textbf{Installati} & \textbf{Forma del contratto} \\
+\midrule
+\rigaTenue
+\pkgStrategie & \num{9} attive, \num{20} spente
+  & \cod{DESCRIPTOR} in \file{strategy.py} \\
+\pkgApprocci  & \num{3} attivi, \num{4} dormienti
+  & \cod{APPROACH\_DESCRIPTOR} in \file{approach.py} \\
+\rigaTenue
+\pkgPesi      & \num{14}
+  & \cod{META} + \cod{compute} in \file{weight\_mode.py} \\
+\pkgOverlay   & \num{7}
+  & \cod{META} + \cod{compute} in \file{overlay.py} \\
+\rigaTenue
+\pkgRegime    & \num{3} regole, \num{3} mercati
+  & \cod{META} + \cod{compute}, in due cartelle distinte \\
+\pkg{indicators/}, \pkg{metrics/}
+  & ---
+  & Artefatti minori, stesso schema \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{pratica}{Accendere e spegnere un artefatto}
+Il prefisso \cod{\_} davanti al nome della cartella è l'interruttore:
+\file{strategies/\_value/} non viene caricata, \file{strategies/value/} sì.
+Rinominare la cartella è l'unico gesto necessario --- non c'è nessun elenco da
+aggiornare da nessuna parte. Delle \num{29} cartelle sotto \pkgStrategie,
+\num{20} cominciano con il trattino basso e restano fuori.
+\end{pratica}
+
+\subsection{L'interfaccia, e il resto}
+
+\pkgDashboard{} è l'applicazione Flask: \num{28494} righe di Python in
+\num{36} file, più \num{42072} righe fra template Jinja, JavaScript e CSS. È
+l'oggetto più grande del progetto e ha un capitolo suo
+(\vediCap{dashboard}).
+
+Restano: \pkg{features/}, \pkg{mms/} e \pkg{volume\_profile/} (calcoli
+specialistici che le strategie possono richiedere dichiarandoli nel
+descrittore), \pkg{genetic/} (la generazione di strategie per programmazione
+genetica), \pkg{validation/} (controlli statistici sui risultati),
+\pkg{scripts/} (gli scarichi e le utilità da riga di comando), \pkg{tests/},
+\pkg{config/} (il solo \file{quantsys.yaml}) e \pkg{build/} (impacchettamento).
+
+\begin{attenzione}{\pkg{brokers/} è morta}
+Nella radice c'è una cartella \pkg{brokers/} di \num{402} righe che duplica
+codice vivo in \pkgLive. Nessun modulo la importa. È un residuo: non va
+estesa, e ciò che sembra doverci andare va in \file{live/broker.py}.
+\end{attenzione}

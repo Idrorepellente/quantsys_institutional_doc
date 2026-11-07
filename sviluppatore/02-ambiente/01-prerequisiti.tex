@@ -1,0 +1,78 @@
+% ===========================================================================
+%  sviluppatore/02-ambiente/01-prerequisiti.tex
+% ===========================================================================
+\section{Che cosa serve avere installato}\label{sez:prerequisiti}
+
+Per la metà locale: Python, e nient'altro di obbligatorio. Per il sito:
+Node.js e un Postgres raggiungibile. Le due metà si avviano in modo
+indipendente, e per lavorare sul motore il sito non serve --- senza di esso si
+perde solo il marketplace.
+
+\begin{center}
+\begin{tabular}{@{}L{34mm}L{26mm}L{78mm}@{}}
+\toprule
+\textbf{Componente} & \textbf{Versione} & \textbf{Note} \\
+\midrule
+\rigaTenue
+Python & \num{3}.10 o più & Il codice usa \cod{match}, \cod{X | None} e
+  le \cod{dataclass} con \cod{slots}. \\
+pandas & $<$\,\num{3} & Vincolo reale: il codice precede l'API di pandas~3. \\
+\rigaTenue
+numpy & $<$\,\num{2} & Stesso motivo. In caso di errori nello stack
+  numerico, questi due vincoli sono la prima cosa da provare. \\
+Node.js & \num{18} o più & Solo per il sito. \\
+\rigaTenue
+Postgres & \num{14} o più & Solo per il sito. In sviluppo va bene anche
+  un'istanza gestita (Neon). \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Installazione delle dipendenze Python}
+
+\begin{codiceInterno}{console}{Dalla radice del progetto}{}
+python -m venv .venv
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+\end{codiceInterno}
+
+\noindent
+Il file \file{requirements.txt} è diviso in blocchi commentati e dichiara
+di che cosa è responsabile ogni dipendenza. Tre di essi vanno guardati:
+
+\begin{description}[leftmargin = 1.6em, style = nextline, itemsep = 4pt]
+  \item[Stack numerico] \pkg{numpy}, \pkg{pandas}, \pkg{scipy},
+    \pkg{scikit-learn}, \pkg{statsmodels}, \pkg{pyarrow}. Senza
+    \pkg{pyarrow} non si leggono i \file{parquet}, cioè non si legge niente.
+  \item[Machine learning] \pkg{lightgbm}, \pkg{hmmlearn}, \pkg{shap}. Servono
+    agli approcci ML e alle modalità di pesatura \cod{regime\_ml} e
+    \cod{regime\_style}. Un sistema senza di esse parte, e quelle voci
+    semplicemente non funzionano.
+  \item[Sorgenti dati] \pkg{yfinance}, \pkg{requests}, \pkg{fredapi},
+    \pkg{python-dotenv}.
+\end{description}
+
+\begin{nota}{Il modello locale è opzionale}
+Lo Studio può generare il codice di un artefatto a partire da una descrizione
+in italiano. Il modello gira in locale via Ollama, che non è nelle
+dipendenze Python e va installato a parte. Senza, lo Studio funziona
+ugualmente: si perde la generazione da testo, restano l'editor e il grafo a
+nodi.
+\end{nota}
+
+\subsection{Con Docker, invece}
+
+Nella radice ci sono \file{Dockerfile} e \file{docker-compose.yml}. Avviano la
+sola dashboard, con i dati montati come volume.
+
+\begin{codiceInterno}{console}{Dalla radice del progetto}{}
+UID=$(id -u) GID=$(id -g) docker compose up --build
+# poi: http://localhost:5000
+\end{codiceInterno}
+
+\begin{attenzione}{Su Linux servono UID e GID}
+Senza passarli, i file che il contenitore scrive nei volumi --- i
+\file{parquet} scaricati, i risultati dei backtest --- risultano di un altro
+proprietario e dall'esterno non si riescono più a modificare. Su macOS e
+Windows il problema non si pone.
+\end{attenzione}

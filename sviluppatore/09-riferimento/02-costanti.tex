@@ -1,0 +1,120 @@
+% ===========================================================================
+%  sviluppatore/09-riferimento/02-costanti.tex
+% ===========================================================================
+\section{Le costanti e la configurazione}\label{sez:costanti}
+
+\subsection{\file{config/quantsys.yaml}}
+
+È il file centrale. Dopo una modifica serve riavviare la dashboard: non
+viene riletto a caldo.
+
+\begin{center}
+\begin{tabular}{@{}L{46mm}R{18mm}L{72mm}@{}}
+\toprule
+\textbf{Chiave} & \textbf{Valore} & \textbf{Che cosa governa} \\
+\midrule
+\multicolumn{3}{@{}l}{\textit{\small \cod{data:}}}\\[2pt]
+\rigaTenue
+\cod{start\_date}        & \num{2010}-01-01 & Inizio del campione. \\
+\cod{train\_years}       & \num{5}  & Ampiezza della finestra di
+                                      addestramento. \\
+\rigaTenue
+\cod{test\_years}        & \num{1}  & Ampiezza della finestra di prova. \\
+\cod{slide\_years}       & \num{1}  & Di quanto avanza la finestra. \\
+\rigaTenue
+\cod{warmup\_days}       & \num{300} & Barre saltate all'inizio. \\
+\cod{min\_folds}         & \num{3}  & Minimo di finestre perché il
+                                      walk-forward abbia senso. \\
+\rigaTenue
+\cod{benchmark\_symbol}  & SPY      & Il riferimento dei confronti. \\
+
+\addlinespace
+\multicolumn{3}{@{}l}{\textit{\small \cod{portfolio:}}}\\[2pt]
+\rigaTenue
+\cod{initial\_capital}   & \num{1000000} & Capitale iniziale. \\
+\cod{portfolio\_target\_vol\_annual} & \num{0.12} & Volatilità annua
+                                      obiettivo. \\
+\rigaTenue
+\cod{max\_position\_weight} & \num{0.05} & Tetto per strumento. \\
+\cod{max\_asset\_class\_gross} & \num{1.00} & Tetto lordo per classe. \\
+\rigaTenue
+\cod{max\_gross\_leverage} & \num{1.0} & Tetto lordo totale. \\
+
+\addlinespace
+\multicolumn{3}{@{}l}{\textit{\small \cod{ensemble:}}}\\[2pt]
+\rigaTenue
+\cod{target\_vol}        & \num{0.10} & Volatilità a cui ogni stream viene
+                                      portato \emph{prima} di essere pesato. \\
+\cod{scale\_lookback}    & \num{252} & Barre della volatilità trailing. \\
+\rigaTenue
+\cod{regime\_window}     & \num{90}  & Finestra del regime. \\
+\cod{regime\_sh\_low} / \cod{\_high} & \num{0.0} / \num{1.5} & Soglie di
+                                      Sharpe per la modulazione. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{attenzione}{\cod{ensemble.target\_vol} non è un parametro di reporting}
+Il commento nel file lo dice: «non è un dettaglio di reporting: lo stesso
+fattore moltiplica il libro eseguito dal vivo». Uno stream a volatilità molto
+bassa chiede molta leva per arrivare all'obiettivo, e il tetto resta
+\cod{max\_gross\_leverage}. Cambiare questo valore cambia le dimensioni delle
+posizioni su un conto reale (\vediSez{live}).
+\end{attenzione}
+
+\noindent
+I valori della tabella sono quelli del file come si trova nel progetto; i
+default del codice, usati quando una chiave manca, sono diversi e stanno in
+\simbolo{AllocatorConfig} (\vediSez{allocatore}).
+
+\subsection{Le costanti del motore}
+
+\begin{center}
+\begin{tabular}{@{}L{40mm}R{14mm}L{82mm}@{}}
+\toprule
+\textbf{Costante} & \textbf{Valore} & \textbf{Dove, e a che serve} \\
+\midrule
+\rigaTenue
+\cod{SCALE\_MIN\_OBS} & \num{20} & \file{reporting/ensemble.py}. Sotto
+  questa soglia non c'è stima di volatilità e il fattore vale \cod{1.0}. \\
+\cod{SCALE\_MAX\_LEVA} & \num{10.0} & Idem. Rapporto massimo fra obiettivo e
+  volatilità stimata: è il tetto alla leva quando la volatilità tende a
+  zero. \\
+\rigaTenue
+\cod{max\_workers} & \num{1} & \file{execution/job\_manager.py}. I job sono
+  serializzati (\vediSez{job}). \\
+\cod{max\_log\_lines} & \num{5000} & Idem. Righe di registro conservate per
+  ogni job. \\
+\rigaTenue
+\cod{min\_lookback\_days} & \num{252} & Default di
+  \simbolo{StrategyDescriptor}. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Le variabili d'ambiente}
+
+\begin{center}
+\begin{tabular}{@{}L{38mm}L{100mm}@{}}
+\toprule
+\textbf{Variabile} & \textbf{Effetto} \\
+\midrule
+\rigaTenue
+\cod{LYRA\_HOME} & Sposta la cartella di lavoro (\vediSez{dati}). \\
+\cod{LYRA\_APP\_TOKEN} & Scavalca il token personale letto da file
+  (\vediSez{ponte}). \\
+\rigaTenue
+\cod{FLASK\_HOST} & Default \cod{127.0.0.1}. Cambiarlo espone la dashboard
+  (\vediSez{avvio}). \\
+\cod{FLASK\_PORT} & Default \num{5000}. \\
+\rigaTenue
+\cod{GH\_REPO} & Repository per gli aggiornamenti automatici
+  (\vediSez{rilascio}). \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+Le chiavi dei servizi esterni --- Polygon, FRED, Stripe, SMTP, Google,
+Postgres --- \emph{non} stanno qui: le gestisce il sito e arrivano alla metà
+locale attraverso il canale~\num{2} (\vediSez{due-meta}).

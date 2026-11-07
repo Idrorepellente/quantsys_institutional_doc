@@ -1,0 +1,100 @@
+% ===========================================================================
+%  comune/frontespizio-utente.tex
+% ===========================================================================
+\begin{titlepage}
+\thispagestyle{empty}
+\begin{tikzpicture}[remember picture, overlay]
+
+  \fill[lyraInchiostro] (current page.north west)
+    rectangle ([yshift = -9mm]current page.north east);
+
+  \node[anchor = north west, inner sep = 0pt]
+    at ([shift = {(28mm, -42mm)}]current page.north west)
+    {\begin{minipage}{125mm}
+       {\sffamily\fontsize{10}{12}\selectfont
+        \color{lyraAccentoScuro}\bfseries
+        LYRA CAPITAL\par}
+       \vspace{3mm}
+       {\sffamily\fontsize{40}{44}\selectfont\color{lyraInchiostro}
+        Manuale\\utente\par}
+       \vspace{5mm}
+       {\color{lyraAccento}\rule{34mm}{1.6pt}\par}
+       \vspace{6mm}
+       {\sffamily\fontsize{12}{17}\selectfont\color{lyraInchiostro!62}
+        Che cosa fa ogni schermata, in quale ordine\\
+        si usano, e che cosa significano i numeri.\par}
+     \end{minipage}};
+
+  \node[anchor = south west, inner sep = 0pt]
+    at ([shift = {(28mm, 34mm)}]current page.south west)
+    {\begin{minipage}{125mm}
+       \begin{tcolorbox}[enhanced, colback = lyraPannello,
+                         colframe = lyraBordo, boxrule = 0.6pt, arc = 4pt,
+                         left = 10pt, right = 10pt, top = 9pt, bottom = 9pt]
+         {\sffamily\footnotesize\color{lyraInchiostro}%
+          \textbf{Come si legge.} Ogni capitolo è una zona dell'applicazione.
+          Si può leggere dall'inizio, oppure aprire direttamente il capitolo
+          della schermata che si ha davanti.\par
+          \vspace{4pt}
+          \textbf{Per modificare Lyra}, non per usarla, il documento è un
+          altro: la \emph{Guida dello sviluppatore}, nella stessa cartella.\par}
+       \end{tcolorbox}
+     \end{minipage}};
+
+  \node[anchor = south east, inner sep = 0pt, align = right]
+    at ([shift = {(-24mm, 18mm)}]current page.south east)
+    {\sffamily\scriptsize\color{lyraInchiostro!45}
+     Documento generato da sorgente \LaTeX\\
+     \today};
+
+\end{tikzpicture}
+\end{titlepage}
+
+\cleardoublepage
+
+\thispagestyle{empty}
+\vspace*{18mm}
+
+{\sffamily\Large\bfseries\color{lyraInchiostro}Prima di cominciare\par}
+\vspace{3mm}
+{\color{lyraAccento}\rule{\textwidth}{1pt}\par}
+\vspace{7mm}
+
+\noindent
+Lyra serve a costruire strategie di investimento, provarle sui dati del
+passato e — quando reggono — farle girare su un conto vero. Le tre cose si
+fanno in quest'ordine, e il manuale segue lo stesso ordine.
+
+\vspace{4mm}
+\noindent
+Nel testo, \voce{Questa} è una voce di menu o una scheda, \pulsante{Questo} un
+pulsante da premere, \campo{questo} un campo da compilare, e
+\percorso{Settings \freccia Data} significa: apri \voce{Settings}, poi la
+scheda \voce{Data}.
+
+\vspace{6mm}
+{\sffamily\large\bfseries\color{lyraInchiostro}I riquadri\par}
+\vspace{3mm}
+
+\begin{nota}{Nota}
+Un chiarimento. Saltandolo, l'operazione riesce lo stesso.
+\end{nota}
+
+\begin{pratica}{In pratica}
+L'operazione, passo per passo.
+\end{pratica}
+
+\begin{attenzione}{Attenzione}
+Qui si perde qualcosa: dati, denaro, o tempo. Vale la pena leggerlo prima.
+\end{attenzione}
+
+\vspace{6mm}
+\begin{perche}{Una parola sui numeri}
+Nessun risultato mostrato dall'applicazione è una previsione. Un backtest dice
+come una strategia si \emph{sarebbe} comportata sui dati del passato, con i
+costi stimati; non dice come si comporterà. Il capitolo sugli \voce{Streams}
+spiega quali numeri guardare per distinguere una strategia che ha funzionato
+da una che ha avuto fortuna.
+\end{perche}
+
+\cleardoublepage

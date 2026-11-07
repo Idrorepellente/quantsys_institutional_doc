@@ -1,0 +1,237 @@
+% ===========================================================================
+%  comune/stile-codice.tex — come si mostra il codice
+% ===========================================================================
+%
+%  PERCHE' listings E NON minted. minted colora meglio, ma per farlo chiama
+%  Pygments durante la compilazione: serve Python installato e il permesso
+%  --shell-escape, che molti editor LaTeX negano per difetto e che le
+%  compilazioni automatiche rifiutano. Una documentazione che non compila sulla
+%  macchina di chi la legge non e' documentazione. listings sta dentro LaTeX e
+%  compila ovunque, e la differenza di resa non vale quel prezzo.
+%
+%  Tre modi di mostrare codice, e vanno usati per cose diverse:
+%
+%    \begin{codice}[python]{didascalia}{percorso/file.py}  blocco con cornice
+%    \inputcodice{python}{didascalia}{file.tex}{percorso}  da file esterno
+%    \cod{nome_simbolo}                                     dentro una frase
+%
+%  Il PERCORSO non e' decorazione: chi legge la documentazione ha il sorgente
+%  aperto accanto, e un frammento senza il suo file costringe a cercarlo.
+% ===========================================================================
+\RequirePackage{listings}
+\RequirePackage{tcolorbox}
+\tcbuselibrary{listings, skins, breakable}
+
+% --- stile comune ----------------------------------------------------------
+\lstdefinestyle{lyraBase}{
+  basicstyle      = \ttfamily\footnotesize\color{lyraInchiostro},
+  keywordstyle    = \color{codParola}\bfseries,
+  commentstyle    = \color{codCommento}\itshape,
+  stringstyle     = \color{codStringa},
+  numberstyle     = \ttfamily\scriptsize\color{codRiga},
+  numbers         = left,
+  numbersep       = 9pt,
+  stepnumber      = 1,
+  showstringspaces= false,
+  breaklines      = true,
+  breakatwhitespace = false,
+  % La freccia dice che la riga continua: senza, una riga spezzata si legge
+  % come due istruzioni, ed e' il tipo di errore che si propaga nel copia-incolla.
+  prebreak        = \raisebox{0ex}[0ex][0ex]{\color{lyraAccento}\ensuremath{\hookleftarrow}},
+  tabsize         = 4,
+  columns         = fullflexible,
+  keepspaces      = true,
+  upquote         = true,
+  extendedchars   = true,
+  literate        =
+    {à}{{\`a}}1 {è}{{\`e}}1 {é}{{\'e}}1 {ì}{{\`\i}}1 {ò}{{\`o}}1 {ù}{{\`u}}1
+    {À}{{\`A}}1 {È}{{\`E}}1 {Ì}{{\`I}}1 {Ò}{{\`O}}1 {Ù}{{\`U}}1
+    {€}{{\texteuro}}1 {°}{{\textdegree}}1 {·}{{\textperiodcentered}}1
+    {—}{{---}}1 {–}{{--}}1 {«}{{\guillemotleft}}1 {»}{{\guillemotright}}1
+    {“}{{\textquotedblleft}}1 {”}{{\textquotedblright}}1
+    {’}{{\textquoteright}}1 {‘}{{\textquoteleft}}1
+    {→}{{$\rightarrow$}}1 {←}{{$\leftarrow$}}1 {✓}{{$\checkmark$}}1,
+}
+
+% ---------------------------------------------------------------------------
+%  REGOLA: dentro un blocco di codice si scrive SOLO ASCII.
+%
+%  Niente lettere accentate, niente caratteri di disegno, niente frecce.
+%  `literate` non basta, e nemmeno il pacchetto listingsutf8: tcblisting
+%  scrive il contenuto in un file intermedio e lo rilegge, quindi i byte
+%  arrivano al kernel prima che listings possa intercettarli. L'errore e'
+%  «Invalid UTF-8 byte sequence», segnalato nel file .listing e senza dire
+%  quale blocco l'ha causato.
+%
+%  Quando un valore del sorgente contiene un accento, si translittera e si
+%  mette un commento accanto. Gli alberi di cartelle si disegnano in ASCII
+%  (|-- e `--), oppure in TikZ, dove non passano da listings.
+%  `make controlla` segnala le violazioni prima che fermino la compilazione.
+% ---------------------------------------------------------------------------
+
+% --- i linguaggi che compaiono nel progetto ---------------------------------
+\lstdefinelanguage{JavaScriptLyra}{
+  keywords = {break, case, catch, class, const, continue, debugger, default,
+    delete, do, else, export, extends, finally, for, function, if, import, in,
+    instanceof, let, new, of, return, super, switch, this, throw, try, typeof,
+    var, void, while, with, yield, async, await, static, get, set},
+  keywordstyle = \color{codParola}\bfseries,
+  ndkeywords = {true, false, null, undefined, document, window, console,
+    fetch, JSON, Promise, Array, Object, Math},
+  ndkeywordstyle = \color{lyraInchiostro!75}\bfseries,
+  sensitive = true,
+  comment = [l]{//},
+  morecomment = [s]{/*}{*/},
+  morestring = [b]',
+  morestring = [b]",
+  morestring = [b]`,
+}
+
+\lstdefinelanguage{TypeScriptLyra}{
+  morekeywords = [1]{break, case, catch, class, const, continue, default,
+    delete, do, else, enum, export, extends, finally, for, function, if,
+    implements, import, in, instanceof, interface, let, new, of, private,
+    protected, public, readonly, return, super, switch, this, throw, try,
+    type, typeof, var, void, while, yield, async, await, as, satisfies},
+  morekeywords = [2]{string, number, boolean, any, unknown, never, Promise,
+    Record, Array, Partial, Required},
+  keywordstyle = [1]\color{codParola}\bfseries,
+  keywordstyle = [2]\color{lyraInchiostro!70},
+  sensitive = true,
+  comment = [l]{//},
+  morecomment = [s]{/*}{*/},
+  morestring = [b]',
+  morestring = [b]",
+  morestring = [b]`,
+}
+
+\lstdefinelanguage{Console}{
+  basicstyle = \ttfamily\footnotesize,
+  morecomment = [l]{\#},
+  sensitive = false,
+}
+
+% --- l'ambiente principale --------------------------------------------------
+%  #1 linguaggio, con il nome CORTO (python, js, ts, sql, json, yaml, html,
+%     css, console): \lstlingua lo traduce nel nome che listings conosce, così
+%     chi scrive non deve ricordare che JSON non esiste e che gli somiglia Java
+%  #2 didascalia
+%  #3 percorso del file nel progetto (vuoto = nessuno)
+\newtcblisting{codiceInterno}[3]{
+  listing only,
+  % Sia lo stile sia la lingua devono stare QUI dentro: `listing options`
+  % sostituisce `listing style` invece di aggiungersi, e il sintomo e' che
+  % meta' delle impostazioni (breaklines, numeri di riga) sparisce senza
+  % dirlo. Le righe lunghe escono dal riquadro, ed e' l'unico segno.
+  listing options = {style = lyraBase, language = #1},
+  breakable,
+  enhanced,
+  colback   = codFondo,
+  colframe  = codBordo,
+  boxrule   = 0.5pt,
+  arc       = 3pt,
+  left      = 3pt, right = 3pt, top = 4pt, bottom = 4pt,
+  toptitle  = 2pt, bottomtitle = 2pt,
+  title     = {\footnotesize\sffamily\bfseries\color{lyraInchiostro}#2%
+               \ifstrempty{#3}{}{\hfill\normalfont\ttfamily\scriptsize
+                 \color{lyraInchiostro!60}#3}},
+  colbacktitle = lyraPannello!60!white,
+  coltitle  = lyraInchiostro,
+  fonttitle = \footnotesize,
+  titlerule = 0pt,
+  before skip = 10pt, after skip = 10pt,
+}
+
+% Nomi corti per i linguaggi, cosi' chi scrive non deve ricordare i nomi
+% interni di listings ne' che JSON e YAML non esistono.
+%
+% Si usa \lstalias e non una macro che traduce: l'opzione `language` di
+% listings viene letta senza espandere, quindi una macro li' dentro produce
+% «Missing \endcsname» alla fine del blocco di codice — errore che non dice
+% niente di cio' che e' successo.
+\lstalias{console}{Console}
+\lstalias{python}{Python}
+\lstalias{js}{JavaScriptLyra}
+\lstalias{ts}{TypeScriptLyra}
+\lstalias{sql}{SQL}
+\lstalias{json}{Java}      % JSON non esiste in listings: Java gli somiglia
+\lstalias{yaml}{Python}    % idem per YAML: commenti con #, due punti, indentazione
+\lstalias{html}{HTML}
+\lstalias{css}{HTML}
+\lstalias{testo}{}
+
+% --- codice da file esterno -------------------------------------------------
+%  #1 linguaggio  #2 didascalia  #3 percorso del file su disco  #4 percorso da
+%  mostrare. Si usa per gli estratti lunghi tenuti fuori dal testo.
+\newcommand{\inputcodice}[4]{%
+  \begin{tcolorbox}[
+    breakable, enhanced,
+    colback = codFondo, colframe = codBordo, boxrule = 0.5pt, arc = 3pt,
+    left = 3pt, right = 3pt, top = 4pt, bottom = 4pt,
+    title = {\footnotesize\sffamily\bfseries\color{lyraInchiostro}#2%
+             \hfill\normalfont\ttfamily\scriptsize\color{lyraInchiostro!60}#4},
+    colbacktitle = lyraPannello!60!white, coltitle = lyraInchiostro,
+    fonttitle = \footnotesize, titlerule = 0pt]
+    \lstinputlisting[style=lyraBase, language=#1]{#3}
+  \end{tcolorbox}}
+
+% --- codice dentro una frase ------------------------------------------------
+%  Fondo tenue invece del grassetto: dentro un paragrafo il grassetto chiama
+%  l'occhio e spezza la lettura, mentre un nome di funzione va riconosciuto
+%  senza essere gridato.
+%  Le due penalita' attorno alla scatola non sono decorazione. Un \tcbox e'
+%  una scatola indivisibile: se capita dopo una parentesi o un trattino --
+%  cioe' senza spazio davanti -- TeX non ha dove spezzare la riga e la lascia
+%  sbordare nel margine. Sono state la causa di quasi tutte le righe troppo
+%  lunghe della prima stesura. Con queste, la scatola puo' sempre andare a
+%  capo per conto suo.
+%
+%  Resta un limite: una scatola piu' larga della giustezza sborda comunque.
+%  Per un percorso lungo si usa \file{} (testo normale, si spezza) oppure lo
+%  si mette in un blocco di codice.
+\DeclareRobustCommand{\cod}[1]{%
+  \penalty50
+  \tcbox[on line, boxsep = 0.6pt, left = 1.4pt, right = 1.4pt, top = 0pt,
+         bottom = 0pt, arc = 2pt, boxrule = 0pt,
+         colback = lyraPannello, colframe = lyraPannello]
+        {\ttfamily\small #1}%
+  \penalty0 }
+
+% Percorso di file nel testo.
+%  Usa lo stesso ciclo di \percorsoHTTP (definito in comune/macro.tex): un nome
+%  come `diagnose_regime_signals.py' e' lungo quattro centimetri e senza punti
+%  di sillabazione, quindi in una colonna stretta sborda. Con i punti di
+%  interruzione dopo / _ . e - va a capo dove si legge comunque.
+%  Il ciclo richiede ASCII e niente spazi: per il resto c'e' \cod{}.
+\DeclareRobustCommand{\file}[1]{{\color{lyraInchiostro!78}\percorsoHTTP{#1}}}
+
+% ===========================================================================
+%  Un COMMENTO del sorgente citato per esteso
+% ===========================================================================
+%  Diversa da `codiceInterno`, e la differenza non e' estetica. Molti commenti
+%  di questo progetto sono prose italiane di dieci righe che spiegano una
+%  decisione: sono la parte piu' utile da citare, e dentro un blocco di
+%  listings non ci stanno — listings vuole ASCII puro (vedi sopra), e
+%  translitterare «perche'» e le lettere accentate significa citare qualcosa
+%  che nel sorgente non c'e'.
+%
+%  Qui il testo e' testo LaTeX normale: accenti, virgolette e trattini lunghi
+%  si compongono come nel resto del documento, e la citazione resta fedele.
+%
+%    \begin{commento}{percorso/del/file.py:120}
+%    Il testo del commento, a capo come nel sorgente.
+%    \end{commento}
+%
+%  Il corsivo e il filetto a sinistra dicono «questo l'ha scritto chi ha
+%  scritto il codice, non chi ha scritto la guida».
+\newtcolorbox{commento}[1]{
+  enhanced, breakable,
+  colback   = codFondo, colframe = lyraInchiostro!30,
+  boxrule   = 0pt, leftrule = 2.2pt, arc = 2pt,
+  left = 9pt, right = 9pt, top = 6pt, bottom = 6pt,
+  fontupper = \small\itshape,
+  title     = {\normalfont\ttfamily\scriptsize\color{lyraInchiostro!60}#1},
+  colbacktitle = codFondo, coltitle = lyraInchiostro,
+  titlerule = 0pt, toptitle = 2pt, bottomtitle = 0pt,
+  before skip = 10pt, after skip = 10pt,
+}

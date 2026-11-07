@@ -1,0 +1,100 @@
+% ===========================================================================
+%  sviluppatore/07-marketplace/01-identita.tex
+% ===========================================================================
+\section{Il ponte verso il sito}\label{sez:ponte}
+
+La dashboard non sa chi è l'utente: lo chiede al sito. Non conserva password
+né segreti: li tiene il sito. Tutto ciò che riguarda identità, denaro e
+catalogo passa da \file{dashboard/app\_api.py}, e il meccanismo è un token
+personale.
+
+\subsection{Dove sta il token}
+
+\begin{codiceInterno}{python}{La ricerca del token, in ordine}{dashboard/app\_api.py:67}
+def token() -> str | None:
+    global _TOKEN, _TOKEN_LOADED
+    if _TOKEN_LOADED:
+        return _TOKEN
+    _TOKEN_LOADED = True
+    env = (os.environ.get("LYRA_APP_TOKEN") or "").strip()
+    if env:
+        _TOKEN = env
+        return _TOKEN
+    try:
+        p = _token_path()
+        if p.exists():
+            data = json.loads(p.read_text(encoding="utf-8"))
+            _TOKEN = (data.get("token") or "").strip() or None
+    except Exception:
+        _TOKEN = None
+    return _TOKEN
+\end{codiceInterno}
+
+\noindent
+Variabile d'ambiente prima, file dopo, e il risultato è messo in cache per
+tutta la vita del processo. La cache è la ragione per cui, dopo un accesso
+nuovo, può servire un riavvio: \cod{\_TOKEN\_LOADED} resta vero.
+
+\subsection{La chiamata che non solleva}
+
+\begin{commento}{dashboard/app\_api.py:137 $\cdot$ \cod{chiama\_sito()}}
+Chiamata al sito che NON solleva: ritorna (ok, dati).
+
+Serve alle rotte che fanno solo da ponte — sicurezza dell'account, per
+esempio. L'app non conserva password ne' segreti: li tiene il sito, e qui
+si inoltra soltanto aggiungendo il token di chi ha fatto l'accesso.
+
+Gli errori del sito arrivano con il proprio messaggio e il proprio codice
+di stato: tradurli qui significherebbe perdere spiegazioni che il sito ha
+scritto apposta.
+\end{commento}
+
+\begin{perche}{Perché gli errori del sito si inoltrano senza tradurli}
+Il sito scrive messaggi pensati per essere letti dall'utente: «il tuo
+abbonamento è scaduto il \ldots», «questa email è già registrata». Sostituirli
+con un generico «errore del server» cancella l'informazione. La dashboard fa
+da ponte, e un ponte non riscrive ciò che trasporta.
+\end{perche}
+
+\subsection{La regola del token giusto}
+
+C'è un secondo segreto, oltre al token dell'utente: quello della dashboard.
+Servono a cose diverse, e scambiarli produce il più insidioso dei difetti
+di questo capitolo.
+
+\begin{commento}{dashboard/community.py:76 $\cdot$ \cod{SI()}}
+SI CHIAMA CON IL TOKEN DELL'UTENTE, non col segreto della dashboard.
+Prima no, e per questo non ha mai funzionato: \percorsoHTTP{/api/app/abbonamento}
+riconosce la persona dal token, quindi rispondeva 401, l'eccezione veniva
+inghiottita e il risultato era «non abbonato» per tutti. Il sintomo era
+invisibile perche' in beta gli unici a pubblicare erano gli
+amministratori, che passano da un'altra strada.
+\end{commento}
+
+\begin{attenzione}{Tre cose insieme rendono un difetto invisibile}
+Una risposta \cod{401}, un'eccezione inghiottita, e un ripiego prudente che
+risponde «non abbonato». Presi uno per uno sono ragionevoli; insieme
+producono un sistema che funziona male e non lo dice. Chi aggiunge una
+chiamata al sito controlli quale dei due segreti serve, e verifichi il
+percorso d'errore con l'utente giusto --- non con un amministratore, che
+spesso passa da un'altra strada e non lo attraversa mai.
+\end{attenzione}
+
+\subsection{«Non sapere vale come no»}
+
+Per la pubblicazione il ripiego prudente è invece la scelta corretta, ed è
+dichiarata:
+
+\begin{commento}{dashboard/community.py:72 $\cdot$ \cod{In()}}
+In caso di errore risponde «livello 0, non puo' pubblicare»: non sapere
+vale come no. Pubblicare per errore mette in vetrina roba di cui nessuno
+risponde e si toglie dopo; non pubblicare si risolve riprovando.
+\end{commento}
+
+\noindent
+Il criterio è l'asimmetria del danno: una pubblicazione sbagliata si corregge
+con fatica e intanto è pubblica; una pubblicazione mancata si corregge
+riprovando. Si noti che è il contrario della regola vista per le \emph{letture}
+(\vediSez{pagina-nuova}): lì «non so» non va mostrato come «no», perché
+nessuna azione irreversibile ne dipende. La differenza fra i due casi è se
+c'è un'azione, non se c'è un'incertezza.

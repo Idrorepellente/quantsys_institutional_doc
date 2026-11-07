@@ -1,0 +1,57 @@
+% ===========================================================================
+%  sviluppatore/04-motore/01-barra.tex
+% ===========================================================================
+\section{Che cosa succede a ogni barra}\label{sez:barra}
+
+Il ciclo principale sta in \file{backtest/engine.py}. Per ogni data del
+calendario, dopo il periodo di riscaldamento, fa sei cose nello stesso ordine.
+
+\figuraTikz{pipeline-motore}
+  {I sei passi del ciclo. La divisione fra la riga superiore e quella
+   inferiore non è grafica: è la divisione fra decidere ed eseguire.}
+  {pipeline-motore}
+
+\begin{enumerate}
+  \item \textbf{Indicatori.} Non si calcolano dentro la strategia: si
+        pre-calcolano una volta per simbolo e si passano già pronti. Che cosa
+        serve lo dichiara ogni strategia nel proprio descrittore, e il
+        registro ne fa l'unione.
+  \item \textbf{Strategie.} Ciascuna riceve gli indicatori e il portafoglio e
+        restituisce una lista di \simbolo{Signal}: che cosa, in che
+        direzione, con quale convinzione. Non quanto.
+  \item \textbf{Allocatore.} Dai segnali ai pesi di portafoglio. È qui che
+        si decide quanto, e il come è configurabile
+        (\vediSez{allocatore}).
+  \item \textbf{Rischio.} Tetti su peso per posizione, esposizione lorda per
+        classe di attività, leva complessiva, volatilità obiettivo.
+  \item \textbf{Esecuzione.} Prezzo di apertura, slippage, costi.
+  \item \textbf{Portafoglio.} Posizioni aggiornate, equity segnata a mercato,
+        storia registrata.
+\end{enumerate}
+
+\subsection{Prima di tutto: i trigger intra-barra}
+
+C'è un passo che precede la decisione, e non compare nella figura perché non
+è parte del ciclo decisionale: il controllo degli \emph{stop} e dei
+\emph{take profit} sulle posizioni già aperte.
+
+\begin{codiceInterno}{python}{Il controllo che viene prima di tutto}{backtest/engine.py:745}
+            # ---- INTRA-BAR TRIGGER CHECK ----
+            # PRIMA della decision/execution phase, controlla se i SL/TP delle
+            # posizioni aperte sono stati toccati nella bar t (high/low).
+            trigger_hits = exit_tracker.check_bar(t, data)
+\end{codiceInterno}
+
+\noindent
+Se un livello è stato toccato, la posizione si chiude subito e il simbolo
+finisce in una lista nera fino al prossimo ribilanciamento vero. La filosofia
+dichiarata nel codice è che «ribilanciare è quando rivaluti la tesi»: uno
+stop toccato non aspetta il prossimo ribilanciamento, ma nemmeno autorizza a
+riaprire la stessa posizione nella stessa barra.
+
+\begin{attenzione}{La lista nera non blocca le chiusure}
+Un simbolo in lista nera non può essere \emph{aperto}, ma un target a zero
+passa sempre. Invertire questa asimmetria --- cioè bloccare anche le chiusure
+--- significherebbe tenere aperta una posizione che il sistema ha deciso di
+chiudere, ed è il tipo di errore che si scopre su un conto reale.
+\end{attenzione}

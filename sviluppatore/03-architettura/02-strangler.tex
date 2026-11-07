@@ -1,0 +1,122 @@
+% ===========================================================================
+%  sviluppatore/03-architettura/02-strangler.tex
+% ===========================================================================
+\section{Due applicazioni web, e il motivo}\label{sez:strangler}
+
+Dentro la metà locale ci sono due applicazioni web (\vediFig{strangler}):
+
+\begin{center}
+\begin{tabular}{@{}L{34mm}L{24mm}L{80mm}@{}}
+\toprule
+ & \textbf{Flask} & \textbf{FastAPI} \\
+\midrule
+\rigaTenue
+File principale & \file{dashboard/app.py} & \file{api/app.py} \\
+Porta           & \num{5000}              & \num{8000} \\
+\rigaTenue
+Dimensione      & \num{246} rotte         & \num{13} router \\
+Restituisce     & pagine HTML e JSON      & solo JSON \\
+\rigaTenue
+Autenticazione  & guardia globale, quasi tutto aperto & nessuna \\
+Parla con       & direttamente il motore  & i casi d'uso, via
+                                            \simbolo{Container} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Che cos'è uno strangler fig}
+
+La pianta da cui prende il nome cresce attorno a un albero ospite, lo
+avvolge e lo sostituisce gradualmente: alla fine resta in piedi da sola, e
+l'albero di dentro non c'è più. Nessun momento in cui il bosco resta senza
+albero.
+
+Applicato qui: la dashboard Flask ha dentro il codice che è stato scritto per
+primo, con il motore chiamato direttamente. L'API FastAPI è il nuovo guscio e
+parla solo con i casi d'uso. Le due convivono, e il confine si sposta una
+funzionalità alla volta.
+
+\begin{perche}{Perché non si riscrive la dashboard e basta}
+Perché la dashboard funziona, e perché \num{28494} righe di Python più
+\num{42072} di template non si riscrivono con la garanzia di non perdere
+niente. Una riscrittura in blocco ha due esiti noti: o dura abbastanza da
+essere abbandonata a metà, o arriva in fondo avendo perso silenziosamente i
+casi limite che nessuno aveva scritto da nessuna parte --- e in un sistema che
+muove denaro, un caso limite perso è un ordine sbagliato.
+\end{perche}
+
+\subsection{Come si avvia l'API}
+
+\begin{codiceInterno}{python}{Il montaggio dell'applicazione}{api/app.py}
+def create_app(container: Optional[Container] = None, jobs=None) -> FastAPI:
+    container = container or build_container()
+    app = FastAPI(title="QuantSys Engine API", version="0.2.0")
+    app.state.container = container
+
+    if jobs is None:
+        # JobManager reale: max_workers=1 = serializzato (default sicuro del progetto)
+        from execution.job_manager import JobManager
+        job_manager = JobManager(max_workers=1)
+        app.state.job_manager = job_manager
+        jobs = JobManagerJobService(container.run_walkforward, job_manager)
+    app.state.jobs = jobs
+
+    app.include_router(health.router)
+    app.include_router(strategies.router)
+    ...
+\end{codiceInterno}
+
+\noindent
+Due cose meritano attenzione. La prima è che \simbolo{create\_app} accetta un
+\simbolo{Container} dall'esterno: nei test si passa un contenitore di finti e
+l'API intera gira senza toccare il disco. La seconda è
+\cod{max\_workers=1}: i job sono \emph{serializzati}, ed è il default sicuro
+del progetto. Due backtest in parallelo si contendono la stessa cache dati e
+gli stessi file di output.
+
+\subsection{I tredici router}
+
+\begin{center}
+\begin{tabular}{@{}L{32mm}L{112mm}@{}}
+\toprule
+\textbf{Router} & \textbf{Che cosa espone} \\
+\midrule
+\rigaTenue
+\file{health}             & Stato del servizio. \\
+\file{strategies}         & Elenco e dettaglio delle strategie. \\
+\rigaTenue
+\file{strategy\_admin}    & Validazione e installazione di una strategia. \\
+\file{runs}               & Avvio di un walk-forward, stato, log in SSE. \\
+\rigaTenue
+\file{streams}            & Catalogo degli stream prodotti. \\
+\file{ensemble}           & Composizione: pesi, overlay, metriche. \\
+\rigaTenue
+\file{models}             & Registro dei modelli ML e promozione. \\
+\file{factor\_attribution}& Scomposizione del rendimento per fattore. \\
+\rigaTenue
+\file{stress\_test}       & Prove sotto scenario. \\
+\file{live}               & Controllo dell'operatività. \\
+\rigaTenue
+\file{generator}          & Generazione di codice da descrizione. \\
+\file{nodes}              & Compilazione del grafo a nodi in Python. \\
+\rigaTenue
+\file{fidelity}           & Confronto fra trade disegnati a mano e strategia. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{attenzione}{Le rotte FastAPI non esistono per Flask}
+Sono due applicazioni separate, in due processi. Nessuna rotta di \pkgApi{} è
+registrata nell'app Flask, e viceversa. Cercare \percorsoHTTP{/api/strategies} sulla
+porta \num{5000} e trovarci una rotta Flask con lo stesso nome ma
+comportamento diverso è possibile, ed è successo: quando si documenta o si
+collauda un endpoint, la porta fa parte dell'indirizzo.
+\end{attenzione}
+
+\subsection{Dove passa il confine, oggi}
+
+La regola pratica: \textbf{ciò che è nuovo nasce nel guscio}. Una funzionalità
+nuova si scrive come caso d'uso, si espone dall'API, e la dashboard la chiama
+come chiamerebbe qualunque servizio. Ciò che esiste si sposta quando lo si
+deve toccare comunque, non prima e non per ordine --- spostare codice che
+funziona e che nessuno sta modificando è rischio senza ritorno.

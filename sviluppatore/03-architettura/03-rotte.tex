@@ -1,0 +1,161 @@
+% ===========================================================================
+%  sviluppatore/03-architettura/03-rotte.tex
+% ===========================================================================
+\section{Le \num{246} rotte, e chi le registra}\label{sez:rotte}
+
+La dashboard Flask ha \num{267} decoratori \cod{@route} che danno
+\num{246} percorsi distinti --- la differenza sono le coppie
+«\cod{GET} in una funzione, \cod{POST} in un'altra». Sono sparsi su undici
+moduli, montati in un ordine che conta.
+
+\begin{center}
+\begin{tabular}{@{}L{36mm}R{14mm}L{86mm}@{}}
+\toprule
+\textbf{Modulo} & \textbf{Rotte} & \textbf{Come si registra} \\
+\midrule
+\rigaTenue
+\file{app.py}             & \num{134} & \cod{@app.route} dentro
+                                        \simbolo{create\_app()} \\
+\file{community.py}       & \num{43}  & \cod{Blueprint("community")},
+                                        senza \cod{url\_prefix} \\
+\rigaTenue
+\file{studio.py}          & \num{43}  & \cod{Blueprint("studio")} \\
+\file{marketplace\_routes.py} & \num{12} & Agganciate \emph{al blueprint
+                                        community}, non a uno proprio \\
+\rigaTenue
+\file{agent.py}           & \num{10}  & \cod{Blueprint("agent")} \\
+\file{genetic.py}         & \num{8}   & \cod{Blueprint("genetic")} \\
+\rigaTenue
+\file{auth.py}            & \num{8}   & \cod{@app.route} dentro
+                                        \simbolo{init\_auth(app)} \\
+\file{ui\_ext\_a/b/e/f.py} & \num{9}  & Caricate automaticamente
+                                        (\vediSez{ui-ext}) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{nota}{Due moduli senza rotte}
+\file{live\_runners.py} e \file{autopubblica.py} non registrano niente: sono
+moduli di servizio. Il primo è chiamato da \file{app.py} sotto
+\percorsoHTTP{/api/runners/*} e \percorsoHTTP{/api/brokers/*}; il secondo parte come thread
+all'avvio.
+\end{nota}
+
+\subsection{L'ordine di montaggio}\label{sez:montaggio}
+
+\figuraTikz{montaggio-app}
+  {Gli otto passi con cui \simbolo{create\_app()} assembla l'applicazione.}
+  {montaggio-app}
+
+\subsection{Il caricamento automatico delle estensioni v2}\label{sez:ui-ext}
+
+L'ultimo passo di registrazione è diverso dagli altri: non c'è nessun elenco.
+
+\begin{codiceInterno}{python}{Il meccanismo delle estensioni}{dashboard/app.py:4362}
+    # Rotte aggiunte con il nuovo stile (v2): ogni modulo dashboard/ui_ext_*.py
+    # espone register(app, data_layer, base_path). Tenerle in moduli propri
+    # evita di far crescere ancora questo file.
+    try:
+        import importlib as _il, pkgutil as _pu, dashboard as _dpkg
+        for _m in sorted(m.name for m in _pu.iter_modules(_dpkg.__path__)
+                         if m.name.startswith("ui_ext_")):
+            _il.import_module(f"dashboard.{_m}").register(app, data_layer, base_path)
+    except Exception as _e:  # noqa: BLE001
+        logging.getLogger("app").warning("v2 page extensions not loaded: %s", _e)
+\end{codiceInterno}
+
+\noindent
+Cinque conseguenze, tutte rilevanti per chi estende:
+
+\begin{enumerate}
+  \item \textbf{Nessun registro da aggiornare.} Si crea
+        \file{dashboard/ui\_ext\_<lettera>.py} con una funzione
+        \simbolo{register(app, data\_layer, base\_path)} e al riavvio c'è.
+  \item \textbf{Ordine alfabetico garantito} dal \cod{sorted}: \file{a},
+        \file{b}, \file{e}, \file{f}. Le lettere \file{c} e \file{d} non
+        esistono --- un buco nella serie, non un errore.
+  \item \textbf{Rotte sull'app, non su un blueprint.} Gli endpoint sono
+        globali (\cod{a\_overview}, \cod{b\_project\_detail}\ldots) e
+        \cod{url\_for} li raggiunge senza prefisso.
+  \item \textbf{Caricate dopo tutto il resto}, compreso
+        \simbolo{init\_auth}: gli hook di queste estensioni girano dopo la
+        guardia di autenticazione.
+  \item \textbf{Fallimento silenzioso.} Un solo \cod{except} avvolge l'intero
+        ciclo: se \file{ui\_ext\_a} solleva all'import, \emph{anche b, e, f non
+        vengono caricati}, e tutto ciò che si vede è una riga di avviso nel
+        registro.
+\end{enumerate}
+
+\begin{attenzione}{Il punto più fragile della dashboard}
+Il punto~\num{5} è il modo tipico in cui metà dell'interfaccia sparisce dopo
+una modifica apparentemente innocua. Il sintomo è una pagina che va in
+\cod{404} o un pannello vuoto; la causa è un \cod{ImportError} in un altro
+modulo. Quando qualcosa della v2 non c'è più, la prima cosa da cercare nel
+registro è la riga \cod{v2 page extensions not loaded}.
+\end{attenzione}
+
+\subsection{Rotte statiche che coprono rotte dinamiche}
+
+Werkzeug dà la precedenza ai segmenti statici, quindi
+\percorsoHTTP{/api/marketplace/items} vince su \percorsoHTTP{/api/marketplace/<artifact\_id>}.
+Funziona, ed è voluto. Ma significa che un artefatto il cui identificativo
+fosse \cod{items}, \cod{mine}, \cod{acquisti}, \cod{diagnostica},
+\cod{contestazioni}, \cod{video-check} o \cod{system-artifacts} sarebbe
+\emph{irraggiungibile}. Lo stesso vale per \percorsoHTTP{/marketplace/sell} contro
+\percorsoHTTP{/marketplace/<artifact\_id>}, e per \percorsoHTTP{/api/jobs/conclusi} contro
+\percorsoHTTP{/api/jobs/<job\_id>}.
+
+\begin{nota}{Perché oggi non è un problema}
+Gli identificativi degli artefatti sono generati, non scelti dall'utente. Se
+un giorno diventassero scegliibili --- uno \emph{slug} leggibile nell'URL, per
+dire --- questa lista diventerebbe un elenco di parole riservate da vietare in
+fase di pubblicazione.
+\end{nota}
+
+\subsection{Tre cose morte, da non seguire}
+
+\begin{description}[leftmargin = 1.6em, style = nextline, itemsep = 5pt]
+  \item[\rotta{POST}{/api/market/publish}]
+    Ritirata. Il docstring dice \cod{"""RITIRATA."""} e la rotta risponde
+    sempre \cod{403}, ma resta registrata e occupa il percorso. La
+    pubblicazione vera è \rotta{POST}{/api/marketplace/publish}, in
+    \file{community.py}.
+  \item[L'endpoint \cod{auth\_google\_token}]
+    Elencato fra quelli pubblici in \file{auth.py}, ma nessuna rotta ha
+    quel nome. Riferimento pendente, innocuo.
+  \item[Il prefisso \percorsoHTTP{/claim}]
+    Elencato fra i percorsi che richiedono un account, ma nessuna rotta
+    comincia con \percorsoHTTP{/claim}: la pagina delle contestazioni è
+    \percorsoHTTP{/marketplace/rimborso/<claim\_id>}, già coperta dal prefisso
+    \percorsoHTTP{/marketplace}. L'equivoco nasce dal template, che si chiama
+    \file{claim.html}.
+\end{description}
+
+\subsection{Due template orfani}
+
+In \file{dashboard/templates/} ci sono \num{35} file. Due non sono raggiunti
+da nessuna rotta e da nessun \cod{include}:
+
+\begin{itemize}
+  \item \file{brokers.html} --- il suo JavaScript è stato estratto in
+        \file{static/js/brokers.js} e l'interfaccia dei broker vive ora dentro
+        \file{live.html}. Residuo di una ristrutturazione.
+  \item \file{server\_runners.html} --- i runner non stanno più sul server, ma
+        sul computer dell'utente. Funzionalità rimossa, template rimasto.
+\end{itemize}
+
+\noindent
+Altri quattro non sono orfani ma non sono nemmeno pagine: \file{base.html} è
+il genitore di tutte le \num{32} pagine, \file{\_robustness\_panel.html},
+\file{\_v2\_profile\_security.html} e \file{\_v2\_studio\_bp.html} sono
+frammenti inclusi. \file{serve\_account.html} è un caso a sé: non lo rende
+nessuna rotta, lo rende la guardia di autenticazione
+(\vediSez{permessi}).
+
+\begin{attenzione}{\file{live.html} non è la pagina di Studio}
+\file{studio.html} è servito da \percorsoHTTP{/studio} e da
+\percorsoHTTP{/studio/dati-esterni}; \file{live.html} è servito da
+\percorsoHTTP{/studio/runner-live}. Il nome del percorso dice Studio, la pagina è
+Live. È facile sbagliare, e il blueprint che la registra si chiama
+\cod{studio}.
+\end{attenzione}

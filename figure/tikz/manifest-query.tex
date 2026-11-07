@@ -1,0 +1,37 @@
+% ===========================================================================
+%  figure/tikz/manifest-query.tex
+%  Prima e dopo il manifesto delle query: il rapporto di fiducia si rovescia.
+% ===========================================================================
+\begin{tikzpicture}[x = 1mm, y = 1mm]
+
+  % ---------- prima ---------------------------------------------------------
+  \node[interfaccia, minimum width = 30mm, minimum height = 10mm] at (0,0)  (a1) {app};
+  \node[sito,        minimum width = 30mm, minimum height = 10mm] at (56,0) (a2) {sito};
+  \node[persistenza, minimum width = 30mm, minimum height = 10mm] at (108,0)(a3) {database};
+  \draw[flusso] (a1) -- (a2) node[etichetta, pos = 0.5] {SQL libero + segreto};
+  \draw[flusso] (a2) -- (a3);
+  \node[nota, anchor = north west, text width = 128mm] at (-16,-8)
+    {\textbf{Prima.} Un segreto uguale per tutte le installazioni. Chi lo
+     estraeva poteva eseguire qualunque comando sul database di produzione.};
+
+  % ---------- dopo ----------------------------------------------------------
+  \node[interfaccia, minimum width = 30mm, minimum height = 10mm] at (0,-34)  (b1) {app};
+  \node[sito,        minimum width = 30mm, minimum height = 10mm] at (56,-34) (b2) {sito};
+  \node[persistenza, minimum width = 30mm, minimum height = 10mm] at (108,-34)(b3) {database};
+  \node[archivio,    minimum width = 30mm, minimum height = 10mm] at (56,-54) (man)
+    {manifesto\\{\scriptsize elenco di \codT{op\_id}}};
+
+  \draw[flusso] (b1) -- (b2) node[etichetta, pos = 0.5] {\codT{op\_id} + parametri};
+  \draw[flusso] (b2) -- (b3);
+  \draw[dipendenza] (man) -- (b2);
+  \draw[bloccato] (18,-27) -- (38,-27);
+  \node[font = \sffamily\scriptsize, text = lyraNegativo, anchor = south] at (28,-26)
+    {qualunque altra cosa};
+
+  \node[nota, anchor = north west, text width = 128mm] at (-16,-62)
+    {\textbf{Dopo.} Il sito conosce in anticipo l'elenco esatto delle query
+     ammesse; l'app può solo chiederne una per nome. E il parametro che
+     identifica l'utente viene riscritto dal sito con l'identità del token:
+     anche mentendo, il client ottiene solo i propri dati.};
+
+\end{tikzpicture}

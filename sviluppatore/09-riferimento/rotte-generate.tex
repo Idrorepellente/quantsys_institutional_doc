@@ -1,0 +1,375 @@
+% ===========================================================================
+%  GENERATO DA strumenti/genera-rotte.py --- non modificare a mano.
+%  Per aggiornarlo:  python3 strumenti/genera-rotte.py /percorso/del/progetto
+% ===========================================================================
+
+\subsection{app.py --- il nucleo}
+\begin{longtable}{@{}L{17mm}L{74mm}L{45mm}@{}}
+\toprule
+\textbf{Metodi} & \textbf{Percorso} & \textbf{Funzione} \\
+\midrule\endfirsthead
+\toprule
+\textbf{Metodi} & \textbf{Percorso} & \textbf{Funzione} \\
+\midrule\endhead
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak } & {\ttfamily\scriptsize index} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak admin} & {\ttfamily\scriptsize admin\_page} \\
+{\scriptsize\sffamily GET POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak account/\allowbreak security} & {\ttfamily\scriptsize api\_account\_security} \\
+\rigaTenue {\scriptsize\sffamily GET POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak admin/\allowbreak amministratori} & {\ttfamily\scriptsize api\_admin\_elenco, api\_admin\_modifica} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak admin/\allowbreak artefatti} & {\ttfamily\scriptsize api\_admin\_artefatti} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak admin/\allowbreak artefatti/\allowbreak zip} & {\ttfamily\scriptsize api\_admin\_artefatti\_zip} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak admin/\allowbreak beta} & {\ttfamily\scriptsize api\_admin\_beta} \\
+\rigaTenue {\scriptsize\sffamily GET POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak admin/\allowbreak beta-access} & {\ttfamily\scriptsize api\_admin\_beta\_access, api\_admin\_beta\_access\_modifica} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak admin/\allowbreak feedback} & {\ttfamily\scriptsize api\_admin\_feedback} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak admin/\allowbreak feedback/\allowbreak export} & {\ttfamily\scriptsize api\_admin\_feedback\_export} \\
+{\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak admin/\allowbreak feedback/\allowbreak group} & {\ttfamily\scriptsize api\_admin\_feedback\_group} \\
+\rigaTenue {\scriptsize\sffamily GET POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak admin/\allowbreak piani} & {\ttfamily\scriptsize api\_admin\_piani, api\_admin\_piani\_modifica} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak admin/\allowbreak users} & {\ttfamily\scriptsize api\_admin\_users} \\
+\rigaTenue {\scriptsize\sffamily GET POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak admin/\allowbreak vendite} & {\ttfamily\scriptsize api\_admin\_vendite, api\_admin\_vendite\_modifica} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak brokers/\allowbreak <broker>/\allowbreak check} & {\ttfamily\scriptsize api\_broker\_check} \\
+\rigaTenue {\scriptsize\sffamily GET POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak brokers/\allowbreak credentials} & {\ttfamily\scriptsize api\_broker\_credentials} \\
+{\scriptsize\sffamily GET POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak brokers/\allowbreak test/\allowbreak config} & {\ttfamily\scriptsize api\_test\_config} \\
+\rigaTenue {\scriptsize\sffamily GET POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak categorie} & {\ttfamily\scriptsize api\_categorie, api\_categorie\_crea} \\
+{\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak categorie/\allowbreak <cat>} & {\ttfamily\scriptsize api\_categorie\_modifica} \\
+\rigaTenue {\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak categorie/\allowbreak <cat>/\allowbreak elimina} & {\ttfamily\scriptsize api\_categorie\_elimina} \\
+{\scriptsize\sffamily GET POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak config/\allowbreak settings} & {\ttfamily\scriptsize api\_config\_settings\_get, api\_config\_settings\_save} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak config/\allowbreak yaml} & {\ttfamily\scriptsize api\_config\_yaml} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak data/\allowbreak cache\_status} & {\ttfamily\scriptsize api\_data\_cache\_status} \\
+\rigaTenue {\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak data/\allowbreak capabilities} & {\ttfamily\scriptsize api\_data\_capabilities} \\
+{\scriptsize\sffamily GET POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak data/\allowbreak categories} & {\ttfamily\scriptsize api\_data\_categories, api\_data\_category\_create} \\
+\rigaTenue {\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak data/\allowbreak categories/\allowbreak <name>/\allowbreak delete} & {\ttfamily\scriptsize api\_data\_category\_delete} \\
+{\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak data/\allowbreak categories/\allowbreak <name>/\allowbreak empty} & {\ttfamily\scriptsize api\_data\_category\_empty} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak data/\allowbreak categories/\allowbreak <name>/\allowbreak files} & {\ttfamily\scriptsize api\_data\_category\_files} \\
+{\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak data/\allowbreak categories/\allowbreak <name>/\allowbreak kind} & {\ttfamily\scriptsize api\_data\_category\_kind} \\
+\rigaTenue {\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak data/\allowbreak download/\allowbreak <mode>} & {\ttfamily\scriptsize api\_data\_download} \\
+{\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak data/\allowbreak mms/\allowbreak generate} & {\ttfamily\scriptsize api\_data\_mms\_generate} \\
+\rigaTenue {\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak data/\allowbreak upload} & {\ttfamily\scriptsize api\_data\_upload} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak ensemble/\allowbreak <name>} & {\ttfamily\scriptsize api\_ensemble} \\
+\rigaTenue {\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak ensemble\_custom} & {\ttfamily\scriptsize api\_ensemble\_custom} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak health} & {\ttfamily\scriptsize api\_health} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak job/\allowbreak <job\_id>} & {\ttfamily\scriptsize api\_job} \\
+{\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak job/\allowbreak <job\_id>/\allowbreak cancel} & {\ttfamily\scriptsize api\_job\_cancel} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak job/\allowbreak <job\_id>/\allowbreak stream} & {\ttfamily\scriptsize api\_job\_stream} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak jobs} & {\ttfamily\scriptsize api\_jobs\_list} \\
+\rigaTenue {\scriptsize\sffamily DELETE} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak jobs/\allowbreak <job\_id>} & {\ttfamily\scriptsize api\_job\_rimuovi} \\
+{\scriptsize\sffamily DELETE} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak jobs/\allowbreak conclusi} & {\ttfamily\scriptsize api\_jobs\_svuota} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak live/\allowbreak approaches} & {\ttfamily\scriptsize api\_live\_approaches} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak live/\allowbreak ensemble\_modes} & {\ttfamily\scriptsize api\_live\_ensemble\_modes} \\
+\rigaTenue {\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak live/\allowbreak run\_cycle} & {\ttfamily\scriptsize api\_live\_run\_cycle} \\
+{\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak live/\allowbreak start} & {\ttfamily\scriptsize api\_live\_start} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak live/\allowbreak state} & {\ttfamily\scriptsize api\_live\_state} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak live/\allowbreak status} & {\ttfamily\scriptsize api\_live\_status} \\
+\rigaTenue {\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak live/\allowbreak stop} & {\ttfamily\scriptsize api\_live\_stop} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak live/\allowbreak strategies} & {\ttfamily\scriptsize api\_live\_strategies} \\
+\rigaTenue {\scriptsize\sffamily GET POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak logics} & {\ttfamily\scriptsize api\_logic\_create, api\_logics} \\
+{\scriptsize\sffamily GET POST DELETE} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak logics/\allowbreak <key>/\allowbreak file} & {\ttfamily\scriptsize api\_logic\_file} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak maintenance/\allowbreak plan} & {\ttfamily\scriptsize api\_maintenance\_plan} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak markets} & {\ttfamily\scriptsize api\_markets} \\
+\rigaTenue {\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak markets/\allowbreak <key>/\allowbreak config} & {\ttfamily\scriptsize api\_market\_config} \\
+{\scriptsize\sffamily GET POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak markets/\allowbreak <key>/\allowbreak file} & {\ttfamily\scriptsize api\_market\_file} \\
+\rigaTenue {\scriptsize\sffamily GET POST DELETE} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak metrics} & {\ttfamily\scriptsize api\_metrics} \\
+{\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak metrics/\allowbreak compute} & {\ttfamily\scriptsize api\_metrics\_compute} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak notifications} & {\ttfamily\scriptsize api\_notifications} \\
+{\scriptsize\sffamily GET POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak overview/\allowbreak prefs} & {\ttfamily\scriptsize api\_overview\_prefs} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak plugins} & {\ttfamily\scriptsize api\_plugins} \\
+{\scriptsize\sffamily GET POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak projects} & {\ttfamily\scriptsize api\_projects} \\
+\rigaTenue {\scriptsize\sffamily GET POST DELETE} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak projects/\allowbreak <pid>} & {\ttfamily\scriptsize api\_project} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak regime} & {\ttfamily\scriptsize api\_regime} \\
+\rigaTenue {\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak reload} & {\ttfamily\scriptsize api\_reload} \\
+{\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak retrain} & {\ttfamily\scriptsize api\_retrain} \\
+\rigaTenue {\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak run/\allowbreak <strategy>} & {\ttfamily\scriptsize api\_run\_strategy} \\
+{\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak run\_all} & {\ttfamily\scriptsize api\_run\_all} \\
+\rigaTenue {\scriptsize\sffamily GET POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak runners} & {\ttfamily\scriptsize api\_runners\_create, api\_runners\_list} \\
+{\scriptsize\sffamily DELETE} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak runners/\allowbreak <rid>} & {\ttfamily\scriptsize api\_runners\_delete} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak runners/\allowbreak <rid>/\allowbreak simulation} & {\ttfamily\scriptsize api\_runner\_simulation} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak runners/\allowbreak <rid>/\allowbreak simulation/\allowbreak series/\allowbreak <symbol>} & {\ttfamily\scriptsize api\_runner\_simulation\_series} \\
+\rigaTenue {\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak runners/\allowbreak <rid>/\allowbreak start} & {\ttfamily\scriptsize api\_runners\_start} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak runners/\allowbreak <rid>/\allowbreak status} & {\ttfamily\scriptsize api\_runners\_status} \\
+\rigaTenue {\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak runners/\allowbreak <rid>/\allowbreak stop} & {\ttfamily\scriptsize api\_runners\_stop} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak strategies} & {\ttfamily\scriptsize api\_strategies} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak stream/\allowbreak <name>} & {\ttfamily\scriptsize api\_stream} \\
+{\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak stream/\allowbreak <name>/\allowbreak delete} & {\ttfamily\scriptsize api\_stream\_delete} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak stream/\allowbreak <name>/\allowbreak files} & {\ttfamily\scriptsize api\_stream\_files} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak streams} & {\ttfamily\scriptsize api\_streams\_list} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak streams/\allowbreak orfani} & {\ttfamily\scriptsize api\_streams\_orphans} \\
+{\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak streams/\allowbreak orfani/\allowbreak pulisci} & {\ttfamily\scriptsize api\_streams\_orphans\_clean} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak universo} & {\ttfamily\scriptsize api\_universo} \\
+{\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak universo/\allowbreak <symbol>/\allowbreak categoria} & {\ttfamily\scriptsize api\_universo\_categoria} \\
+\rigaTenue {\scriptsize\sffamily GET POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak user\_approaches} & {\ttfamily\scriptsize api\_user\_approach\_create, api\_user\_approaches\_list} \\
+{\scriptsize\sffamily GET DELETE} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak user\_approaches/\allowbreak <name>} & {\ttfamily\scriptsize api\_user\_approach\_delete, api\_user\_approach\_files} \\
+\rigaTenue {\scriptsize\sffamily GET POST DELETE} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak user\_approaches/\allowbreak <name>/\allowbreak <filename>} & {\ttfamily\scriptsize api\_user\_approach\_file\_delete, api\_user\_approach\_file\_get, api\_user\_approach\_file\_save} \\
+{\scriptsize\sffamily GET POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak user\_strategies} & {\ttfamily\scriptsize api\_user\_strategies\_list, api\_user\_strategy\_create} \\
+\rigaTenue {\scriptsize\sffamily GET DELETE} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak user\_strategies/\allowbreak <name>} & {\ttfamily\scriptsize api\_user\_strategy\_delete, api\_user\_strategy\_files} \\
+{\scriptsize\sffamily GET POST DELETE} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak user\_strategies/\allowbreak <name>/\allowbreak <filename>} & {\ttfamily\scriptsize api\_user\_file\_delete, api\_user\_file\_get, api\_user\_file\_save} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak visual/\allowbreak <strategy>/\allowbreak chart/\allowbreak <symbol>} & {\ttfamily\scriptsize api\_visual\_chart} \\
+{\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak visual/\allowbreak <strategy>/\allowbreak custom\_indicator/\allowbreak <symbol>} & {\ttfamily\scriptsize api\_visual\_custom\_indicator} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak visual/\allowbreak <strategy>/\allowbreak indicators/\allowbreak <symbol>} & {\ttfamily\scriptsize api\_visual\_indicators} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak visual/\allowbreak <strategy>/\allowbreak liquidity\_heatmap/\allowbreak <symbol>} & {\ttfamily\scriptsize api\_visual\_liquidity\_heatmap} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak visual/\allowbreak <strategy>/\allowbreak mms/\allowbreak <symbol>} & {\ttfamily\scriptsize api\_visual\_mms} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak visual/\allowbreak <strategy>/\allowbreak symbols} & {\ttfamily\scriptsize api\_visual\_symbols} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak visual/\allowbreak <strategy>/\allowbreak zones/\allowbreak <symbol>} & {\ttfamily\scriptsize api\_visual\_zones} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak visual/\allowbreak indicator\_template} & {\ttfamily\scriptsize api\_visual\_indicator\_template} \\
+\rigaTenue {\scriptsize\sffamily GET POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak visual/\allowbreak indicators} & {\ttfamily\scriptsize api\_visual\_indicators\_list, api\_visual\_indicators\_save} \\
+{\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak visual/\allowbreak indicators/\allowbreak delete} & {\ttfamily\scriptsize api\_visual\_indicators\_delete} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak config} & {\ttfamily\scriptsize config\_page} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak data} & {\ttfamily\scriptsize data\_page} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak editor} & {\ttfamily\scriptsize editor\_page} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak ensemble/\allowbreak <name>} & {\ttfamily\scriptsize ensemble\_page} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak ensemble\_custom} & {\ttfamily\scriptsize ensemble\_custom\_page} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak favicon.ico} & {\ttfamily\scriptsize favicon} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak live/\allowbreak test/\allowbreak <rid>} & {\ttfamily\scriptsize live\_test\_page} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak profile} & {\ttfamily\scriptsize profile\_page} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak projects} & {\ttfamily\scriptsize projects\_page} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak regime} & {\ttfamily\scriptsize regime\_page} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak run} & {\ttfamily\scriptsize run\_page} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak security} & {\ttfamily\scriptsize security\_page} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak stream/\allowbreak <name>} & {\ttfamily\scriptsize stream\_page} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak streams} & {\ttfamily\scriptsize streams\_page} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak subscription} & {\ttfamily\scriptsize subscription\_page} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak visual} & {\ttfamily\scriptsize visual\_page} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak visual/\allowbreak <strategy>} & {\ttfamily\scriptsize visual\_page} \\
+\bottomrule
+\end{longtable}
+
+\subsection{studio.py --- blueprint \cod{studio}}
+\begin{longtable}{@{}L{17mm}L{74mm}L{45mm}@{}}
+\toprule
+\textbf{Metodi} & \textbf{Percorso} & \textbf{Funzione} \\
+\midrule\endfirsthead
+\toprule
+\textbf{Metodi} & \textbf{Percorso} & \textbf{Funzione} \\
+\midrule\endhead
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak studio} & {\ttfamily\scriptsize page} \\
+\rigaTenue {\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak studio/\allowbreak api/\allowbreak approach/\allowbreak install} & {\ttfamily\scriptsize api\_approach\_install} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak studio/\allowbreak api/\allowbreak available/\allowbreak approaches} & {\ttfamily\scriptsize api\_avail\_approaches} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak studio/\allowbreak api/\allowbreak available/\allowbreak metrics} & {\ttfamily\scriptsize api\_avail\_metrics} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak studio/\allowbreak api/\allowbreak available/\allowbreak overlays} & {\ttfamily\scriptsize api\_avail\_overlays} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak studio/\allowbreak api/\allowbreak available/\allowbreak strategies} & {\ttfamily\scriptsize api\_avail\_strategies} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak studio/\allowbreak api/\allowbreak available/\allowbreak weightmodes} & {\ttfamily\scriptsize api\_avail\_weightmodes} \\
+\rigaTenue {\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak studio/\allowbreak api/\allowbreak compile} & {\ttfamily\scriptsize api\_compile} \\
+{\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak studio/\allowbreak api/\allowbreak data/\allowbreak adapter/\allowbreak apply} & {\ttfamily\scriptsize api\_data\_apply} \\
+\rigaTenue {\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak studio/\allowbreak api/\allowbreak data/\allowbreak adapter/\allowbreak generate} & {\ttfamily\scriptsize api\_data\_generate} \\
+{\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak studio/\allowbreak api/\allowbreak data/\allowbreak analyze} & {\ttfamily\scriptsize api\_data\_analyze} \\
+\rigaTenue {\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak studio/\allowbreak api/\allowbreak fidelity/\allowbreak codify} & {\ttfamily\scriptsize api\_fid\_codify} \\
+{\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak studio/\allowbreak api/\allowbreak fidelity/\allowbreak score} & {\ttfamily\scriptsize api\_fid\_score} \\
+\rigaTenue {\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak studio/\allowbreak api/\allowbreak generate} & {\ttfamily\scriptsize api\_generate} \\
+{\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak studio/\allowbreak api/\allowbreak indicator/\allowbreak compile} & {\ttfamily\scriptsize api\_ind\_compile} \\
+\rigaTenue {\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak studio/\allowbreak api/\allowbreak indicator/\allowbreak generate} & {\ttfamily\scriptsize api\_ind\_generate} \\
+{\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak studio/\allowbreak api/\allowbreak install} & {\ttfamily\scriptsize api\_install} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak studio/\allowbreak api/\allowbreak installati/\allowbreak <categoria>} & {\ttfamily\scriptsize api\_installati} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak studio/\allowbreak api/\allowbreak installati/\allowbreak <categoria>/\allowbreak <nome>} & {\ttfamily\scriptsize api\_installato\_apri} \\
+\rigaTenue {\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak studio/\allowbreak api/\allowbreak installati/\allowbreak <categoria>/\allowbreak <nome>/\allowbreak elimina} & {\ttfamily\scriptsize api\_installato\_elimina} \\
+{\scriptsize\sffamily GET POST} & {\ttfamily\scriptsize /\allowbreak studio/\allowbreak api/\allowbreak manual-trades} & {\ttfamily\scriptsize api\_manual\_trades} \\
+\rigaTenue {\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak studio/\allowbreak api/\allowbreak metric/\allowbreak compile} & {\ttfamily\scriptsize api\_metric\_compile} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak studio/\allowbreak api/\allowbreak metric/\allowbreak doc} & {\ttfamily\scriptsize api\_metric\_doc} \\
+\rigaTenue {\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak studio/\allowbreak api/\allowbreak metric/\allowbreak generate} & {\ttfamily\scriptsize api\_metric\_generate} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak studio/\allowbreak api/\allowbreak metric/\allowbreak template} & {\ttfamily\scriptsize api\_metric\_template} \\
+\rigaTenue {\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak studio/\allowbreak api/\allowbreak metric/\allowbreak validate} & {\ttfamily\scriptsize api\_metric\_validate} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak studio/\allowbreak api/\allowbreak models} & {\ttfamily\scriptsize api\_models} \\
+\rigaTenue {\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak studio/\allowbreak api/\allowbreak overlay/\allowbreak compile} & {\ttfamily\scriptsize api\_overlay\_compile} \\
+{\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak studio/\allowbreak api/\allowbreak overlay/\allowbreak generate} & {\ttfamily\scriptsize api\_overlay\_generate} \\
+\rigaTenue {\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak studio/\allowbreak api/\allowbreak overlay/\allowbreak install} & {\ttfamily\scriptsize api\_overlay\_install} \\
+{\scriptsize\sffamily GET POST DELETE} & {\ttfamily\scriptsize /\allowbreak studio/\allowbreak api/\allowbreak overlay/\allowbreak port} & {\ttfamily\scriptsize api\_overlay\_port} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak studio/\allowbreak api/\allowbreak overlay/\allowbreak template} & {\ttfamily\scriptsize api\_overlay\_template} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak studio/\allowbreak api/\allowbreak runner/\allowbreak get/\allowbreak <name>} & {\ttfamily\scriptsize api\_runner\_get} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak studio/\allowbreak api/\allowbreak runner/\allowbreak list} & {\ttfamily\scriptsize api\_runner\_list} \\
+{\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak studio/\allowbreak api/\allowbreak runner/\allowbreak save} & {\ttfamily\scriptsize api\_runner\_save} \\
+\rigaTenue {\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak studio/\allowbreak api/\allowbreak runner/\allowbreak validate} & {\ttfamily\scriptsize api\_runner\_validate} \\
+{\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak studio/\allowbreak api/\allowbreak weightmode/\allowbreak compile} & {\ttfamily\scriptsize api\_wm\_compile} \\
+\rigaTenue {\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak studio/\allowbreak api/\allowbreak weightmode/\allowbreak generate} & {\ttfamily\scriptsize api\_wm\_generate} \\
+{\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak studio/\allowbreak api/\allowbreak weightmode/\allowbreak install} & {\ttfamily\scriptsize api\_wm\_install} \\
+\rigaTenue {\scriptsize\sffamily GET POST DELETE} & {\ttfamily\scriptsize /\allowbreak studio/\allowbreak api/\allowbreak weightmode/\allowbreak port} & {\ttfamily\scriptsize api\_wm\_port} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak studio/\allowbreak api/\allowbreak weightmode/\allowbreak template} & {\ttfamily\scriptsize api\_wm\_template} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak studio/\allowbreak dati-esterni} & {\ttfamily\scriptsize data\_esterni\_page} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak studio/\allowbreak runner-live} & {\ttfamily\scriptsize runner\_live\_page} \\
+\bottomrule
+\end{longtable}
+
+\subsection{community.py --- blueprint \cod{community}}
+\begin{longtable}{@{}L{17mm}L{74mm}L{45mm}@{}}
+\toprule
+\textbf{Metodi} & \textbf{Percorso} & \textbf{Funzione} \\
+\midrule\endfirsthead
+\toprule
+\textbf{Metodi} & \textbf{Percorso} & \textbf{Funzione} \\
+\midrule\endhead
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak account} & {\ttfamily\scriptsize account} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak abbonamento} & {\ttfamily\scriptsize abbonamento\_stato} \\
+{\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak abbonamento/\allowbreak checkout} & {\ttfamily\scriptsize abbonamento\_checkout} \\
+\rigaTenue {\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak abbonamento/\allowbreak portale} & {\ttfamily\scriptsize abbonamento\_portale} \\
+{\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak account} & {\ttfamily\scriptsize account\_update} \\
+\rigaTenue {\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak community/\allowbreak feedback} & {\ttfamily\scriptsize feedback\_create} \\
+{\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak feedback} & {\ttfamily\scriptsize api\_submit\_feedback} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak marketplace/\allowbreak <artifact\_id>} & {\ttfamily\scriptsize marketplace\_detail} \\
+{\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak marketplace/\allowbreak <artifact\_id>/\allowbreak buy} & {\ttfamily\scriptsize marketplace\_buy} \\
+\rigaTenue {\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak marketplace/\allowbreak <artifact\_id>/\allowbreak comments} & {\ttfamily\scriptsize marketplace\_comment} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak marketplace/\allowbreak <artifact\_id>/\allowbreak conflicts} & {\ttfamily\scriptsize marketplace\_conflicts} \\
+\rigaTenue {\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak marketplace/\allowbreak <artifact\_id>/\allowbreak contesta} & {\ttfamily\scriptsize marketplace\_contesta} \\
+{\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak marketplace/\allowbreak <artifact\_id>/\allowbreak install} & {\ttfamily\scriptsize marketplace\_install} \\
+\rigaTenue {\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak marketplace/\allowbreak <artifact\_id>/\allowbreak installa-admin} & {\ttfamily\scriptsize marketplace\_installa\_admin} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak marketplace/\allowbreak <artifact\_id>/\allowbreak issue-stato} & {\ttfamily\scriptsize marketplace\_issue\_stato} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak marketplace/\allowbreak <artifact\_id>/\allowbreak perche-non-mio} & {\ttfamily\scriptsize marketplace\_perche\_non\_mio} \\
+{\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak marketplace/\allowbreak <artifact\_id>/\allowbreak remove} & {\ttfamily\scriptsize marketplace\_remove} \\
+\rigaTenue {\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak marketplace/\allowbreak <artifact\_id>/\allowbreak riconcilia} & {\ttfamily\scriptsize marketplace\_riconcilia} \\
+{\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak marketplace/\allowbreak <artifact\_id>/\allowbreak scheda} & {\ttfamily\scriptsize marketplace\_modifica\_scheda} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak marketplace/\allowbreak acquisti} & {\ttfamily\scriptsize marketplace\_acquisti} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak marketplace/\allowbreak claim/\allowbreak <claim\_id>} & {\ttfamily\scriptsize marketplace\_claim} \\
+\rigaTenue {\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak marketplace/\allowbreak claim/\allowbreak <claim\_id>/\allowbreak chiudi} & {\ttfamily\scriptsize marketplace\_claim\_chiudi} \\
+{\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak marketplace/\allowbreak claim/\allowbreak <claim\_id>/\allowbreak messaggio} & {\ttfamily\scriptsize marketplace\_claim\_messaggio} \\
+\rigaTenue {\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak marketplace/\allowbreak claim/\allowbreak <claim\_id>/\allowbreak verifica-integrita} & {\ttfamily\scriptsize marketplace\_claim\_integrita} \\
+{\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak marketplace/\allowbreak claim/\allowbreak <claim\_id>/\allowbreak verifica-performance} & {\ttfamily\scriptsize marketplace\_claim\_performance} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak marketplace/\allowbreak claim/\allowbreak aperte} & {\ttfamily\scriptsize marketplace\_claim\_aperte} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak marketplace/\allowbreak contestazioni} & {\ttfamily\scriptsize marketplace\_contestazioni} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak marketplace/\allowbreak diagnostica} & {\ttfamily\scriptsize marketplace\_diagnostica} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak marketplace/\allowbreak items} & {\ttfamily\scriptsize marketplace\_items\_api} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak marketplace/\allowbreak mine} & {\ttfamily\scriptsize marketplace\_mine} \\
+{\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak marketplace/\allowbreak publish} & {\ttfamily\scriptsize marketplace\_publish} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak marketplace/\allowbreak system-artifacts} & {\ttfamily\scriptsize marketplace\_system\_artifacts} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak marketplace/\allowbreak system-artifacts/\allowbreak <kind>/\allowbreak <path:name>} & {\ttfamily\scriptsize marketplace\_system\_artifact} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak marketplace/\allowbreak video-check} & {\ttfamily\scriptsize marketplace\_video\_check} \\
+{\scriptsize\sffamily GET POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak messages/\allowbreak <conversation\_id>} & {\ttfamily\scriptsize messages\_send, messages\_thread} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak feedback} & {\ttfamily\scriptsize feedback} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak marketplace} & {\ttfamily\scriptsize marketplace} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak marketplace/\allowbreak <artifact\_id>} & {\ttfamily\scriptsize marketplace\_item} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak marketplace/\allowbreak acquisto/\allowbreak <artifact\_id>} & {\ttfamily\scriptsize marketplace\_purchase\_return} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak marketplace/\allowbreak rimborso/\allowbreak <claim\_id>} & {\ttfamily\scriptsize claim\_page} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak marketplace/\allowbreak sell} & {\ttfamily\scriptsize marketplace\_sell} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak messages} & {\ttfamily\scriptsize messages} \\
+\bottomrule
+\end{longtable}
+
+\subsection{marketplace\_routes.py --- sul blueprint \cod{community}}
+\begin{longtable}{@{}L{17mm}L{74mm}L{45mm}@{}}
+\toprule
+\textbf{Metodi} & \textbf{Percorso} & \textbf{Funzione} \\
+\midrule\endfirsthead
+\toprule
+\textbf{Metodi} & \textbf{Percorso} & \textbf{Funzione} \\
+\midrule\endhead
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak market/\allowbreak admin/\allowbreak payments} & {\ttfamily\scriptsize market\_admin\_payments} \\
+\rigaTenue {\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak market/\allowbreak admin/\allowbreak refund} & {\ttfamily\scriptsize market\_admin\_refund} \\
+{\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak market/\allowbreak buy/\allowbreak <artifact\_id>} & {\ttfamily\scriptsize market\_buy} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak market/\allowbreak catalog} & {\ttfamily\scriptsize market\_catalog} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak market/\allowbreak earnings} & {\ttfamily\scriptsize market\_earnings} \\
+\rigaTenue {\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak market/\allowbreak install/\allowbreak <artifact\_id>} & {\ttfamily\scriptsize market\_install} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak market/\allowbreak item/\allowbreak <artifact\_id>} & {\ttfamily\scriptsize market\_item} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak market/\allowbreak license/\allowbreak <artifact\_id>} & {\ttfamily\scriptsize market\_license} \\
+{\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak market/\allowbreak publish} & {\ttfamily\scriptsize market\_publish} \\
+\rigaTenue {\scriptsize\sffamily GET POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak market/\allowbreak seller} & {\ttfamily\scriptsize market\_seller, market\_seller\_azione} \\
+{\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak market/\allowbreak seller/\allowbreak connect} & {\ttfamily\scriptsize market\_seller\_connect} \\
+\bottomrule
+\end{longtable}
+
+\subsection{agent.py --- blueprint \cod{agent}}
+\begin{longtable}{@{}L{17mm}L{74mm}L{45mm}@{}}
+\toprule
+\textbf{Metodi} & \textbf{Percorso} & \textbf{Funzione} \\
+\midrule\endfirsthead
+\toprule
+\textbf{Metodi} & \textbf{Percorso} & \textbf{Funzione} \\
+\midrule\endhead
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak agent} & {\ttfamily\scriptsize page} \\
+\rigaTenue {\scriptsize\sffamily GET POST} & {\ttfamily\scriptsize /\allowbreak agent/\allowbreak api/\allowbreak chats} & {\ttfamily\scriptsize api\_chat\_create, api\_chats} \\
+{\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak agent/\allowbreak api/\allowbreak chats/\allowbreak <chat\_id>/\allowbreak delete} & {\ttfamily\scriptsize api\_chat\_delete} \\
+\rigaTenue {\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak agent/\allowbreak api/\allowbreak chats/\allowbreak <chat\_id>/\allowbreak message} & {\ttfamily\scriptsize api\_chat\_message} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak agent/\allowbreak api/\allowbreak chats/\allowbreak <chat\_id>/\allowbreak messages} & {\ttfamily\scriptsize api\_chat\_messages} \\
+\rigaTenue {\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak agent/\allowbreak api/\allowbreak chats/\allowbreak <chat\_id>/\allowbreak prepare} & {\ttfamily\scriptsize api\_chat\_prepare} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak agent/\allowbreak api/\allowbreak chats/\allowbreak <chat\_id>/\allowbreak progress} & {\ttfamily\scriptsize api\_chat\_progress} \\
+\rigaTenue {\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak agent/\allowbreak api/\allowbreak chats/\allowbreak <chat\_id>/\allowbreak rename} & {\ttfamily\scriptsize api\_chat\_rename} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak agent/\allowbreak api/\allowbreak contexts} & {\ttfamily\scriptsize api\_contexts} \\
+\bottomrule
+\end{longtable}
+
+\subsection{genetic.py --- blueprint \cod{genetic}}
+\begin{longtable}{@{}L{17mm}L{74mm}L{45mm}@{}}
+\toprule
+\textbf{Metodi} & \textbf{Percorso} & \textbf{Funzione} \\
+\midrule\endfirsthead
+\toprule
+\textbf{Metodi} & \textbf{Percorso} & \textbf{Funzione} \\
+\midrule\endhead
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak genetic} & {\ttfamily\scriptsize page} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak genetic/\allowbreak api/\allowbreak config} & {\ttfamily\scriptsize api\_config} \\
+{\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak genetic/\allowbreak api/\allowbreak job/\allowbreak <job\_id>/\allowbreak installa} & {\ttfamily\scriptsize api\_installa\_respinta} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak genetic/\allowbreak api/\allowbreak jobs} & {\ttfamily\scriptsize api\_jobs} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak genetic/\allowbreak api/\allowbreak jobs/\allowbreak <job\_id>} & {\ttfamily\scriptsize api\_job} \\
+\rigaTenue {\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak genetic/\allowbreak api/\allowbreak jobs/\allowbreak <job\_id>/\allowbreak cancel} & {\ttfamily\scriptsize api\_job\_cancel} \\
+{\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak genetic/\allowbreak api/\allowbreak run} & {\ttfamily\scriptsize api\_run} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak genetic/\allowbreak api/\allowbreak strategies} & {\ttfamily\scriptsize api\_strategies} \\
+\bottomrule
+\end{longtable}
+
+\subsection{auth.py --- dentro \cod{init\_auth(app)}}
+\begin{longtable}{@{}L{17mm}L{74mm}L{45mm}@{}}
+\toprule
+\textbf{Metodi} & \textbf{Percorso} & \textbf{Funzione} \\
+\midrule\endfirsthead
+\toprule
+\textbf{Metodi} & \textbf{Percorso} & \textbf{Funzione} \\
+\midrule\endhead
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak auth/\allowbreak google/\allowbreak callback} & {\ttfamily\scriptsize auth\_google\_callback} \\
+\rigaTenue {\scriptsize\sffamily GET POST} & {\ttfamily\scriptsize /\allowbreak login} & {\ttfamily\scriptsize auth\_login} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak login/\allowbreak google} & {\ttfamily\scriptsize auth\_google\_start} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak login/\allowbreak google/\allowbreak pronto} & {\ttfamily\scriptsize auth\_google\_pronto} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak logout} & {\ttfamily\scriptsize auth\_logout} \\
+\rigaTenue {\scriptsize\sffamily GET POST} & {\ttfamily\scriptsize /\allowbreak register} & {\ttfamily\scriptsize auth\_register} \\
+{\scriptsize\sffamily GET POST} & {\ttfamily\scriptsize /\allowbreak reset} & {\ttfamily\scriptsize auth\_reset} \\
+\rigaTenue {\scriptsize\sffamily GET POST} & {\ttfamily\scriptsize /\allowbreak verify} & {\ttfamily\scriptsize auth\_verify} \\
+\bottomrule
+\end{longtable}
+
+\subsection{ui\_ext\_a.py --- estensione v2}
+\begin{longtable}{@{}L{17mm}L{74mm}L{45mm}@{}}
+\toprule
+\textbf{Metodi} & \textbf{Percorso} & \textbf{Funzione} \\
+\midrule\endfirsthead
+\toprule
+\textbf{Metodi} & \textbf{Percorso} & \textbf{Funzione} \\
+\midrule\endhead
+{\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak a/\allowbreak metric\_preview} & {\ttfamily\scriptsize a\_metric\_preview} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak a/\allowbreak overview} & {\ttfamily\scriptsize a\_overview} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak a/\allowbreak stream/\allowbreak <name>/\allowbreak meta} & {\ttfamily\scriptsize a\_stream\_meta} \\
+\bottomrule
+\end{longtable}
+
+\subsection{ui\_ext\_b.py --- estensione v2}
+\begin{longtable}{@{}L{17mm}L{74mm}L{45mm}@{}}
+\toprule
+\textbf{Metodi} & \textbf{Percorso} & \textbf{Funzione} \\
+\midrule\endfirsthead
+\toprule
+\textbf{Metodi} & \textbf{Percorso} & \textbf{Funzione} \\
+\midrule\endhead
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak ensemble-custom} & {\ttfamily\scriptsize b\_ensemble\_custom\_alias} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak projects/\allowbreak <path:pid>} & {\ttfamily\scriptsize b\_project\_detail} \\
+\bottomrule
+\end{longtable}
+
+\subsection{ui\_ext\_e.py --- estensione v2}
+\begin{longtable}{@{}L{17mm}L{74mm}L{45mm}@{}}
+\toprule
+\textbf{Metodi} & \textbf{Percorso} & \textbf{Funzione} \\
+\midrule\endfirsthead
+\toprule
+\textbf{Metodi} & \textbf{Percorso} & \textbf{Funzione} \\
+\midrule\endhead
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak e/\allowbreak account-data} & {\ttfamily\scriptsize e\_account\_data} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak e/\allowbreak sell-status} & {\ttfamily\scriptsize e\_sell\_status} \\
+\bottomrule
+\end{longtable}
+
+\subsection{ui\_ext\_f.py --- estensione v2}
+\begin{longtable}{@{}L{17mm}L{74mm}L{45mm}@{}}
+\toprule
+\textbf{Metodi} & \textbf{Percorso} & \textbf{Funzione} \\
+\midrule\endfirsthead
+\toprule
+\textbf{Metodi} & \textbf{Percorso} & \textbf{Funzione} \\
+\midrule\endhead
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak f/\allowbreak account} & {\ttfamily\scriptsize f\_account} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak f/\allowbreak subscription/\allowbreak invoices} & {\ttfamily\scriptsize f\_subscription\_invoices} \\
+\bottomrule
+\end{longtable}
+
+\begin{nota}{Quanti sono}
+Questa tabella elenca \num{246} percorsi distinti, da \num{267} decoratori \cod{@route} su \num{11} moduli. Se i numeri non coincidono con quelli del progetto che si ha davanti, la tabella è vecchia: si rigenera con \file{strumenti/genera-rotte.py}.
+\end{nota}

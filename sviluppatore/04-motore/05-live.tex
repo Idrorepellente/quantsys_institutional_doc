@@ -1,0 +1,122 @@
+% ===========================================================================
+%  sviluppatore/04-motore/05-live.tex
+% ===========================================================================
+\section{Lo stesso calcolo, su un conto vero}\label{sez:live}
+
+\pkgLive{} non è un secondo motore: è lo stesso, con un broker al posto dei
+dati storici. Il valore di tutto il progetto dipende da questa frase, e il
+modo in cui viene mantenuta vera merita di essere letto per intero, perché è
+anche l'esempio migliore di che cosa va storto quando non lo è.
+
+\subsection{Il difetto che ha definito il progetto}
+
+Fino a un certo punto, il backtest normalizzava la volatilità di ogni stream
+e l'operatività dal vivo no. Il commento in testa a
+\file{live/ensemble\_live.py} dice che cosa significava:
+
+\begin{quote}\itshape
+Senza il punto~2 un libro dichiarato al \num{4}\,\% di vol veniva mostrato
+in backtest moltiplicato per \num{2.5} ed eseguito dal vivo a dimensione
+piena: \num{0.4} volte il rischio e il rendimento misurati. Al contrario, un
+libro al \num{25}\,\% veniva tagliato a \num{0.4} in backtest e girava dal
+vivo a \num{2.5} volte.
+\end{quote}
+
+\noindent
+Nessun errore, nessuna eccezione, nessun avviso. Il backtest mostrava un
+numero e il conto ne produceva un altro, e la differenza era un fattore fra
+\num{0.4} e \num{2.5} a seconda della volatilità dello stream --- cioè più
+grande quanto più il libro si discostava dall'obiettivo, che è esattamente il
+caso in cui si ha bisogno che il backtest sia attendibile.
+
+\begin{perche}{Perché il rimedio è stato condividere la funzione}
+Si sarebbe potuto riscrivere la normalizzazione in \pkgLive{} copiando la
+formula. Due implementazioni della stessa formula restano identiche finché
+qualcuno non ne tocca una, e questo difetto è nato esattamente così. La
+soluzione è che \simbolo{\_vol\_trailing} è \emph{una}, e le due strade la
+usano in modo diverso in un solo punto documentato: il backtest la shifta di
+un giorno, il live no (\vediSez{ensemble}).
+\end{perche}
+
+\subsection{I due punti in cui la normalizzazione entra}
+
+\begin{enumerate}
+  \item \textbf{I pesi si calcolano sui rendimenti scalati}, non su quelli
+        grezzi. Le modalità di pesatura guardano la matrice di covarianza: su
+        serie non normalizzate uno stream al \num{25}\,\% di volatilità
+        riceve un peso del tutto diverso da quello che riceveva in backtest.
+  \item \textbf{\simbolo{scales()} restituisce il fattore da applicare adesso}
+        al vettore di posizioni --- cioè la leva che il backtest stava
+        mostrando e che il live non applicava.
+\end{enumerate}
+
+\subsection{Il riscaldamento}
+
+La volatilità trailing non esiste prima di una ventina di osservazioni, e fra
+venti e sessanta è ancora rumorosa. In quel tratto il sistema mescola la
+stima con una volatilità \emph{a priori} --- per uno stream di approccio, la
+sua volatilità di backtest --- con peso lineare crescente.
+
+\begin{center}
+\begin{tabular}{@{}L{40mm}L{98mm}@{}}
+\toprule
+\textbf{Osservazioni} & \textbf{Che cosa si usa} \\
+\midrule
+\rigaTenue
+meno di \cod{SCALE\_MIN\_OBS} & Solo la volatilità a priori. Senza una, il
+  fattore è \cod{1.0}. \\
+fra le due soglie & Miscela lineare fra priori e stima. \\
+\rigaTenue
+oltre \cod{scale\_min\_obs} & Solo la stima: qui coincide con il backtest. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+Il requisito dichiarato è: \emph{mai un salto di dimensione in un solo
+giorno}. Una transizione netta fra priori e stima produrrebbe, il giorno in
+cui la soglia viene superata, un ordine di ribilanciamento che non
+corrisponde a nessun cambiamento del mercato.
+
+\begin{nota}{Lo stato sopravvive ai riavvii}
+I rendimenti per stream sono salvati su JSON, così la finestra non riparte da
+zero a ogni riavvio del processo. Senza, ogni riavvio rimetterebbe il sistema
+in riscaldamento, e il riscaldamento usa la volatilità a priori: il conto
+cambierebbe dimensione per il solo fatto di essere stato riavviato.
+\end{nota}
+
+\subsection{I broker}
+
+L'interfaccia è \simbolo{live.broker.LiveBroker}, la stessa classe che
+\pkgPorte{} ri-esporta come porta \simbolo{Broker}. Le implementazioni
+attuali coprono il conto reale, il conto demo del broker, l'esecuzione su
+carta e un broker di prova con il tempo accelerato --- quest'ultimo serve alla
+pagina di simulazione, che fa passare una giornata di mercato in pochi
+secondi.
+
+\begin{attenzione}{Le credenziali restano su file locale}
+\percorsoHTTP{/api/brokers/credentials} legge e scrive un file sul computer
+dell'utente. Non passano dal sito, non finiscono nel database, e non c'è
+nessun percorso che le porti in rete. Questo è il motivo per cui la porta
+della dashboard non va esposta: chi la raggiunge può leggerle.
+\end{attenzione}
+
+\subsection{Il ciclo dal vivo}
+
+\begin{center}
+\begin{tabular}{@{}L{42mm}L{96mm}@{}}
+\toprule
+\textbf{Rotta} & \textbf{Che cosa fa} \\
+\midrule
+\rigaTenue
+\rotta{POST}{/api/live/run\_cycle} & Un ciclo solo. Il default è prudente: conto
+  su carta, prova a vuoto, dati dimostrativi. \\
+\rotta{POST}{/api/live/start} & Operatività continua. \\
+\rigaTenue
+\rotta{POST}{/api/live/stop} & Ferma il ciclo \emph{alla fine} di quello in
+  corso, non a metà. \\
+\rotta{GET}{/api/live/status} & Stato, numero di cicli, configurazione e le
+  ultime \num{60} righe del registro. \\
+\bottomrule
+\end{tabular}
+\end{center}

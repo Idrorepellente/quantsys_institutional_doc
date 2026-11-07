@@ -1,0 +1,181 @@
+% ===========================================================================
+%  sviluppatore/04-motore/04-ensemble.tex
+% ===========================================================================
+\section{Comporre più stream}\label{sez:ensemble}
+
+Una strategia da sola è uno stream. \simbolo{EnsembleEngine}, in
+\file{reporting/ensemble.py}, ne prende diversi e ne fa uno solo. Il percorso
+ha tre stadi, e due di essi sono punti d'innesto per i plugin.
+
+\figuraTikz{composizione-ensemble}
+  {La composizione. Pesatura e overlay fanno cose diverse e non vanno
+   confuse: la prima distribuisce, la seconda scala.}
+  {composizione-ensemble}
+
+\subsection{Primo stadio: portare gli stream alla stessa scala}
+
+Due strategie con lo stesso Sharpe ma volatilità diversa non vanno pesate
+allo stesso modo: la più volatile dominerebbe il risultato
+indipendentemente dal peso dichiarato. Ogni stream viene quindi riportato a
+una volatilità obiettivo comune prima di essere pesato.
+
+Il mattone è uno solo, e serve sia al backtest sia all'operatività dal vivo:
+
+\begin{codiceInterno}{python}{Il mattone comune}{reporting/ensemble.py:335}
+    def _vol_trailing(self, returns: pd.Series) -> pd.Series:
+        """Vol annualizzata TRAILING e NON shiftata: il valore a t usa le
+        osservazioni fino a t INCLUSO.
+
+        E' il mattone comune fra backtest e live. Il backtest la shifta di un
+        giorno (`_compute_scale_series`) perche' lo scale applicato al ritorno
+        di t deve conoscere solo il passato; il live la usa non shiftata
+        (`scala_corrente`) perche' li' l'ultima osservazione e' il ritorno
+        appena realizzato e la posizione che si sta per aprire rendera' nel
+        periodo SUCCESSIVO. Due usi, una sola formula: e' l'unico modo perche'
+        il libro che si esegue sia quello che si e' misurato.
+        """
+\end{codiceInterno}
+
+\begin{perche}{Perché uno shift di differenza non è un dettaglio}
+Nel backtest il fattore applicato al rendimento di $t$ deve conoscere solo il
+passato, quindi la serie si shifta di uno. Dal vivo l'ultima osservazione
+\emph{è} il rendimento appena realizzato, e la posizione che si sta per
+aprire renderà nel periodo successivo: shiftare anche lì significherebbe
+dimensionare con una stima vecchia di un giorno. Stesso numero, due usi, e
+se le due strade calcolassero la volatilità ciascuna per conto proprio il
+libro eseguito non sarebbe quello misurato. Il motivo per cui la funzione è
+una sola è esattamente questo.
+\end{perche}
+
+\noindent
+Due costanti governano i casi limite:
+
+\begin{center}
+\begin{tabular}{@{}L{32mm}R{14mm}L{92mm}@{}}
+\toprule
+\textbf{Costante} & \textbf{Valore} & \textbf{A che serve} \\
+\midrule
+\rigaTenue
+\cod{SCALE\_MIN\_OBS} & \num{20} & Sotto questa soglia non c'è stima, e il
+  fattore vale \cod{1.0}: il libro resta quello dell'allocatore, mai
+  amplificato da una volatilità stimata su quattro dati. \\
+\cod{SCALE\_MAX\_LEVA} & \num{10.0} & Con volatilità che tende a zero il
+  fattore esploderebbe. La volatilità ha quindi un pavimento a
+  \cod{target\_vol / SCALE\_MAX\_LEVA}. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Secondo stadio: la pesatura}
+
+Quattordici modalità installate, raggruppate per famiglia:
+
+\begin{center}
+\begin{tabular}{@{}L{34mm}L{18mm}L{86mm}@{}}
+\toprule
+\textbf{Famiglia} & \textbf{Tipo} & \textbf{Modalità} \\
+\midrule
+\rigaTenue
+Ingenua & statica & \cod{equal} \\
+Rischio / covarianza & statica & \cod{inverse\_cov}, \cod{min\_variance\_lw},
+  \cod{min\_variance\_rmt}, \cod{erc} \\
+\rigaTenue
+Robusta & statica & \cod{hrp}, \cod{nco}, \cod{cluster\_risk\_budget},
+  \cod{max\_div} \\
+Coda & statica & \cod{cvar} \\
+\rigaTenue
+Con vista sui rendimenti & statica & \cod{black\_litterman}, \cod{kelly} \\
+Adattiva al regime & \textbf{rolling} & \cod{regime\_ml}, \cod{regime\_style} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+Il campo \cod{kind} del \cod{META} governa il dispatch, e non è
+documentazione: è la condizione di un \cod{if}.
+
+\begin{codiceInterno}{python}{Il dispatch, senza una catena di if}{reporting/ensemble.py:491}
+        spec = next((m for m in self.WEIGHTING_MODE_REGISTRY
+                     if m["key"] == self.weighting_mode), None)
+        if spec is None:
+            raise ValueError(f"Unknown weighting_mode: {self.weighting_mode}")
+        weight_fn = _WEIGHTING_COMPUTERS[self.weighting_mode]
+        if spec["kind"] == "static":
+            weights = weight_fn(self, stream_pnls)
+        else:  # rolling: pesi time-varying; per la UI esponi la MEDIA come scalare
+            weights_over_time = weight_fn(self, stream_pnls)
+            mean_w = weights_over_time.mean(axis=0)
+            weights = {name: float(mean_w[name]) for name in stream_pnls}
+\end{codiceInterno}
+
+\begin{attenzione}{Il modello documenta un valore che non esiste}
+\file{weights/WEIGHT\_MODE\_TEMPLATE.md} dice che \cod{kind} vale
+\cod{"static"} o \cod{"dynamic"}. Nel codice il confronto è con
+\cod{"static"}, e \emph{tutto il resto} finisce nel ramo rolling. I
+quattordici plugin installati usano \cod{static} (dieci) e \cod{rolling}
+(quattro); \cod{dynamic} non lo usa nessuno. Un plugin scritto seguendo il
+modello funzionerebbe per caso. Il modello è da correggere, il codice no.
+\end{attenzione}
+
+\subsection{Terzo stadio: gli overlay}
+
+Ogni overlay attivo produce un moltiplicatore in $(0,1]$ calcolato dal
+PnL \emph{base}, cioè da quello prima di qualunque overlay. I moltiplicatori
+si moltiplicano fra loro.
+
+\begin{codiceInterno}{python}{L'applicazione degli overlay}{reporting/ensemble.py:555}
+        # Overlay di esposizione CAUSALI (ortogonali al weighting_mode e componibili
+        # fra loro). Ogni overlay attivo produce un moltiplicatore in (0,1] calcolato
+        # dal PnL/stream BASE (=> ordine-indipendente); l'esposizione finale e' il
+        # PRODOTTO dei moltiplicatori. Nessun overlay attivo => ensemble_pnl invariato.
+        base_pnl = ensemble_pnl
+        overlay_multipliers: dict[str, pd.Series] = {}
+        for ov in self.OVERLAY_REGISTRY:
+            if ov["key"] in self.enabled_overlays:
+                m = _GATE_COMPUTERS[ov["key"]](self, base_pnl, stream_pnls)
+                m = m.reindex(base_pnl.index).fillna(1.0)
+                overlay_multipliers[ov["key"]] = m
+        if overlay_multipliers:
+            total_mult = pd.Series(1.0, index=base_pnl.index)
+            for m in overlay_multipliers.values():
+                total_mult = total_mult * m
+            ensemble_pnl = base_pnl * total_mult
+\end{codiceInterno}
+
+\begin{nota}{L'indipendenza dall'ordine è una proprietà costruita}
+Se ogni overlay calcolasse il proprio moltiplicatore dal PnL già modificato
+dai precedenti, il risultato dipenderebbe dall'ordine in cui compaiono nel
+registro --- cioè dal campo \cod{order}, che è un dato di presentazione.
+Calcolandoli tutti dal PnL base, l'ordine smette di contare e attivare due
+overlay dà lo stesso risultato comunque li si elenchi.
+\end{nota}
+
+\subsection{I sette overlay installati}
+
+\begin{center}
+\begin{tabular}{@{}L{26mm}L{32mm}L{80mm}@{}}
+\toprule
+\textbf{Chiave} & \textbf{Famiglia} & \textbf{Quando taglia} \\
+\midrule
+\rigaTenue
+\cod{vol\_regime} & Volatilità & Quando la volatilità realizzata sale. Mira
+  al drawdown massimo. \\
+\cod{jump\_vol} & Volatilità & Reazione in un giorno a salti oltre $N$ sigma:
+  copre il rischio di apertura che gli overlay lenti perdono. \\
+\rigaTenue
+\cod{corr\_gate} & Correlazione & Quando la correlazione media fra gli stream
+  schizza, cioè quando la diversificazione sparisce. \\
+\cod{regime\_gmm} & Stress & Miscela gaussiana su feature multivariate;
+  riduzione graduale al crescere della probabilità di stress. \\
+\rigaTenue
+\cod{iso\_stress} & Stress & Isolation forest su dispersione, volatilità,
+  ampiezza, correlazione media. \\
+\cod{macro\_regime} & Macro & Fattore latente (PCA causale) su curva, spread
+  di credito, VIX, disoccupazione. \\
+\rigaTenue
+\cod{news\_pressure} & Flusso informativo & Quando il volume di notizie
+  supera la norma storica. È l'unico che dichiara dati esterni e una
+  scadenza giornaliera. \\
+\bottomrule
+\end{tabular}
+\end{center}

@@ -1,0 +1,47 @@
+% ===========================================================================
+%  figure/tikz/guardia-auth.tex
+%  Il percorso di una richiesta attraverso _require_login().
+%  Non c'è un decoratore per rotta: c'è questo, e vale per tutte.
+% ===========================================================================
+\begin{tikzpicture}[x = 1mm, y = 1mm]
+
+  \node[persona, minimum width = 34mm] at (0,0) (req) {richiesta};
+
+  \node[decisione, minimum width = 40mm] at (0,-18) (pubb)
+    {endpoint pubblico\\o \codT{/static/}?};
+  \node[decisione, minimum width = 40mm] at (0,-42) (serve)
+    {percorso in\\\codT{\_SERVE\_ACCOUNT}?};
+  \node[decisione, minimum width = 40mm] at (0,-66) (uid)
+    {c'è \codT{session["uid"]}?};
+  \node[decisione, minimum width = 40mm] at (0,-90) (api)
+    {è una chiamata\\\codT{/api/}?};
+
+  \node[interfaccia, minimum width = 36mm, anchor = west] at (36,-18) (passa1)
+    {passa};
+  \node[interfaccia, minimum width = 36mm, anchor = west] at (36,-42) (anon)
+    {passa, \codT{g.user = None}\\{\scriptsize si lavora anonimi}};
+  \node[motore, minimum width = 36mm, anchor = west] at (36,-66) (ok)
+    {passa, \codT{g.user} valorizzato};
+  \node[esterno, minimum width = 36mm, anchor = west] at (36,-90) (json)
+    {\codT{401 \{"error": "not signed in"\}}};
+  \node[sito, minimum width = 44mm] at (0,-112) (pagina)
+    {\codT{serve\_account.html}, stato \codT{200}};
+
+  \draw[flusso] (req)   -- (pubb);
+  \draw[flusso] (pubb)  -- (serve) node[etichetta, pos = 0.45] {no};
+  \draw[flusso] (serve) -- (uid)   node[etichetta, pos = 0.45] {sì};
+  \draw[flusso] (uid)   -- (api)   node[etichetta, pos = 0.45] {no};
+  \draw[flusso] (api)   -- (pagina) node[etichetta, pos = 0.45] {no};
+
+  \draw[flusso] (pubb.east)  -- (passa1) node[etichetta, pos = 0.5] {sì};
+  \draw[flusso] (serve.east) -- (anon)   node[etichetta, pos = 0.5] {no};
+  \draw[flusso] (uid.east)   -- (ok)     node[etichetta, pos = 0.5] {sì};
+  \draw[flusso] (api.east)   -- (json)   node[etichetta, pos = 0.5] {sì};
+
+  \node[nota, anchor = north west, text width = 74mm] at (-22,-124)
+    {Il ramo marcato \emph{si lavora anonimi} è la scelta di fondo: la
+     dashboard gira sul computer di chi la usa, e la gran parte delle rotte
+     non chiede nulla. Solo i percorsi elencati in
+     \codT{\_SERVE\_ACCOUNT} ricadono nel ramo di sinistra.};
+
+\end{tikzpicture}

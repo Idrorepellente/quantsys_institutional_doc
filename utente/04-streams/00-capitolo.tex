@@ -1,0 +1,130 @@
+% ===========================================================================
+%  utente/04-streams/00-capitolo.tex
+% ===========================================================================
+\chapter{Streams}\label{cap:streams}
+
+Uno \voce{stream} è il risultato di una strategia: la serie dei suoi
+guadagni e delle sue perdite nel tempo. La pagina \voce{Streams} li mostra
+tutti, una scheda per ciascuno.
+
+\figuraSchermata{1.0}{figure/schermate/streams.png}
+  {L'elenco dei risultati. Ogni scheda porta l'andamento, lo Sharpe, il
+   rendimento e la perdita massima.}
+  {streams}
+
+\section{Lanciare un backtest}\label{sez:run}
+
+La scheda \voce{Run backtest}, accanto a \voce{Streams}, elenca tutto ciò
+che si può far girare: le strategie e gli approcci installati, ciascuno con
+la propria descrizione e un pulsante.
+
+\figuraSchermata{1.0}{figure/schermate/run.png}
+  {Che cosa si può lanciare. \pulsante{Run All} li mette in coda tutti, uno
+   dopo l'altro.}
+  {run}
+
+\begin{pratica}{Lanciare, e poi}
+\begin{enumerate}
+  \item Premere il pulsante della strategia voluta.
+  \item La pagina mostra il registro in diretta: si vede che cosa sta
+        facendo, riga per riga.
+  \item Si può chiudere la pagina. Il lavoro continua, e la campanella in
+        alto a destra avvisa alla fine.
+  \item Il risultato compare in \voce{Streams}.
+\end{enumerate}
+\end{pratica}
+
+\begin{attenzione}{Un lavoro per volta}
+I backtest girano in fila, non in parallelo, anche premendo più pulsanti.
+Non è un limite da aggirare: due calcoli contemporanei si contenderebbero
+gli stessi file e produrrebbero risultati mescolati.
+\end{attenzione}
+
+\section{La scheda di un risultato}\label{sez:stream-dettaglio}
+
+Cliccando su uno stream si apre la sua pagina.
+
+\figuraSchermata{1.0}{figure/schermate/stream.png}
+  {La scheda di uno stream. In alto il giudizio di robustezza, sotto le
+   metriche, poi la curva.}
+  {stream}
+
+\subsection{Robustness: il riquadro da leggere per primo}
+
+È la parte più importante della pagina, ed è quella che risponde alla
+domanda «questa strategia ha funzionato, o ha avuto fortuna?». Il punteggio
+a destra riassume i cinque numeri in uno.
+
+\begin{center}
+\begin{tabular}{@{}L{42mm}L{96mm}@{}}
+\toprule
+\textbf{Indicatore} & \textbf{Che cosa dice} \\
+\midrule
+\rigaTenue
+\voce{P(Sharpe > 0)} & La probabilità che il risultato non sia rumore. Sotto
+  il \num{95}\,\% la strategia non ha dimostrato niente. \\
+\voce{Monte Carlo p-value} & La stessa domanda posta in un altro modo:
+  rimescolando i dati, quante volte un caso fortunato avrebbe fatto
+  altrettanto bene. Più è piccolo, meglio è. \\
+\rigaTenue
+\voce{Min. track record} & Da quanto tempo questa strategia dovrebbe girare
+  perché il suo risultato sia credibile. Un valore superiore al periodo
+  provato significa: non c'è ancora abbastanza storia. \\
+\voce{OOS Sharpe instability} & Quanto lo Sharpe cambia da un periodo
+  all'altro. Alto significa che la strategia ha funzionato in alcuni periodi
+  e non in altri. \\
+\rigaTenue
+\voce{Losing OOS periods} & La percentuale di periodi chiusi in perdita. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{perche}{Perché un giudizio «Doubtful» non è un errore}
+Significa che i dati non bastano a distinguere questa strategia dal caso.
+Non che sia sbagliata: che non è stata dimostrata. È la risposta onesta su
+un periodo breve, e il modo per cambiarla è avere più storia --- non
+cambiare i parametri finché il giudizio migliora, che è il modo più comune
+di ingannarsi.
+\end{perche}
+
+\subsection{Le metriche}
+
+Dodici riquadri. Oltre a quelli già visti nella schermata iniziale
+(\vediCap{overview}):
+
+\begin{description}[leftmargin = 1.4em, style = nextline, itemsep = 4pt]
+  \item[\voce{Beta vs SPY}] Quanto la strategia segue il mercato. Vicino a
+    zero: fa una cosa sua. Vicino a uno: si muove come l'indice.
+  \item[\voce{Sortino}] Come lo Sharpe, ma conta solo le oscillazioni verso
+    il basso. Salire in fretta non è un difetto.
+  \item[\voce{Calmar}] Rendimento annuo diviso perdita massima. Risponde a
+    «quanto rende per ogni punto di sofferenza».
+  \item[\voce{Hit rate}] La percentuale di periodi in guadagno.
+  \item[\voce{N obs}] Quante osservazioni. Poche osservazioni rendono tutto
+    il resto meno affidabile.
+\end{description}
+
+\subsection{I tre pulsanti in alto}
+
+\begin{itemize}
+  \item \pulsante{Open the code in Studio} --- apre l'artefatto nell'editor.
+  \item \pulsantesec{Run backtest} --- rilancia il calcolo.
+  \item \pulsantesec{Use in Ensemble} --- porta questo stream nel
+    costruttore dei project (\vediCap{projects}).
+\end{itemize}
+
+\section{View: guardare che cosa ha fatto}\label{sez:view}
+
+La voce \voce{View} del menu mostra i prezzi con sopra le operazioni della
+strategia: dove è entrata, dove è uscita, e gli indicatori che stava
+guardando.
+
+\figuraSchermata{1.0}{figure/schermate/visual.png}
+  {La vista sui grafici. Si sceglie la strategia e lo strumento, e si
+   sovrappongono gli indicatori.}
+  {visual}
+
+\noindent
+Serve a una cosa che i numeri non dicono: \emph{se la strategia sta facendo
+quello che si pensava}. Una curva che sale bene può nascondere venti
+operazioni sensate e una sola enorme fortunata.
