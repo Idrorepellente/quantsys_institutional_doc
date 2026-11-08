@@ -67,6 +67,16 @@
 ]{geometry}
 
 \usepackage{emptypage}      % le pagine lasciate bianche restano davvero bianche
+
+% Niente pagine bianche. I due documenti si leggono a schermo: la pagina
+% vuota che il libro inserisce per far cominciare capitoli, parti e
+% frontespizio sulla pagina di destra lì è solo un buco. Con l'opzione
+% openany della classe i capitoli e le parti cominciano sulla pagina
+% seguente; qui lo stesso vale per \frontmatter, \mainmatter e i
+% \cleardoublepage scritti a mano (frontespizi), che la classe book
+% eseguirebbe comunque. Il layout resta a due facciate (margini interno ed
+% esterno, intestazioni alternate).
+\let\cleardoublepage\clearpage
 \usepackage{setspace}
 \setstretch{1.06}
 
