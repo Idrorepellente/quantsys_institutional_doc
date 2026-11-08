@@ -80,53 +80,56 @@
 {\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak run\_all} & {\ttfamily\scriptsize api\_run\_all} \\
 \rigaTenue {\scriptsize\sffamily GET POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak runners} & {\ttfamily\scriptsize api\_runners\_create, api\_runners\_list} \\
 {\scriptsize\sffamily DELETE} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak runners/\allowbreak <rid>} & {\ttfamily\scriptsize api\_runners\_delete} \\
-\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak runners/\allowbreak <rid>/\allowbreak simulation} & {\ttfamily\scriptsize api\_runner\_simulation} \\
-{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak runners/\allowbreak <rid>/\allowbreak simulation/\allowbreak series/\allowbreak <symbol>} & {\ttfamily\scriptsize api\_runner\_simulation\_series} \\
-\rigaTenue {\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak runners/\allowbreak <rid>/\allowbreak start} & {\ttfamily\scriptsize api\_runners\_start} \\
-{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak runners/\allowbreak <rid>/\allowbreak status} & {\ttfamily\scriptsize api\_runners\_status} \\
-\rigaTenue {\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak runners/\allowbreak <rid>/\allowbreak stop} & {\ttfamily\scriptsize api\_runners\_stop} \\
-{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak strategies} & {\ttfamily\scriptsize api\_strategies} \\
-\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak stream/\allowbreak <name>} & {\ttfamily\scriptsize api\_stream} \\
-{\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak stream/\allowbreak <name>/\allowbreak delete} & {\ttfamily\scriptsize api\_stream\_delete} \\
-\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak stream/\allowbreak <name>/\allowbreak files} & {\ttfamily\scriptsize api\_stream\_files} \\
-{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak streams} & {\ttfamily\scriptsize api\_streams\_list} \\
-\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak streams/\allowbreak orfani} & {\ttfamily\scriptsize api\_streams\_orphans} \\
-{\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak streams/\allowbreak orfani/\allowbreak pulisci} & {\ttfamily\scriptsize api\_streams\_orphans\_clean} \\
-\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak universo} & {\ttfamily\scriptsize api\_universo} \\
-{\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak universo/\allowbreak <symbol>/\allowbreak categoria} & {\ttfamily\scriptsize api\_universo\_categoria} \\
-\rigaTenue {\scriptsize\sffamily GET POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak user\_approaches} & {\ttfamily\scriptsize api\_user\_approach\_create, api\_user\_approaches\_list} \\
-{\scriptsize\sffamily GET DELETE} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak user\_approaches/\allowbreak <name>} & {\ttfamily\scriptsize api\_user\_approach\_delete, api\_user\_approach\_files} \\
-\rigaTenue {\scriptsize\sffamily GET POST DELETE} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak user\_approaches/\allowbreak <name>/\allowbreak <filename>} & {\ttfamily\scriptsize api\_user\_approach\_file\_delete, api\_user\_approach\_file\_get, api\_user\_approach\_file\_save} \\
-{\scriptsize\sffamily GET POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak user\_strategies} & {\ttfamily\scriptsize api\_user\_strategies\_list, api\_user\_strategy\_create} \\
-\rigaTenue {\scriptsize\sffamily GET DELETE} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak user\_strategies/\allowbreak <name>} & {\ttfamily\scriptsize api\_user\_strategy\_delete, api\_user\_strategy\_files} \\
-{\scriptsize\sffamily GET POST DELETE} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak user\_strategies/\allowbreak <name>/\allowbreak <filename>} & {\ttfamily\scriptsize api\_user\_file\_delete, api\_user\_file\_get, api\_user\_file\_save} \\
-\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak visual/\allowbreak <strategy>/\allowbreak chart/\allowbreak <symbol>} & {\ttfamily\scriptsize api\_visual\_chart} \\
-{\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak visual/\allowbreak <strategy>/\allowbreak custom\_indicator/\allowbreak <symbol>} & {\ttfamily\scriptsize api\_visual\_custom\_indicator} \\
-\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak visual/\allowbreak <strategy>/\allowbreak indicators/\allowbreak <symbol>} & {\ttfamily\scriptsize api\_visual\_indicators} \\
-{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak visual/\allowbreak <strategy>/\allowbreak liquidity\_heatmap/\allowbreak <symbol>} & {\ttfamily\scriptsize api\_visual\_liquidity\_heatmap} \\
-\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak visual/\allowbreak <strategy>/\allowbreak mms/\allowbreak <symbol>} & {\ttfamily\scriptsize api\_visual\_mms} \\
-{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak visual/\allowbreak <strategy>/\allowbreak symbols} & {\ttfamily\scriptsize api\_visual\_symbols} \\
-\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak visual/\allowbreak <strategy>/\allowbreak zones/\allowbreak <symbol>} & {\ttfamily\scriptsize api\_visual\_zones} \\
-{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak visual/\allowbreak indicator\_template} & {\ttfamily\scriptsize api\_visual\_indicator\_template} \\
-\rigaTenue {\scriptsize\sffamily GET POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak visual/\allowbreak indicators} & {\ttfamily\scriptsize api\_visual\_indicators\_list, api\_visual\_indicators\_save} \\
-{\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak visual/\allowbreak indicators/\allowbreak delete} & {\ttfamily\scriptsize api\_visual\_indicators\_delete} \\
-\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak config} & {\ttfamily\scriptsize config\_page} \\
-{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak data} & {\ttfamily\scriptsize data\_page} \\
-\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak editor} & {\ttfamily\scriptsize editor\_page} \\
-{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak ensemble/\allowbreak <name>} & {\ttfamily\scriptsize ensemble\_page} \\
-\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak ensemble\_custom} & {\ttfamily\scriptsize ensemble\_custom\_page} \\
-{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak favicon.ico} & {\ttfamily\scriptsize favicon} \\
-\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak live/\allowbreak test/\allowbreak <rid>} & {\ttfamily\scriptsize live\_test\_page} \\
-{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak profile} & {\ttfamily\scriptsize profile\_page} \\
-\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak projects} & {\ttfamily\scriptsize projects\_page} \\
-{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak regime} & {\ttfamily\scriptsize regime\_page} \\
-\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak run} & {\ttfamily\scriptsize run\_page} \\
-{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak security} & {\ttfamily\scriptsize security\_page} \\
-\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak stream/\allowbreak <name>} & {\ttfamily\scriptsize stream\_page} \\
-{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak streams} & {\ttfamily\scriptsize streams\_page} \\
-\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak subscription} & {\ttfamily\scriptsize subscription\_page} \\
-{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak visual} & {\ttfamily\scriptsize visual\_page} \\
-\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak visual/\allowbreak <strategy>} & {\ttfamily\scriptsize visual\_page} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak runners/\allowbreak <rid>/\allowbreak journal} & {\ttfamily\scriptsize api\_runners\_journal} \\
+{\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak runners/\allowbreak <rid>/\allowbreak kill-switch/\allowbreak reset} & {\ttfamily\scriptsize api\_runners\_kill\_reset} \\
+\rigaTenue {\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak runners/\allowbreak <rid>/\allowbreak mode} & {\ttfamily\scriptsize api\_runners\_mode} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak runners/\allowbreak <rid>/\allowbreak simulation} & {\ttfamily\scriptsize api\_runner\_simulation} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak runners/\allowbreak <rid>/\allowbreak simulation/\allowbreak series/\allowbreak <symbol>} & {\ttfamily\scriptsize api\_runner\_simulation\_series} \\
+{\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak runners/\allowbreak <rid>/\allowbreak start} & {\ttfamily\scriptsize api\_runners\_start} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak runners/\allowbreak <rid>/\allowbreak status} & {\ttfamily\scriptsize api\_runners\_status} \\
+{\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak runners/\allowbreak <rid>/\allowbreak stop} & {\ttfamily\scriptsize api\_runners\_stop} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak strategies} & {\ttfamily\scriptsize api\_strategies} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak stream/\allowbreak <name>} & {\ttfamily\scriptsize api\_stream} \\
+\rigaTenue {\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak stream/\allowbreak <name>/\allowbreak delete} & {\ttfamily\scriptsize api\_stream\_delete} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak stream/\allowbreak <name>/\allowbreak files} & {\ttfamily\scriptsize api\_stream\_files} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak streams} & {\ttfamily\scriptsize api\_streams\_list} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak streams/\allowbreak orfani} & {\ttfamily\scriptsize api\_streams\_orphans} \\
+\rigaTenue {\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak streams/\allowbreak orfani/\allowbreak pulisci} & {\ttfamily\scriptsize api\_streams\_orphans\_clean} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak universo} & {\ttfamily\scriptsize api\_universo} \\
+\rigaTenue {\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak universo/\allowbreak <symbol>/\allowbreak categoria} & {\ttfamily\scriptsize api\_universo\_categoria} \\
+{\scriptsize\sffamily GET POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak user\_approaches} & {\ttfamily\scriptsize api\_user\_approach\_create, api\_user\_approaches\_list} \\
+\rigaTenue {\scriptsize\sffamily GET DELETE} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak user\_approaches/\allowbreak <name>} & {\ttfamily\scriptsize api\_user\_approach\_delete, api\_user\_approach\_files} \\
+{\scriptsize\sffamily GET POST DELETE} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak user\_approaches/\allowbreak <name>/\allowbreak <filename>} & {\ttfamily\scriptsize api\_user\_approach\_file\_delete, api\_user\_approach\_file\_get, api\_user\_approach\_file\_save} \\
+\rigaTenue {\scriptsize\sffamily GET POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak user\_strategies} & {\ttfamily\scriptsize api\_user\_strategies\_list, api\_user\_strategy\_create} \\
+{\scriptsize\sffamily GET DELETE} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak user\_strategies/\allowbreak <name>} & {\ttfamily\scriptsize api\_user\_strategy\_delete, api\_user\_strategy\_files} \\
+\rigaTenue {\scriptsize\sffamily GET POST DELETE} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak user\_strategies/\allowbreak <name>/\allowbreak <filename>} & {\ttfamily\scriptsize api\_user\_file\_delete, api\_user\_file\_get, api\_user\_file\_save} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak visual/\allowbreak <strategy>/\allowbreak chart/\allowbreak <symbol>} & {\ttfamily\scriptsize api\_visual\_chart} \\
+\rigaTenue {\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak visual/\allowbreak <strategy>/\allowbreak custom\_indicator/\allowbreak <symbol>} & {\ttfamily\scriptsize api\_visual\_custom\_indicator} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak visual/\allowbreak <strategy>/\allowbreak indicators/\allowbreak <symbol>} & {\ttfamily\scriptsize api\_visual\_indicators} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak visual/\allowbreak <strategy>/\allowbreak liquidity\_heatmap/\allowbreak <symbol>} & {\ttfamily\scriptsize api\_visual\_liquidity\_heatmap} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak visual/\allowbreak <strategy>/\allowbreak mms/\allowbreak <symbol>} & {\ttfamily\scriptsize api\_visual\_mms} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak visual/\allowbreak <strategy>/\allowbreak symbols} & {\ttfamily\scriptsize api\_visual\_symbols} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak visual/\allowbreak <strategy>/\allowbreak zones/\allowbreak <symbol>} & {\ttfamily\scriptsize api\_visual\_zones} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak visual/\allowbreak indicator\_template} & {\ttfamily\scriptsize api\_visual\_indicator\_template} \\
+{\scriptsize\sffamily GET POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak visual/\allowbreak indicators} & {\ttfamily\scriptsize api\_visual\_indicators\_list, api\_visual\_indicators\_save} \\
+\rigaTenue {\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak visual/\allowbreak indicators/\allowbreak delete} & {\ttfamily\scriptsize api\_visual\_indicators\_delete} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak config} & {\ttfamily\scriptsize config\_page} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak data} & {\ttfamily\scriptsize data\_page} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak editor} & {\ttfamily\scriptsize editor\_page} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak ensemble/\allowbreak <name>} & {\ttfamily\scriptsize ensemble\_page} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak ensemble\_custom} & {\ttfamily\scriptsize ensemble\_custom\_page} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak favicon.ico} & {\ttfamily\scriptsize favicon} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak live/\allowbreak test/\allowbreak <rid>} & {\ttfamily\scriptsize live\_test\_page} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak profile} & {\ttfamily\scriptsize profile\_page} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak projects} & {\ttfamily\scriptsize projects\_page} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak regime} & {\ttfamily\scriptsize regime\_page} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak run} & {\ttfamily\scriptsize run\_page} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak security} & {\ttfamily\scriptsize security\_page} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak stream/\allowbreak <name>} & {\ttfamily\scriptsize stream\_page} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak streams} & {\ttfamily\scriptsize streams\_page} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak subscription} & {\ttfamily\scriptsize subscription\_page} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak visual} & {\ttfamily\scriptsize visual\_page} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak visual/\allowbreak <strategy>} & {\ttfamily\scriptsize visual\_page} \\
 \bottomrule
 \end{longtable}
 
@@ -371,5 +374,5 @@
 \end{longtable}
 
 \begin{nota}{Quanti sono}
-Questa tabella elenca \num{246} percorsi distinti, da \num{267} decoratori \cod{@route} su \num{11} moduli. Se i numeri non coincidono con quelli del progetto che si ha davanti, la tabella è vecchia: si rigenera con \file{strumenti/genera-rotte.py}.
+Questa tabella elenca \num{249} percorsi distinti, da \num{270} decoratori \cod{@route} su \num{11} moduli. Se i numeri non coincidono con quelli del progetto che si ha davanti, la tabella è vecchia: si rigenera con \file{strumenti/genera-rotte.py}.
 \end{nota}

@@ -1,10 +1,10 @@
 % ===========================================================================
 %  sviluppatore/03-architettura/03-rotte.tex
 % ===========================================================================
-\section{Le \num{246} rotte, e chi le registra}\label{sez:rotte}
+\section{Le \num{249} rotte, e chi le registra}\label{sez:rotte}
 
-La dashboard Flask ha \num{267} decoratori \cod{@route} che danno
-\num{246} percorsi distinti --- la differenza sono le coppie
+La dashboard Flask ha \num{270} decoratori \cod{@route} che danno
+\num{249} percorsi distinti --- la differenza sono le coppie
 «\cod{GET} in una funzione, \cod{POST} in un'altra». Sono sparsi su undici
 moduli, montati in un ordine che conta.
 
@@ -14,7 +14,7 @@ moduli, montati in un ordine che conta.
 \textbf{Modulo} & \textbf{Rotte} & \textbf{Come si registra} \\
 \midrule
 \rigaTenue
-\file{app.py}             & \num{134} & \cod{@app.route} dentro
+\file{app.py}             & \num{137} & \cod{@app.route} dentro
                                         \simbolo{create\_app()} \\
 \file{community.py}       & \num{43}  & \cod{Blueprint("community")},
                                         senza \cod{url\_prefix} \\

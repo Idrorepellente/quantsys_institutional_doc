@@ -2,6 +2,10 @@
 %  sviluppatore/04-motore/05-live.tex
 % ===========================================================================
 \section{Lo stesso calcolo, su un conto vero}\label{sez:live}
+% Sezione fitta di tabelle che non si spezzano: con il fondo pagina
+% allineato, lo spazio avanzato finiva attorno a una tabella. Qui il fondo
+% resta libero; alla fine della sezione si torna all'allineamento del libro.
+\raggedbottom
 
 \pkgLive{} non è un secondo motore: è lo stesso, con un broker al posto dei
 dati storici. Il valore di tutto il progetto dipende da questa frase, e il
@@ -89,34 +93,364 @@ cambierebbe dimensione per il solo fatto di essere stato riavviato.
 
 L'interfaccia è \simbolo{live.broker.LiveBroker}, la stessa classe che
 \pkgPorte{} ri-esporta come porta \simbolo{Broker}. Le implementazioni
-attuali coprono il conto reale, il conto demo del broker, l'esecuzione su
-carta e un broker di prova con il tempo accelerato --- quest'ultimo serve alla
-pagina di simulazione, che fa passare una giornata di mercato in pochi
-secondi.
+attuali coprono Interactive Brokers (\file{live/brokers/ibkr.py}),
+MetaTrader~5 (\file{live/brokers/mt5.py}), l'esecuzione su carta e un broker
+di prova con il tempo accelerato --- quest'ultimo serve alla pagina di
+simulazione, che fa passare una giornata di mercato in pochi secondi.
+
+Oltre ai metodi obbligatori, cinque \emph{ganci} con un default innocuo:
+
+\begin{center}
+\begin{tabular}{@{}L{46mm}L{92mm}@{}}
+\toprule
+\textbf{Metodo} & \textbf{A che serve} \\
+\midrule
+\rigaTenue
+\simbolo{account\_label()} & Una riga che dice a quale conto ci si è
+  collegati: numero, demo o reale, terminale, cambio applicato. Va nel
+  registro all'avvio. \\
+\simbolo{account\_identity()} & Chi è il conto, in un dizionario
+  (\cod{broker}, \cod{account}, \cod{where}, \cod{kind}); \cod{None} se il
+  broker non sa dirlo. Lega la conferma degli ordini reali a un conto
+  (\vediSez{live-ordini-reali}). \\
+\rigaTenue
+\simbolo{real\_orders\_blockers()} & I motivi per cui il conto
+  \emph{non} può ricevere ordini da Lyra. Se la lista non è vuota, un
+  runner con ordini reali non parte; se compare mentre gira, i cicli si
+  saltano. \\
+\simbolo{open\_orders()} & Gli ordini ancora in lavorazione,
+  \cod{\{simbolo: quanti\}}. Il motore non manda un ordine su un simbolo che
+  ne ha uno in corso. \\
+\rigaTenue
+\simbolo{cancel\_open\_orders()} & Cancella gli ordini aperti \emph{di
+  Lyra} (non quelli fatti a mano) e dice quanti. Il runner la chiama
+  all'avvio e all'arresto. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+L'esito di ogni ordine è un \simbolo{Fill} con \cod{status} fra
+\cod{filled}, \cod{partial}, \cod{pending} (accettato, né eseguito né
+cancellato), \cod{skipped} (sotto la quantità minima, non inviato),
+\cod{rejected}, \cod{cancelled} ed \cod{error}, e una \cod{note} con il
+perché nelle parole del broker. Un adattatore che non riesce a leggere il
+conto solleva \simbolo{BrokerUnavailable} (una \simbolo{ConnectionError}):
+il runner lo riprova invece di fermarsi. Anche un fill parziale
+entra nel libro della strategia (\simbolo{LivePortfolioMirror.record\_fill}).
+
+\begin{center}
+\begin{tabular}{@{}L{30mm}L{108mm}@{}}
+\toprule
+\textbf{Adattatore} & \textbf{Che cosa garantisce} \\
+\midrule
+\rigaTenue
+IBKR & L'ordine va al conto indicato (\cod{order.account}) e porta il
+  riferimento del runner (\cod{orderRef} \cod{lyra:<id>}); equity e
+  posizioni si leggono di quel conto e solo per i contratti \cod{STK}, così
+  un'opzione su AAPL non viene letta come azioni AAPL. Un ordine non
+  eseguito entro \cod{fill\_timeout\_s} viene cancellato; se la
+  cancellazione non arriva entro \cod{cancel\_timeout\_s} l'esito è
+  \cod{pending}, e un ordine \cod{Inactive} viene cancellato perché può
+  riattivarsi. \simbolo{equity\_in\_valuta()} converte la
+  \cod{NetLiquidation} della valuta base del conto con il tag
+  \cod{ExchangeRate} (in riserva il cambio dei dati di Lyra): senza, un
+  conto in euro risultava a equity zero. \simbolo{open\_orders()} legge
+  \simbolo{reqAllOpenOrders()} (solo \cod{STK}, solo il conto);
+  \simbolo{cancel\_open\_orders()} cancella solo i riferimenti
+  \cod{lyra}. Il collegamento passa \cod{account} e un \cod{timeout} di
+  \num{20}\,s. Posizioni, valori del conto e stati degli ordini di
+  \pkg{ib\_insync} si aggiornano solo mentre il suo event loop gira, e fra
+  un ciclo e l'altro il runner dorme: prima di leggere il conto
+  \simbolo{\_aggiorna()} fa girare il loop e le posizioni si chiedono al
+  server (\simbolo{reqPositions()}), altrimenti un ordine eseguito
+  durante la notte risultava ancora da fare; se la richiesta fallisce
+  l'errore sale, senza ripiegare sulla copia locale. Le richieste bloccanti
+  hanno \cod{RequestTimeout} di \num{20}\,s (di default aspettano per
+  sempre). Si importa \pkg{ib\_async}, il seguito mantenuto, oppure
+  \pkg{ib\_insync}, nel thread che lo usa. \\
+MT5 & Il riempimento segue \cod{symbol\_info.filling\_mode} (IOC, FOK o
+  Return): imporre IOC fa rifiutare ogni ordine sui simboli che non lo
+  accettano. Il retcode \num{10010} è un'esecuzione parziale, il
+  \num{10008} un ordine accettato non ancora eseguito (\cod{pending}). Un
+  conto \emph{hedging}, il trading disabilitato, \cod{trade\_expert}
+  falso, \voce{Algo Trading} spento o \cod{tradeapi\_disabled} bloccano gli
+  ordini reali. Un conto in un'altra valuta si converte con il tick della
+  coppia nel terminale (\cod{EURUSD}, anche con il suffisso del broker).
+  Gli ordini in attesa vengono da \simbolo{orders\_get()}; si cancellano
+  con \cod{TRADE\_ACTION\_REMOVE} solo quelli con il \cod{magic} di Lyra.
+  \cod{None} da \simbolo{positions\_get()}, \simbolo{orders\_get()} o
+  \simbolo{account\_info()} è un errore dell'API, non un conto vuoto: letto
+  come «nessuna posizione» faceva ricomprare il libro.
+  \simbolo{is\_connected()} interroga il terminale, così dopo un suo
+  riavvio ci si ricollega. Il pacchetto parla con un terminale per
+  processo: le chiamate passano da un lucchetto, e \simbolo{shutdown()} lo
+  chiama solo l'ultimo che si scollega. \\
+\bottomrule
+\end{tabular}
+\end{center}
 
 \begin{attenzione}{Le credenziali restano su file locale}
 \percorsoHTTP{/api/brokers/credentials} legge e scrive un file sul computer
 dell'utente. Non passano dal sito, non finiscono nel database, e non c'è
 nessun percorso che le porti in rete. Questo è il motivo per cui la porta
-della dashboard non va esposta: chi la raggiunge può leggerle.
+della dashboard non va esposta: chi la raggiunge può leggerle. Per IBKR
+porta e client ID sono controllati al salvataggio, e
+\simbolo{live\_runners.cfg\_ibkr()} li passa al collegamento come
+\cod{broker\_cfg}.
 \end{attenzione}
+
+\subsection{Simulazione o ordini reali}\label{sez:live-ordini-reali}
+
+Un runner su un broker vero parte in simulazione: \cod{dry\_run} vero, il
+motore calcola gli ordini e non li invia. Gli ordini reali richiedono tre
+cose insieme, e nessuna basta da sola:
+
+\begin{codiceInterno}{python}{Quando un runner invia davvero}{dashboard/live\_runners.py:216}
+def ordini_reali(runner: dict) -> bool:
+    r = runner or {}
+    return (str(r.get("broker") or "") in BROKER_REALI
+            and r.get("dry_run") is False
+            and bool(r.get("real_orders_confirmed_at")))
+\end{codiceInterno}
+
+\noindent
+\cod{dry\_run} deve essere \cod{False} in modo esplicito --- non basta che
+manchi --- e la conferma la scrive solo una richiesta che la porta:
+\cod{confirm\_real\_orders} quando si salva il runner, \cod{confirm} quando
+si cambia modalità. L'avvio di un runner con ordini reali chiede a sua volta
+\cod{confirm\_real}. Le rotte \percorsoHTTP{/api/live/*}, rimaste per le
+prove da script, su un broker vero girano sempre in simulazione: gli ordini
+reali passano solo dai runner, dove ci sono conferma, registro e kill-switch
+salvato.
+
+\subsubsection{La conferma è legata a un conto}
+
+Al primo avvio dopo una conferma, \simbolo{\_prepara\_conto} scrive in
+\file{data/runners/<id>/account.json} la chiave del conto
+(\simbolo{chiave\_conto()}: broker, server per MT5, numero) insieme a
+\cod{real\_orders\_confirmed\_at}. Agli avvii successivi con la stessa
+conferma un conto diverso ferma l'avvio (\simbolo{\_NonParte}); a ogni ciclo
+\simbolo{\_controlla\_conto} confronta di nuovo l'identità e, se è cambiata,
+ferma il runner prima del ciclo (\simbolo{\_Fermo}) senza toccare gli
+ordini del conto nuovo. Una conferma nuova lega il runner al conto del
+prossimo avvio (\simbolo{legame\_valido()}). Senza identità
+(\cod{account\_identity()} a \cod{None}), o con \file{account.json}
+illeggibile (\simbolo{leggi\_legame()}), gli ordini reali non partono.
+
+\subsection{Il registro del runner}\label{sez:live-registro}
+
+Ogni riga scritta con \simbolo{REGISTRO.log(rid, testo, kind, data)} va in
+memoria (le ultime \num{200}, per lo stato) e su disco, in
+\file{data/runners/<id>/journal.jsonl}: un oggetto JSON per riga con
+\cod{ts} (UTC), \cod{session} (una per avvio), \cod{mode}, \cod{broker},
+\cod{kind}, \cod{msg} e, quando serve, \cod{data}. Oltre \num{5}\,MB il
+file ruota su \file{journal.1.jsonl} \ldots{} \file{journal.9.jsonl}
+(\simbolo{\_ruota\_registro}), e \simbolo{registro\_leggi} li ripercorre
+all'indietro finché servono righe. I \cod{kind} sono \cod{mode},
+\cod{start}, \cod{stop}, \cod{info}, \cod{cycle}, \cod{order} (simulati),
+\cod{fill} (inviati, con l'esito), \cod{warning}, \cod{error}, \cod{risk} e
+\cod{maintenance}.
+
+\noindent
+Nella stessa cartella stanno lo stato del motore (\file{live\_state.json}),
+la storia della normalizzazione (\file{ensemble.json}), lo stato del
+\simbolo{RiskManager} (\file{risk.json}) e il legame con il conto
+(\file{account.json}). Prima stato e normalizzazione erano un file unico in
+\file{data/}: due runner attivi insieme se li sovrascrivevano a vicenda.
+
+\subsection{Dati vecchi}\label{sez:live-dati-vecchi}
+
+\simbolo{LoaderLiveFeed} legge gli stessi file del backtest e non scarica
+niente. Se nessuno li aggiorna, il motore continua a decidere sugli stessi
+prezzi --- e con ordini veri dimensiona le quantità su prezzi di giorni
+prima. \simbolo{live.freshness.motivo\_dati\_vecchi} conta le \emph{sedute
+mancanti} fra l'ultima barra e l'ultimo giorno di borsa prima di oggi
+(UTC), sul calendario del mercato del simbolo (\simbolo{calendario\_per},
+dall'asset class). Prima di oggi, perché il feed legge i file con una data
+di fine esclusiva: la barra di oggi la serve domani, e pretenderla dopo la
+chiusura americana tratteneva ogni ordine dalle 22 a mezzanotte.
+
+\begin{center}
+\begin{tabular}{@{}L{30mm}L{78mm}L{28mm}@{}}
+\toprule
+\textbf{Calendario} & \textbf{Sedute} & \textbf{Tolleranza} \\
+\midrule
+\rigaTenue
+\cod{nyse} & Lunedì--venerdì meno le festività NYSE (regole di
+  \pkg{pandas}: Venerdì Santo, Juneteenth dal 2022, 4 luglio e Natale con
+  il giorno osservato) & nessuna \\
+\cod{fx} & Lunedì--venerdì & una seduta \\
+\rigaTenue
+\cod{crypto} & Tutti i giorni & una seduta \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+Mancano le chiusure straordinarie (lutti nazionali, uragani): quel giorno i
+dati risultano vecchi di una seduta e gli ordini aspettano, cioè l'errore va
+nella direzione prudente. Per barre infragiornaliere si contano le barre
+mancanti in tempo di borsa (oltre tre, vecchi); per barre settimanali, oltre
+due periodi e tre giorni.
+
+\noindent
+Il motore misura ogni simbolo a ogni ciclo, anche in simulazione
+(\simbolo{\_dati\_vecchi}), e riporta il riassunto in
+\cod{CycleReport.data\_stale}. Fuori dal dry-run trattiene gli ordini dei
+simboli indietro e lo scrive in \cod{orders\_held}: un'ultima barra fresca
+su SPY non rende freschi i prezzi di AAPL. Un simbolo del runner con una
+posizione aperta e nessun prezzo nel ciclo (file mancante, simbolo saltato
+dal caricamento) finisce nello stesso riassunto: il motore non può né
+valutarlo né ridurlo. In entrambi i casi gli ordini che aumentano
+l'esposizione aspettano (vedi \emph{Prima le riduzioni}, più avanti). Passano solo le chiusure
+ordinate dal kill-switch del conto, che vendono la quantità che c'è e non
+dipendono dal prezzo. Il controllo vale per ogni broker tranne quello su
+carta (\cod{guard\_stale\_data}), che il simulatore TEST e la prova da
+terminale guidano con il proprio orologio.
+
+\subsection{Il kill-switch del conto}\label{sez:live-kill}
+
+Il \simbolo{RiskManager} vive quanto il processo, e il livello del conto
+protegge del denaro che sta nel conto. Per questo, con ordini reali, picco
+di equity e chiusura sono salvati per \emph{conto}, in
+\file{data/accounts/<chiave>.json} (\simbolo{carica\_stato\_conto},
+\simbolo{salva\_stato\_conto}); mai nella cartella temporanea, che il
+sistema svuota. Il resto dello stato --- strategie sospese con la data,
+asset class ridotte con la scadenza, finestre di PnL --- va in
+\file{risk.json} del runner con il suo contesto (modalità, broker, conto),
+attraverso \simbolo{export\_state()} e \simbolo{restore\_state()}: uno
+stato per contesto (\simbolo{contesti\_rischio}), così una corsa in
+simulazione non cancella le strategie sospese della modalità reale.
+
+\begin{itemize}
+  \item Il drawdown si controlla all'inizio del ciclo, appena letta
+        l'equity (\simbolo{check\_account}), non solo dopo gli ordini: un
+        calo avvenuto fra due cicli faceva partire un altro giro di acquisti
+        prima che il kill-switch scattasse. Con il conto chiuso il ciclo
+        procede anche con l'equity a zero: chiudere non ne ha bisogno.
+  \item Passare a simulazione e tornare agli ordini reali, o usare un altro
+        runner sullo stesso conto, non riapre il conto: le rotte di
+        creazione e di cambio modalità non toccano più lo stato. Lo riapre
+        solo \rotta{POST}{/api/runners/<rid>/kill-switch/reset}, che azzera
+        il file del conto a cui il runner è legato.
+  \item Uno stato del conto illeggibile ferma gli ordini reali: trattarlo da
+        vuoto riaprirebbe un conto chiuso.
+  \item Se all'avvio l'equity è già sotto il picco del conto oltre la
+        soglia, il kill-switch scatta e si scrive nel file del conto, ma il
+        runner non manda ordini: non può sapere se è un prelievo o una
+        perdita. Al prossimo avvio chiude (perdita); il reset lo evita
+        (prelievo). Con l'equity non leggibile all'avvio non parte.
+  \item Un conto chiuso non impedisce l'avvio: il runner parte in sola
+        chiusura (il \simbolo{RiskManager} riparte chiuso, ogni peso è
+        zero), chiude e a conto piatto (\simbolo{\_posizioni\_aperte}) si
+        ferma; in sola chiusura nessun errore lo ferma. L'elenco dei runner
+        segnala la sola chiusura (\cod{close\_only}) solo se il conto chiuso
+        è quello della conferma attuale; altrimenti \cod{killed\_unbound}.
+  \item Quando il kill scatta durante un ciclo, il ciclo di chiusura parte
+        subito, senza aspettare la cadenza; se resta qualcosa di aperto si
+        riprova dopo \cod{min(passo, 60\,s)} per tre volte, poi alla
+        cadenza normale.
+\end{itemize}
+
+\noindent
+Il drawdown del conto si controlla a ogni ciclo
+(\simbolo{check\_account}); i livelli per strategia e per asset class, che
+lavorano su finestre di barre, una volta per barra nuova
+(\simbolo{\_nuova\_barra\_rischio}), come nel backtest: aggiornarli a ogni
+ciclo --- quattro per barra --- accorciava la finestra di \num{30} giorni a
+\num{35} cicli. Il PnL realizzato fra due barre si attribuisce tutto alla
+barra nuova (\simbolo{LivePortfolioMirror.consolida\_realizzati}). Il
+livello per asset class riceve dal ciclo il PnL di prezzo per classe una
+volta per barra (\simbolo{\_registra\_pnl\_asset\_class}). Nel backtest
+\simbolo{update} chiama \simbolo{check\_account} con la stessa regola di
+prima: i risultati non cambiano.
 
 \subsection{Il ciclo dal vivo}
 
+Il runner fa il primo ciclo subito, poi uno ogni quarto della barra più
+corta che guarda (\simbolo{cadenza\_reale\_secondi}, mai sotto i \num{15}
+secondi): per strategie giornaliere, ogni sei ore. L'avvio dalla pagina
+imponeva \num{60} secondi, e un runner giornaliero rifaceva lo stesso ciclo
+ogni minuto.
+
+\noindent
+Ogni runner gira in un thread suo, con un proprio event loop
+\cod{asyncio}: \pkg{ib\_insync} ne ha bisogno per collegarsi, e un thread
+che non è il principale non ne ha uno. Fermato il runner, gli ordini di Lyra
+ancora aperti si cancellano (con ordini reali, sul conto verificato), il
+collegamento al broker si chiude --- altrimenti IBKR terrebbe occupato il
+client ID --- e il loop con lui.
+
+\begin{itemize}
+  \item \textbf{Un avvio solo.} \simbolo{start} tiene un lucchetto dai
+        controlli fino alla registrazione del runner: con due richieste
+        ravvicinate potevano partire due motori sullo stesso conto. Un
+        errore dopo la registrazione rimette il runner fermo.
+  \item \textbf{Equity assente.} Un conto con equity zero o mancante salta
+        il ciclo (\cod{skipped\_reason} \cod{no\_account\_equity}): prima
+        ogni peso andava a zero e partiva una chiusura per ogni posizione.
+  \item \textbf{Ordini in corso.} Un simbolo con un ordine ancora aperto al
+        broker non riceve un ordine nuovo; se gli ordini aperti non si
+        leggono, non parte nulla.
+  \item \textbf{Prima le riduzioni.} Gli ordini che riducono una posizione
+        (\simbolo{\_riduce}) partono prima di quelli che la aumentano, e
+        un'inversione diventa chiusura più apertura
+        (\simbolo{\_separa\_inversioni}; la gamba di apertura conta come
+        aumento). Se qualcosa è trattenuto (dati vecchi, ordine in corso,
+        posizione senza prezzo) o una riduzione non è \cod{filled} né
+        \cod{skipped}, gli aumenti del ciclo non partono: in una rotazione
+        con la vendita trattenuta, l'acquisto da solo portava l'esposizione
+        oltre quella del libro vecchio e di quello nuovo.
+  \item \textbf{Stop fra un ordine e l'altro.} Il runner assegna al motore
+        \cod{stop\_requested}: premuto Stop, gli ordini non ancora inviati
+        del ciclo in corso non partono.
+  \item \textbf{Cicli falliti.} Un errore di collegamento
+        (\simbolo{e\_transitorio}: \simbolo{ConnectionError} e quindi
+        \simbolo{BrokerUnavailable}, \simbolo{TimeoutError},
+        \simbolo{OSError}) si riprova senza limite, con attese che
+        raddoppiano fino a \num{15} minuti. Un'eccezione di altro tipo si
+        riprova dopo \cod{min(passo, 60\,s)}; tre di fila fermano il runner
+        con la causa, tranne in sola chiusura. Un ciclo saltato non tocca né
+        il kill-switch né la manutenzione.
+\end{itemize}
+
 \begin{center}
-\begin{tabular}{@{}L{42mm}L{96mm}@{}}
+\begin{tabular}{@{}L{50mm}L{88mm}@{}}
 \toprule
 \textbf{Rotta} & \textbf{Che cosa fa} \\
 \midrule
 \rigaTenue
-\rotta{POST}{/api/live/run\_cycle} & Un ciclo solo. Il default è prudente: conto
-  su carta, prova a vuoto, dati dimostrativi. \\
-\rotta{POST}{/api/live/start} & Operatività continua. \\
+\rotta{GET}{/api/runners} & I runner salvati, con \cod{mode},
+  \cod{real\_orders}, \cod{killed}, \cod{close\_only}, il conto legato,
+  \cod{data\_stale}, \cod{account\_blocked} e le soglie del
+  kill-switch. \\
+\rotta{POST}{/api/runners} & Crea o aggiorna. Ordini reali solo con
+  \cod{dry\_run: false} e \cod{confirm\_real\_orders: true}. \\
 \rigaTenue
-\rotta{POST}{/api/live/stop} & Ferma il ciclo \emph{alla fine} di quello in
-  corso, non a metà. \\
+\rotta{POST}{/api/runners/<rid>/mode} & Simulazione o reale, a runner
+  fermo; il reale chiede \cod{confirm}. \\
+\rotta{POST}{/api/runners/<rid>/start} & Avvia. Con ordini reali chiede
+  \cod{confirm\_real}; senza \cod{interval}, la cadenza viene dal
+  timeframe. \\
+\rigaTenue
+\rotta{POST}{/api/runners/<rid>/stop} & Ferma il runner: gli ordini non
+  ancora inviati del ciclo in corso non partono. \\
+\rotta{GET}{/api/runners/<rid>/journal} & Le ultime righe del registro
+  (\cod{limit}, di default \num{300}). \\
+\rigaTenue
+\rotta{POST}{/api/runners/<rid>/kill-switch/reset} & Riapre il conto
+  chiuso dal kill-switch (il file del conto legato al runner), a runner
+  fermo. \\
+\rotta{POST}{/api/live/run\_cycle} & Un ciclo solo, per le prove da script.
+  Su un broker vero sempre in simulazione. \\
+\rigaTenue
+\rotta{POST}{/api/live/start} & Ciclo continuo per le prove da script,
+  con la stessa regola. \\
 \rotta{GET}{/api/live/status} & Stato, numero di cicli, configurazione e le
-  ultime \num{60} righe del registro. \\
+  ultime \num{60} righe del ciclo di prova. \\
 \bottomrule
 \end{tabular}
 \end{center}
+
+\flushbottom

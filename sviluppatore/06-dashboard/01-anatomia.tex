@@ -13,23 +13,26 @@ per orientarsi è guardare le dimensioni: dicono dove sta il peso.
 \textbf{File} & \textbf{KB} & \textbf{Di che cosa si occupa} \\
 \midrule
 \rigaTenue
-\file{app.py}            & \num{213} & Il montaggio e \num{134} rotte. \\
+\file{app.py}            & \num{226} & Il montaggio e \num{137} rotte. \\
 \file{agent.py}          & \num{132} & L'assistente che scrive artefatti. \\
 \rigaTenue
 \file{community.py}      & \num{132} & Marketplace, contestazioni, account,
                                        messaggi, abbonamento. \\
-\file{web\_db.py}        & \num{90}  & L'accesso al Postgres del sito. \\
+\file{live\_runners.py}  & \num{90}  & I runner live: avvio, conto legato,
+                                       kill-switch del conto, registro. \\
 \rigaTenue
+\file{web\_db.py}        & \num{90}  & L'accesso al Postgres del sito. \\
 \file{agent\_tools\_sistema.py} & \num{80} & Gli strumenti con cui l'agente
                                        agisce sul sistema vivo. \\
+\rigaTenue
 \file{auth.py}           & \num{71}  & Accesso, registrazione, guardia
                                        globale, pagine HTML in linea. \\
-\rigaTenue
 \file{autopubblica.py}   & \num{49}  & Pubblicazione automatica degli
                                        artefatti, in un thread. \\
-\file{genetic.py}        & \num{49}  & Strategie per programmazione genetica. \\
 \rigaTenue
+\file{genetic.py}        & \num{49}  & Strategie per programmazione genetica. \\
 \file{visual\_debug.py}  & \num{45}  & Il debug visivo sui grafici. \\
+\rigaTenue
 \file{studio.py}         & \num{42}  & Editor, grafo a nodi, generazione. \\
 \bottomrule
 \end{tabular}
@@ -47,8 +50,8 @@ quale stile seguire per estenderla.
 \midrule
 \rigaTenue
 1 --- tutto in \file{app.py}
-  & \cod{@app.route} dentro \simbolo{create\_app} & \num{134} rotte in un
-    file di \num{213}~KB. \\
+  & \cod{@app.route} dentro \simbolo{create\_app} & \num{137} rotte in un
+    file di \num{226}~KB. \\
 2 --- blueprint
   & \file{studio}, \file{community}, \file{agent}, \file{genetic}
   & \cod{Blueprint(...)}, nessun \cod{url\_prefix}. \\
