@@ -3,8 +3,9 @@
 # ===========================================================================
 #
 #    make                 compila tutti e due i PDF
-#    make sviluppatore    solo la guida dello sviluppatore
-#    make utente          solo il manuale utente
+#    make sviluppatore    solo la guida dello sviluppatore (in italiano)
+#    make user            solo la User guide, il manuale utente (in inglese);
+#                         `make utente' fa la stessa cosa
 #    make figure          compila le figure TikZ una per una (per vederle sole)
 #    make guarda          ricompila a ogni salvataggio
 #    make pulisci         toglie i file intermedi, tiene i PDF
@@ -19,27 +20,28 @@
 LATEXMK  := latexmk
 OPZIONI  := -pdf -interaction=nonstopmode -halt-on-error -file-line-error
 
-DOCUMENTI := guida-sviluppatore manuale-utente
+DOCUMENTI := guida-sviluppatore user-guide
 PDF       := $(addsuffix .pdf, $(DOCUMENTI))
 
 # Ricompila quando cambia QUALUNQUE sorgente, non solo il file principale:
 # latexmk da solo non sa che guida-sviluppatore.tex dipende da sessanta file
 # sotto sviluppatore/.
-SORGENTI := $(shell find comune sviluppatore utente figure -name '*.tex' 2>/dev/null)
+SORGENTI := $(shell find comune sviluppatore user figure -name '*.tex' 2>/dev/null)
 
-.PHONY: all sviluppatore utente figure guarda pulisci pulisci-tutto controlla ascii
+.PHONY: all sviluppatore user utente figure guarda pulisci pulisci-tutto controlla ascii
 
 all: $(PDF)
 
 sviluppatore: guida-sviluppatore.pdf
-utente:       manuale-utente.pdf
+user:         user-guide.pdf
+utente:       user-guide.pdf
 
 guida-sviluppatore.pdf: guida-sviluppatore.tex $(SORGENTI)
 	@echo "  ==> guida dello sviluppatore"
 	@$(LATEXMK) $(OPZIONI) $<
 
-manuale-utente.pdf: manuale-utente.tex $(SORGENTI)
-	@echo "  ==> manuale utente"
+user-guide.pdf: user-guide.tex $(SORGENTI)
+	@echo "  ==> user guide"
 	@$(LATEXMK) $(OPZIONI) $<
 
 # Ogni figura si compila anche DA SOLA, in un PDF ritagliato: serve a vederla a

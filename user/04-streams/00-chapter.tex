@@ -1,0 +1,130 @@
+% ===========================================================================
+%  user/04-streams/00-chapter.tex
+% ===========================================================================
+\chapter{Streams}\label{cap:streams}
+
+A \voce{stream} is the result of a strategy: the series of its gains and
+losses over time. The \voce{Streams} page shows them all, one card each.
+
+\figuraSchermata{1.0}{figure/schermate/streams.png}
+  {The list of results. Each card carries the performance, the Sharpe ratio,
+   the return and the maximum loss.}
+  {streams}
+
+\section{Running a backtest}\label{sez:run}
+
+The \voce{Run backtest} tab, next to \voce{Streams}, lists everything that
+can be run: the installed strategies and approaches, each with its own
+description and a button.
+
+\figuraSchermata{1.0}{figure/schermate/run.png}
+  {What can be run. \pulsante{Run All} queues them all, one after the
+   other.}
+  {run}
+
+\begin{pratica}{Running it, and then}
+\begin{enumerate}
+  \item Press the button of the strategy you want.
+  \item The page shows the log live: you see what it is doing, line by line.
+  \item You can close the page. The job carries on, and the bell at the top
+        right tells you when it is done.
+  \item The result appears in \voce{Streams}.
+\end{enumerate}
+\end{pratica}
+
+\begin{attenzione}{One job at a time}
+Backtests run in a queue, not in parallel, even if you press several
+buttons. It is not a limit to work around: two calculations at the same time
+would fight over the same files and produce mixed-up results.
+\end{attenzione}
+
+\section{The page of a result}\label{sez:stream-detail}
+
+Clicking on a stream opens its page.
+
+\figuraSchermata{1.0}{figure/schermate/stream.png}
+  {The page of a stream. At the top the robustness verdict, below it the
+   metrics, then the curve.}
+  {stream}
+
+\subsection{Robustness: the panel to read first}
+
+It is the most important part of the page, and it is the one that answers
+the question \enquote{did this strategy work, or was it lucky?}. The score on
+the right sums up the five numbers in one.
+
+\begin{center}
+\begin{tabular}{@{}L{42mm}L{96mm}@{}}
+\toprule
+\textbf{Indicator} & \textbf{What it tells you} \\
+\midrule
+\rigaTenue
+\voce{P(Sharpe > 0)} & The probability that the result is not noise. Below
+  \perc{95} the strategy has proved nothing. \\
+\voce{Monte Carlo p-value} & The same question asked another way: shuffling
+  the data, how often would a lucky case have done just as well. The smaller,
+  the better. \\
+\rigaTenue
+\voce{Min. track record} & How long this strategy would need to run for its
+  result to be credible. A value longer than the period tested means: there
+  is not enough history yet. \\
+\voce{OOS Sharpe instability} & How much the Sharpe ratio changes from one
+  period to the next. High means the strategy worked in some periods and not
+  in others. \\
+\rigaTenue
+\voce{Losing OOS periods} & The percentage of periods closed at a loss. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{perche}{Why a \enquote{Doubtful} verdict is not an error}
+It means the data are not enough to tell this strategy apart from chance.
+Not that it is wrong: that it has not been proved. It is the honest answer
+over a short period, and the way to change it is to have more history ---
+not to change the parameters until the verdict improves, which is the most
+common way of fooling yourself.
+\end{perche}
+
+\subsection{The metrics}
+
+Twelve panels. Besides those already seen on the home screen
+(\vediCap{overview}):
+
+\begin{description}[leftmargin = 1.4em, style = nextline, itemsep = 4pt]
+  \item[\voce{Beta vs SPY}] How closely the strategy follows the market.
+    Close to zero: it does something of its own. Close to one: it moves like
+    the index.
+  \item[\voce{Sortino}] Like the Sharpe ratio, but it counts only the
+    downward swings. Rising fast is not a flaw.
+  \item[\voce{Calmar}] Annual return divided by maximum loss. It answers
+    \enquote{how much does it earn for each point of pain}.
+  \item[\voce{Hit rate}] The percentage of periods in profit.
+  \item[\voce{N obs}] How many observations. Few observations make
+    everything else less reliable.
+\end{description}
+
+\subsection{The three buttons at the top}
+
+\begin{itemize}
+  \item \pulsante{Open the code in Studio} --- opens the artifact in the
+    editor.
+  \item \pulsantesec{Run backtest} --- runs the calculation again.
+  \item \pulsantesec{Use in Ensemble} --- takes this stream into the project
+    builder (\vediCap{projects}).
+\end{itemize}
+
+\section{View: seeing what it did}\label{sez:view}
+
+The \voce{View} item in the menu shows prices with the strategy's trades on
+top: where it went in, where it came out, and the indicators it was
+watching.
+
+\figuraSchermata{1.0}{figure/schermate/visual.png}
+  {The chart view. You choose the strategy and the instrument, and overlay
+   the indicators.}
+  {visual}
+
+\noindent
+It is for something the numbers do not say: \emph{whether the strategy is
+doing what you thought}. A curve that rises nicely can hide twenty sensible
+trades and a single huge lucky one.

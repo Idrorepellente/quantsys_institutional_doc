@@ -4,15 +4,15 @@ Due documenti, un progetto LaTeX.
 
 | File | Che cos'è | A chi serve |
 |---|---|---|
-| `guida-sviluppatore.pdf` | Architettura, motore quantitativo, estensioni, rilascio | A chi deve **modificare** Lyra |
-| `manuale-utente.pdf` | Che cosa fa ogni schermata e in quale ordine si usano | A chi deve **usare** Lyra |
+| `guida-sviluppatore.pdf` | Architettura, motore quantitativo, estensioni, rilascio. In italiano | A chi deve **modificare** Lyra |
+| `user-guide.pdf` | La *User guide*, il manuale utente: che cosa fa ogni schermata e in quale ordine si usano. In inglese, come l'applicazione | A chi deve **usare** Lyra |
 
 ## Compilare
 
 ```
 make                 # tutti e due i PDF
 make sviluppatore    # solo la guida
-make utente          # solo il manuale
+make user            # solo la User guide (anche: make utente)
 make figure          # ogni figura TikZ in un PDF ritagliato, per vederla sola
 make controlla       # ASCII nei listati, riferimenti rotti, righe troppo lunghe
 make guarda          # ricompila a ogni salvataggio
@@ -22,6 +22,23 @@ make pulisci         # toglie gli intermedi, tiene i PDF
 Serve una TeX Live con `latexmk`. Nient'altro: niente Python per compilare,
 niente `--shell-escape`, nessun font da installare. È il motivo per cui il
 codice è composto con `listings` e non con `minted`.
+
+### Due lingue, un preambolo
+
+La guida dello sviluppatore è in italiano, la User guide in inglese
+britannico; il preambolo in `comune/` è lo stesso. La lingua la sceglie il
+file principale prima di includerlo:
+
+```
+\newcommand{\lyraLingua}{english}   % in user-guide.tex
+\input{comune/preambolo}
+```
+
+Senza quella riga il documento è in italiano. La scelta decide babel, le
+parole che le macro scrivono da sole (`\vediCap` scrive «capitolo» o
+«Chapter») e il controllo della sillabazione qui sotto, che vale solo per
+l'italiano. I titoli dei riquadri (`nota`, `attenzione`…) si scrivono a mano
+nella lingua del documento.
 
 ### Se l'italiano non viene sillabato
 
@@ -44,7 +61,7 @@ fmtutil-sys --byfmt pdflatex                 # poi, in entrambi i casi
 ```
 comune/        preambolo, colori, stili, macro: condivisi dai due documenti
 sviluppatore/  un capitolo per cartella, un file per sezione
-utente/        idem
+user/          la User guide: un capitolo per cartella, in 00-chapter.tex
 figure/tikz/   i disegni, uno per file
 figure/schermate/  le immagini dell'applicazione
 strumenti/     script di servizio (vedi sotto)

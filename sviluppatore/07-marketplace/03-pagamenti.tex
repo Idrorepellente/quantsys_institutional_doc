@@ -13,7 +13,7 @@ Questa è l'area in cui un errore costa denaro vero, e la regola che la governa
 
 \subsection{La regola, e perché c'è}
 
-\begin{commento}{dashboard/community.py:1978 $\cdot$ \cod{marketplace\_purchase\_return()}}
+\begin{commento}{dashboard/community.py:1982 $\cdot$ \cod{marketplace\_purchase\_return()}}
 Ritorno dal browser dopo il pagamento.
 
 NON concede nulla. Prima questa rotta creava l'acquisto come «paid»
@@ -43,7 +43,7 @@ difetto di sicurezza, non una comodità.
 I webhook si perdono. Esiste quindi una rotta di riconciliazione, costruita
 con lo stesso principio:
 
-\begin{codiceInterno}{python}{Riconciliare senza concedere}{dashboard/community.py:2068}
+\begin{codiceInterno}{python}{Riconciliare senza concedere}{dashboard/community.py:2072}
     def marketplace_riconcilia(artifact_id):
         """Completa un pagamento che il webhook non ha portato a termine.
 
@@ -58,7 +58,7 @@ scorciatoia, è una seconda interrogazione alla stessa autorità.
 
 \subsection{Distinguere «non comprato» da «non ho potuto chiedere»}
 
-\begin{commento}{dashboard/community.py:2090 $\cdot$ \cod{marketplace\_perche\_non\_mio()}}
+\begin{commento}{dashboard/community.py:2094 $\cdot$ \cod{marketplace\_perche\_non\_mio()}}
 Perche' l'artefatto non risulta acquistato.
 
 Il possesso dipende da due letture: la licenza e l'acquisto. Se
@@ -76,7 +76,7 @@ che gli resta è aprire una contestazione.
 
 \subsection{Gli abbonamenti: una rotta sola per due cose}
 
-\begin{commento}{dashboard/community.py:2676 $\cdot$ \cod{abbonamento\_checkout()}}
+\begin{commento}{dashboard/community.py:2680 $\cdot$ \cod{abbonamento\_checkout()}}
 Apre il pagamento di un piano, o cambia quello in corso.
 
 Una rotta sola per entrambe le cose perche' la domanda dell'utente e'
@@ -87,10 +87,33 @@ Due rotte avrebbero costretto l'interfaccia a indovinarlo.
 
 \noindent
 Il corpo della richiesta porta \cod{tier} e \cod{periodo}; le cadenze sono
-mensile e annuale, con l'annuale scontata. La disdetta, il cambio di carta e
-le fatture passano invece dal portale di fatturazione
-(\rotta{POST}{/api/abbonamento/portale}), che è una pagina ospitata dal
-fornitore: non c'è codice da mantenere per quelle funzioni.
+mensile e annuale, con l'annuale a dieci mensilità (Desk solo annuale). La
+disdetta, il cambio di carta e le fatture passano invece dal portale di
+fatturazione (\rotta{POST}{/api/abbonamento/portale}), che è una pagina
+ospitata dal fornitore: non c'è codice da mantenere per quelle funzioni.
+
+Tre regole stanno sul sito, nella rotta che crea la sessione di pagamento,
+e non nell'app:
+
+\begin{itemize}
+  \item \textbf{La prova di due mesi.} Se il piano la prevede e l'account non
+        ne ha mai avuta una né ha mai avuto un abbonamento su Stripe, la
+        sessione porta la fine della prova: mesi di calendario, calcolati
+        dal minuto della chiave di idempotenza, così due clic nello stesso
+        minuto mandano a Stripe la stessa richiesta. La carta si chiede
+        comunque, e il primo addebito parte da solo alla fine della prova. Il
+        webhook scrive \cod{subscriptionTrialEnd} finché la prova è in corso
+        e \cod{trialUsedAt} la prima volta, che non si svuota più.
+  \item \textbf{Desk non si compra dal checkout.} Il piano porta
+        \cod{sales\_only} e la rotta risponde \num{409} con il codice
+        \cod{sales\_only}, anche a un amministratore.
+  \item \textbf{Il piano si riconosce dal codice.} Nei metadati
+        dell'abbonamento il checkout scrive il codice del piano accanto al
+        livello; il webhook e la rotta delle fatture cercano il piano prima
+        dal codice, poi dal prodotto Stripe, poi dal numero. Desk era il
+        livello~\num{3} prima che arrivasse Quant, e un abbonamento nato
+        allora porta ancora quel numero.
+\end{itemize}
 
 \subsection{Le contestazioni}
 

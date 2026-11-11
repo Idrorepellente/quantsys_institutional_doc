@@ -2,9 +2,17 @@
 %  comune/preambolo.tex — impostazioni comuni ai due documenti
 % ===========================================================================
 %
-%  Lo includono sia guida-sviluppatore.tex sia manuale-utente.tex. Ciò che
-%  vale per uno solo dei due NON va qui: va nel suo file principale, altrimenti
+%  Lo includono sia guida-sviluppatore.tex sia user-guide.tex. Ciò che vale
+%  per uno solo dei due NON va qui: va nel suo file principale, altrimenti
 %  fra sei mesi nessuno sa più perché una cosa è dove è.
+%
+%  LA LINGUA la sceglie il file principale, PRIMA di includere questo file:
+%
+%      \newcommand{\lyraLingua}{english}     % la User guide
+%
+%  Senza, il documento è in italiano (la guida dello sviluppatore). La scelta
+%  decide babel, le parole che le macro scrivono da sole («figura», «Figure»)
+%  e il controllo della sillabazione in fondo.
 %
 %  Motore: pdfLaTeX. Non lualatex, non xelatex, e la scelta è deliberata —
 %  questo preambolo usa solo pacchetti di una TeX Live di base, così chi riceve
@@ -16,6 +24,14 @@
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
 
+\providecommand{\lyraLingua}{italian}
+\newif\iflyraInglese
+% Si confrontano i TESTI, non le macro: \newcommand definisce macro «long» e
+% \ifx fra una long e una no dice «diverse» anche con lo stesso testo.
+\edef\lyraLinguaScelta{\lyraLingua}
+\def\lyraLinguaInglese{english}
+\ifx\lyraLinguaScelta\lyraLinguaInglese \lyraInglesetrue \fi
+
 %  L'italiano in due modi, perché non tutte le installazioni hanno il pacchetto
 %  babel-italian (le immagini Docker di TeX Live «base» tipicamente no, e una
 %  documentazione che non compila lì è inutile metà delle volte che serve).
@@ -26,9 +42,18 @@
 %  La sillabazione italiana è un'altra cosa: sta nel FORMATO, non nel pacchetto,
 %  e se manca si vede subito (parole spezzate all'inglese). Il controllo è in
 %  fondo a questo file.
-\IfFileExists{italian.ldf}
-  {\usepackage[italian]{babel}}
-  {\usepackage[italian, provide = *]{babel}}
+%
+%  L'inglese è quello britannico: date «11 November 2026», ortografia
+%  «licence», «colour», come il sito. Se i pattern britannici mancano dal
+%  formato, babel usa quelli americani, che spezzano le stesse parole quasi
+%  sempre negli stessi punti.
+\iflyraInglese
+  \usepackage[british]{babel}
+\else
+  \IfFileExists{italian.ldf}
+    {\usepackage[italian]{babel}}
+    {\usepackage[italian, provide = *]{babel}}
+\fi
 
 \usepackage{csquotes}
 
@@ -209,9 +234,14 @@
 %    \begin{attenzione}{titolo}  qui si rompe qualcosa
 %    \begin{perche}{titolo}      perché è così e non altrimenti
 %    \begin{pratica}{titolo}     cosa fare, passo per passo
+%
+%  Un riquadro lungo si spezza fra due pagine. Se però dopo il salto ne
+%  resterebbe una riga sola, la pagina si allunga di quella riga (al massimo
+%  20pt, `enlargepage flexible') e il riquadro finisce dov'è: una riga staccata
+%  in cima alla pagina dopo si legge come un errore di impaginazione.
 % ===========================================================================
 \newtcolorbox{nota}[1]{
-  enhanced, breakable,
+  enhanced, breakable, enlargepage flexible = 20pt,
   colback = lyraCielo!35!white, colframe = lyraCieloBordo,
   boxrule = 0pt, leftrule = 2.2pt, arc = 2pt,
   left = 8pt, right = 8pt, top = 6pt, bottom = 6pt,
@@ -223,7 +253,7 @@
 }
 
 \newtcolorbox{attenzione}[1]{
-  enhanced, breakable,
+  enhanced, breakable, enlargepage flexible = 20pt,
   colback = lyraPesca!40!white, colframe = lyraNegativo!70,
   boxrule = 0pt, leftrule = 2.2pt, arc = 2pt,
   left = 8pt, right = 8pt, top = 6pt, bottom = 6pt,
@@ -235,7 +265,7 @@
 }
 
 \newtcolorbox{perche}[1]{
-  enhanced, breakable,
+  enhanced, breakable, enlargepage flexible = 20pt,
   colback = lyraPannello, colframe = lyraGrigioChiaro,
   boxrule = 0pt, leftrule = 2.2pt, arc = 2pt,
   left = 8pt, right = 8pt, top = 6pt, bottom = 6pt,
@@ -247,7 +277,7 @@
 }
 
 \newtcolorbox{pratica}[1]{
-  enhanced, breakable,
+  enhanced, breakable, enlargepage flexible = 20pt,
   colback = lyraMenta!45!white, colframe = lyraAccento,
   boxrule = 0pt, leftrule = 2.2pt, arc = 2pt,
   left = 8pt, right = 8pt, top = 6pt, bottom = 6pt,
@@ -311,6 +341,10 @@
 %  Il controllo guarda \language, che è un parametro intero del motore e si
 %  può sempre confrontare: 0 è la lingua di partenza (inglese). Se dopo aver
 %  selezionato l'italiano siamo ancora lì, i pattern non ci sono.
+%
+%  Vale solo per i documenti in italiano: in un documento inglese \language = 0
+%  è proprio la lingua giusta.
+\iflyraInglese\else
 \AtBeginDocument{%
   \ifnum\language = 0
     \PackageWarningNoLine{lyra}{%
@@ -318,3 +352,4 @@
       con le regole inglesi. Installare hyphen-italian e rigenerare il\MessageBreak
       formato (fmtutil-sys --byfmt pdflatex)}%
   \fi}
+\fi

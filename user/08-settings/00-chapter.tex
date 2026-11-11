@@ -1,0 +1,164 @@
+% ===========================================================================
+%  user/08-settings/00-chapter.tex
+% ===========================================================================
+\chapter{Settings and data}\label{cap:settings}
+
+The \voce{Settings} item gathers three tabs: \voce{Config}, \voce{Data} and
+\voce{Market rules}. They are the three places where you tell the system
+what to work with, and within which limits.
+
+\section{Data: bringing in the prices}\label{sez:data}
+
+Without data, every page of the application is empty. It is the first thing
+to do after installing.
+
+\figuraSchermata{1.0}{figure/schermate/data.png}
+  {The Data page. On the left the automatic download, on the right the manual
+   upload, below them the categories.}
+  {data}
+
+\subsection{Downloading}
+
+You choose three things and press \pulsante{Download}:
+
+\begin{description}[leftmargin = 1.4em, style = nextline, itemsep = 4pt]
+  \item[\campo{Provider}] Where to get them from. Some need a personal key,
+    which you set up from the site.
+  \item[\campo{Timeframe}] The time step. The same instrument can exist at
+    several steps: daily data and five-minute data live in different folders
+    and do not get in each other's way.
+  \item[\campo{Category}] What kind of data it is.
+\end{description}
+
+\noindent
+The job goes into the queue and the bell tells you when it is done. Below the
+fields, a line says what is already there: how many files, how much space, up
+to when they go.
+
+\subsection{Uploading your own file}
+
+The \voce{Your data} panel accepts CSV, Parquet and XLSX files dragged onto
+it. The system recognises by itself columns written in capitals, dates given
+as an index or as a column, and prefixes such as \campo{adj\_}. The
+\voce{Expected format} panel shows what it expects.
+
+\subsection{The categories}
+
+Each category is a folder, and they come in two types.
+
+\begin{center}
+\begin{tabular}{@{}L{22mm}L{116mm}@{}}
+\toprule
+\textbf{Type} & \textbf{It means} \\
+\midrule
+\rigaTenue
+\voce{1:1} & One file per instrument, named after the instrument. The link
+  is automatic, and the application can say how many instruments are covered
+  and how many are not. \\
+\voce{1:N} & Files shared by several instruments: sectors, macroeconomic
+  series, currencies. Here there is no coverage to compute, and the strategy
+  has to declare which file to use. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{nota}{\enquote{0 / 15 assets covered} is not a fault}
+It means the category exists but has no data yet for any instrument. It
+fills up by downloading, or by dragging files into it.
+\end{nota}
+
+\section{Config: the limits}\label{sez:config}
+
+These are the parameters that apply to every calculation.
+
+\figuraSchermata{1.0}{figure/schermate/config.png}
+  {The parameters. Each field carries its unit below it, because the
+   difference between \num{0.12} and \num{12} is a factor of a hundred.}
+  {config}
+
+\begin{center}
+\begin{tabular}{@{}L{44mm}L{94mm}@{}}
+\toprule
+\textbf{Field} & \textbf{What it limits} \\
+\midrule
+\multicolumn{2}{@{}l}{\textit{\small Portfolio \& allocator}}\\[2pt]
+\rigaTenue
+\voce{Initial capital} & The capital the calculations start from. \\
+\voce{Annual target volatility} & How much you accept the portfolio swinging
+  in a year. It is the main risk dial. \\
+\rigaTenue
+\voce{Max weight per position} & The most a single instrument can weigh. \\
+\voce{Max gross per asset class} & The most a whole class can weigh ---
+  shares, bonds, currencies. It guards against diversification that is only
+  apparent: four bonds all going the same way are a single position. \\
+\rigaTenue
+\voce{Max gross leverage} & The total exposure. \num{1.0} means no
+  leverage. \\
+
+\addlinespace
+\multicolumn{2}{@{}l}{\textit{\small Ensemble}}\\[2pt]
+\rigaTenue
+\voce{Target volatility} & The volatility every stream is brought to
+  \emph{before} being weighted. \\
+\voce{Regime window}, \voce{thresholds} & How the state of the market is
+  assessed for the modulation. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{attenzione}{\voce{Target volatility} also acts on the real account}
+It is not a display setting. The same factor that normalises the streams in
+the backtest multiplies the positions the runner opens on a real account.
+Changing it changes how much you really risk, not just what you see on the
+chart.
+\end{attenzione}
+
+\noindent
+Further down, \voce{Asset categories} lets you add categories of
+instruments: once created, a strategy can declare them and restrict itself to
+them.
+
+\section{Market rules: the regimes}\label{sez:regimes}
+
+A \voce{regime} is the state of the market, with three values: \voce{bull},
+\voce{neutral}, \voce{bear}. Strategies can declare that they weigh things
+differently according to the state.
+
+\figuraSchermata{1.0}{figure/schermate/regime.png}
+  {The configured markets. Below them, the history of the states: green bull,
+   grey neutral, red bear.}
+  {regime}
+
+\subsection{How to read the page}
+
+Each panel at the top is a \emph{market} --- a set of instruments that share
+the same way of measuring the regime:
+
+\begin{description}[leftmargin = 1.4em, style = nextline, itemsep = 4pt]
+  \item[\voce{RULE}] The rule used to compute the state.
+  \item[\voce{DRIVER}] The series that drives the decision --- for shares,
+    SPY; for forex, the dollar.
+  \item[\voce{SYMBOLS}] How many name patterns fall into this market.
+  \item[The coloured bar] How much time was spent in each state.
+\end{description}
+
+\begin{attenzione}{\enquote{No driver available}}
+The panel of a market that cannot find its driving series says so with a
+warning, like the \voce{crypto} market in the screenshot. That market
+\textbf{modulates nothing}: it is not an error that blocks anything, but the
+strategies on those instruments behave as if the regime were always neutral.
+The fix is to download the missing series from the \voce{Data} page.
+\end{attenzione}
+
+\subsection{The chart}
+
+It shows the driving series with the background coloured by state. Below it,
+the counts: how many observations, how many times the state changed, and the
+percentage of time spent in each.
+
+\begin{nota}{Few changes of state is a good thing}
+A regime must be a \emph{state}, not a reaction. Twenty-five transitions in
+five years mean the rule tells different periods apart; two hundred would
+mean it is chasing noise, and a strategy that changes weight every week pays
+costs without taking a position.
+\end{nota}

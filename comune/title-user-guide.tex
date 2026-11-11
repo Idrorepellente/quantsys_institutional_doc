@@ -1,0 +1,99 @@
+% ===========================================================================
+%  comune/title-user-guide.tex — title page and "Before you start"
+% ===========================================================================
+\begin{titlepage}
+\thispagestyle{empty}
+\begin{tikzpicture}[remember picture, overlay]
+
+  \fill[lyraInchiostro] (current page.north west)
+    rectangle ([yshift = -9mm]current page.north east);
+
+  \node[anchor = north west, inner sep = 0pt]
+    at ([shift = {(28mm, -42mm)}]current page.north west)
+    {\begin{minipage}{125mm}
+       {\sffamily\fontsize{10}{12}\selectfont
+        \color{lyraAccentoScuro}\bfseries
+        LYRA CAPITAL\par}
+       \vspace{3mm}
+       {\sffamily\fontsize{40}{44}\selectfont\color{lyraInchiostro}
+        User\\guide\par}
+       \vspace{5mm}
+       {\color{lyraAccento}\rule{34mm}{1.6pt}\par}
+       \vspace{6mm}
+       {\sffamily\fontsize{12}{17}\selectfont\color{lyraInchiostro!62}
+        What each screen does, in which order\\
+        to use them, and what the numbers mean.\par}
+     \end{minipage}};
+
+  \node[anchor = south west, inner sep = 0pt]
+    at ([shift = {(28mm, 34mm)}]current page.south west)
+    {\begin{minipage}{125mm}
+       \begin{tcolorbox}[enhanced, colback = lyraPannello,
+                         colframe = lyraBordo, boxrule = 0.6pt, arc = 4pt,
+                         left = 10pt, right = 10pt, top = 9pt, bottom = 9pt]
+         {\sffamily\footnotesize\color{lyraInchiostro}%
+          \textbf{How to read it.} Each chapter is one area of the
+          application. Read it from the start, or go straight to the chapter
+          for the screen in front of you.\par
+          \vspace{4pt}
+          \textbf{To change Lyra}, rather than use it, there is another
+          document: the \emph{Guida dello sviluppatore} (developer guide, in
+          Italian), in the same folder.\par}
+       \end{tcolorbox}
+     \end{minipage}};
+
+  \node[anchor = south east, inner sep = 0pt, align = right]
+    at ([shift = {(-24mm, 18mm)}]current page.south east)
+    {\sffamily\scriptsize\color{lyraInchiostro!45}
+     Document generated from \LaTeX\ source\\
+     \today};
+
+\end{tikzpicture}
+\end{titlepage}
+
+\cleardoublepage
+
+\thispagestyle{empty}
+\vspace*{18mm}
+
+{\sffamily\Large\bfseries\color{lyraInchiostro}Before you start\par}
+\vspace{3mm}
+{\noindent\color{lyraAccento}\rule{\textwidth}{1pt}\par}
+\vspace{7mm}
+
+\noindent
+Lyra is for building investment strategies, testing them on past data and
+--- when they hold up --- running them on a real account. The three happen
+in that order, and this guide follows the same order.
+
+\vspace{4mm}
+\noindent
+In the text, \voce{This} is a menu item or a tab, \pulsante{This} a button to
+press, \campo{this} a field to fill in, and \percorso{Settings \freccia Data}
+means: open \voce{Settings}, then the \voce{Data} tab.
+
+\vspace{6mm}
+{\sffamily\large\bfseries\color{lyraInchiostro}The boxes\par}
+\vspace{3mm}
+
+\begin{nota}{Note}
+A clarification. Skip it and the operation still works.
+\end{nota}
+
+\begin{pratica}{In practice}
+The operation, step by step.
+\end{pratica}
+
+\begin{attenzione}{Warning}
+Something can be lost here: data, money or time. Worth reading first.
+\end{attenzione}
+
+\vspace{6mm}
+\begin{perche}{A word about the numbers}
+No result shown by the application is a forecast. A backtest says how a
+strategy \emph{would have} behaved on past data, with estimated costs; it
+does not say how it will behave. The chapter on \voce{Streams} explains which
+numbers to look at to tell a strategy that worked from one that got lucky.
+\end{perche}
+
+\cleardoublepage

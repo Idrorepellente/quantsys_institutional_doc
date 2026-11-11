@@ -1,0 +1,448 @@
+% ===========================================================================
+%  user/06-live/00-chapter.tex
+% ===========================================================================
+\chapter{Live}\label{cap:live}
+% A chapter full of boxes that do not break: with the page bottom aligned,
+% all the spare space ended up between two paragraphs. Here the bottom stays
+% ragged; at the end of the chapter the book's alignment comes back.
+\raggedbottom
+
+This is the page where a strategy stops being an exercise. A runner always
+starts in simulation: it works out the orders on the connected account and
+writes them to its journal, without sending them. Real orders are switched
+on runner by runner, when you decide, with an explicit confirmation. From
+then on, money moves.
+
+\figuraSchermata{1.0}{figure/schermate/live.png}
+  {The Live page. At the top the status, below it the three steps to create a
+   runner, on the right the summary of what is missing and the saved
+   runners.}
+  {live}
+
+\section{What a runner is}\label{sez:runner}
+
+A \voce{runner} is what runs a strategy on an account. It is made of three
+parts, and they are exactly what the three steps ask for:
+
+\begin{enumerate}
+  \item \textbf{A name.} It only serves to recognise it in the list.
+  \item \textbf{What it runs.} A project (with its weights and its overlays),
+        or a single strategy.
+  \item \textbf{Where it runs.} Which broker. For MetaTrader 5 and
+        Interactive Brokers there is also the choice of orders: simulated or
+        real (\vediSez{real-orders}).
+\end{enumerate}
+
+\noindent
+The panel on the right shows which of the three are in place: the
+\pulsante{Save runner} button stays off until all three are. Below it, a line
+says what the orders will be like, already in the colour they will have on
+the runner's card.
+
+\section{The three brokers}\label{sez:brokers}
+
+\begin{center}
+\begin{tabular}{@{}L{34mm}L{104mm}@{}}
+\toprule
+\textbf{Broker} & \textbf{What it does} \\
+\midrule
+\rigaTenue
+\voce{TEST} & A simulated world with synthetic data and accelerated time.
+  It needs no account and no credentials. It shows whether the machinery
+  works --- retraining, composition, orders --- without waiting months. It
+  is always simulated. \\
+\voce{MetaTrader 5} & Runs on the account the MT5 terminal installed on the
+  computer is logged into: Lyra needs no credentials. At start-up it checks
+  that MT5 is there; with real orders, also that the account is
+  \emph{netting}, that the broker allows automated trading and that
+  \voce{Algo Trading} is on. \\
+\rigaTenue
+\voce{Interactive Brokers} & Connects to TWS or IB Gateway with the host,
+  port, client ID and account saved with \pulsantesec{Connect}. If they are
+  missing, it asks for them at start-up. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{pratica}{The order to follow, without exceptions}
+\begin{enumerate}
+  \item \textbf{TEST} for a few simulated days. It shows that the machinery
+        starts, that orders come out, that the journals get written.
+  \item \textbf{The real broker, in simulation.} The runner reads the
+        account's equity and positions and writes to the journal the orders
+        it would send. You find out which instruments the broker does not
+        trade and which quantities do not add up.
+  \item \textbf{A demo or paper account, with real orders on.} Real orders,
+        play money: you find out about trading hours, rejections and
+        missing permissions.
+  \item \textbf{A real account}, with a fraction of the capital.
+\end{enumerate}
+Skipping a step saves no time: it only means finding the same problems later,
+with the money in.
+\end{pratica}
+
+\section{Simulation or real orders}\label{sez:real-orders}
+
+Once MetaTrader 5 or Interactive Brokers is chosen, the \voce{Orders} panel
+appears below the broker cards, with two positions: \voce{Simulation}, the
+starting one, and \voce{Real orders}.
+
+\figuraSchermata{1.0}{figure/schermate/live-ordini.png}
+  {A runner with real orders on: the \voce{Orders} panel and the summary line
+   turn red. On the right, a runner already saved in simulation.}
+  {live-orders}
+
+\begin{pratica}{Switching real orders on}
+\begin{enumerate}
+  \item In step~\num{3}, choose \voce{MetaTrader 5} or
+        \voce{Interactive Brokers}.
+  \item In the \voce{Orders} panel, press \voce{Real orders}. A window opens
+        that says what changes.
+  \item Read it, tick the box and press \pulsante{Enable real orders}: the
+        button stays off until the box is ticked.
+  \item \pulsante{Save runner}. The \voce{REAL ORDERS} label appears in red on
+        the runner's card.
+\end{enumerate}
+For a runner that is already saved, use \voce{Switch to real orders\ldots}
+on its card, with the runner stopped: the window is the same.
+\end{pratica}
+
+\figuraSchermata{0.82}{figure/schermate/live-conferma.png}
+  {The confirmation of real orders. The button turns on only after the box is
+   ticked.}
+  {live-confirm}
+
+\begin{attenzione}{The runner manages the whole account}
+It sizes the orders on the equity of the whole account, not on a part of
+it, and in the symbols it trades it closes the positions that are not among
+its targets: a share bought by hand on that account, if it is in the
+strategy's universe, can be sold at the next cycle. That is why the account
+must be dedicated to Lyra --- one per runner, no manual trading.
+\end{attenzione}
+
+\begin{nota}{First reduce, then increase}
+In every cycle the runner first sends the orders that reduce positions,
+then those that increase them; a reversal (from short to long, or the other
+way round) becomes two orders, the close and the open. If part of the book
+cannot go out --- old data on a stock, an order still open at the broker, a
+holding with no price --- or a reduction does not go through, the orders
+that increase exposure wait for the next cycle. A cycle left halfway never
+leaves the account more exposed than before.
+\end{nota}
+
+\noindent
+The mode is always visible: on the runner's card (\voce{SIMULATION} or
+\voce{REAL ORDERS}) and on every line of the journal. It can only be changed
+with the runner stopped, and going back to simulation with \voce{Back to
+simulation} asks for no confirmation. The \pulsante{RUN} button of a runner
+with real orders is red and asks once more before starting.
+
+\begin{nota}{The confirmation stays on record}
+The runner records when real orders were confirmed, and the journal reports
+it. Going back to simulation deletes the confirmation: to switch them on
+again, you confirm again.
+\end{nota}
+
+\subsection{The confirmation is for one account}\label{sez:bound-account}
+
+At the first start after the confirmation, the runner records the account it
+is connected to --- on MT5 the number and server, on IBKR the number --- and
+from then on it does not move. If later the MT5 terminal is logged into
+another account, or the \pulsantesec{Connect} settings point to another IBKR
+account, the runner does not start and the journal says which account it
+expected and which one it found. If it happens while it is running, it stops
+before sending anything else. The account is shown on the runner's card and
+in the start window.
+
+\begin{pratica}{Moving to another account}
+\begin{enumerate}
+  \item With the runner stopped, \voce{Back to simulation}.
+  \item Connect the broker to the new account (the MT5 terminal, or
+        \pulsantesec{Connect} for IBKR).
+  \item \voce{Switch to real orders\ldots} and confirm: at the next start the
+        runner binds itself to the new account.
+\end{enumerate}
+\end{pratica}
+
+\begin{nota}{Accounts in another currency}
+Lyra sizes the orders in dollars, on the prices of its own data. An account
+in euros is fine: the equity is converted with the exchange rate the broker
+gives (on MT5, the EURUSD price in the terminal). If there is no rate, real
+orders do not start and the journal says so.
+\end{nota}
+
+\section{The journal}\label{sez:journal}
+
+Every runner keeps a journal, which opens with \voce{Journal} on its card.
+Everything the runner does goes into it, one line per event, with the time
+and the mode in which it happened:
+
+\begin{itemize}
+  \item starts and stops, with the account it connected to: number, type
+        (demo, paper or real), terminal; with real orders, also the check
+        that it is the confirmed account and Lyra's orders left open,
+        cancelled at start and at stop;
+  \item the orders. In simulation, those it would send; if they are the same
+        at the next cycle, a single line says so. With real orders, those
+        sent and their outcome: filled with quantity and price, partly
+        filled, still working (\emph{pending}), cancelled, rejected with the
+        reason the broker gives;
+  \item warnings, for example a symbol the broker does not trade, or data
+        that are too old;
+  \item the kill-switch events (\vediSez{kill-switch});
+  \item maintenance: retraining and data updates.
+\end{itemize}
+
+\figuraSchermata{1.0}{figure/schermate/live-registro.png}
+  {The journal of a runner with real orders: two orders filled, one cancelled
+   because it was not filled in time, a warning.}
+  {live-journal}
+
+\noindent
+The filters at the top separate orders and fills, kill-switch, warnings and
+errors. While the runner is running, the journal updates by itself.
+
+\begin{nota}{It lives on the computer}
+The journal is a file in the application folder,
+\file{data/runners/<id>/journal.jsonl}, one line per event; beyond
+\num{5}\,MB it continues in \file{journal.1.jsonl} and so on, up to ten
+files. It stays after the application is closed and even after the runner is
+deleted: it is the account's logbook, and it is worth keeping.
+\end{nota}
+
+\section{The kill-switch}\label{sez:kill-switch}
+
+Three levels, on by default, the same as in the backtest:
+
+\begin{center}
+\begin{tabular}{@{}L{30mm}L{50mm}L{58mm}@{}}
+\toprule
+\textbf{Level} & \textbf{When it trips} & \textbf{What it does} \\
+\midrule
+\rigaTenue
+Strategy & An \perc{8} drawdown & Suspends it for \num{30} days, then it
+  comes back by itself. \\
+Asset class & A \perc{5} loss in \num{30} days & Halves its exposure for
+  \num{20} days. \\
+\rigaTenue
+Account & A \perc{20} drawdown from the peak & Closes the positions in the
+  runner's symbols and opens no others. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+A suspended strategy and a halved asset class stay that way even after the
+runner is restarted, until they expire.
+
+The account level, with real orders, belongs to the \textbf{account} and not
+to the runner. The drawdown is measured at the start of every cycle, before
+deciding: if the fall happened between one cycle and the next, the runner
+does not send another round of purchases, but closes the positions in the
+symbols it trades straight away. If something stays open (market closed, a
+rejection) it tries again at once, then every minute three times, then at
+the normal pace; once the positions are closed, it stops by itself.
+
+\noindent
+From then on the account stays closed: after a restart, after going to
+simulation and back to real orders, for any runner with real orders on that
+account. Starting a runner on a closed account only serves to close the
+positions left: the start window says so, the runner closes and stops. While
+it is closing, not even repeated errors stop it.
+
+\begin{pratica}{Reopening the account}
+\begin{enumerate}
+  \item Stop the runner.
+  \item \voce{Journal} \freccia \pulsantesec{Reset kill-switch}, and confirm.
+        The account reopens for every runner that uses it.
+  \item At the next start the peak starts again from the account's equity.
+\end{enumerate}
+\end{pratica}
+
+\begin{perche}{Why it belongs to the account, and is saved}
+The kill-switch protects money, and the money is in the account. When it
+belonged to the runner, a restart was enough to start again from the equity
+of the moment --- after a \perc{15} drawdown the \perc{20} limit in fact
+became \perc{32} --- and going to simulation and back, or using another
+runner, was enough to reopen a closed account. The state lives in
+\file{data/accounts/}, one file per account; if it cannot be read, real
+orders do not start: a closed account must not reopen because of a damaged
+file.
+\end{perche}
+
+\begin{nota}{A fall found at start-up, withdrawals and deposits}
+The kill-switch looks at the account's equity and does not tell a loss from
+a withdrawal. If at start-up the equity is already below the account's peak
+by more than the threshold --- the fall happened with the runner stopped ---
+the kill-switch trips and is recorded, but the runner sends no orders and
+says how to go on. If it is a loss, start the runner again: it closes the
+positions left and stops. If money was withdrawn, reset the kill-switch from
+the journal instead. If the account's equity cannot be read at start-up,
+real orders do not start.
+\end{nota}
+
+\begin{nota}{In simulation}
+The kill-switch trips in simulation too, and the journal says what it would
+have done. There it closes nothing and does not touch the account: it
+belongs to the runner, and it is reset the same way.
+\end{nota}
+
+\section{When orders do not go out}\label{sez:orders-held}
+
+When an order does not go out, or does not go as expected, the journal says
+so in one line. The most common ones, what they mean and what to do:
+
+\begin{longtable}{@{}L{46mm}L{92mm}@{}}
+\toprule
+\textbf{In the journal} & \textbf{What it means, and what to do} \\
+\midrule\endfirsthead
+\toprule
+\textbf{In the journal} & \textbf{What it means, and what to do} \\
+\midrule\endhead
+\rigaTenue
+\enquote{orders NOT sent: the data are too old}
+  & The prices the runner decides on are those downloaded in
+    \percorso{Settings \freccia Data}, and they do not update by themselves.
+    Every symbol must reach the last closed session of its market: for US
+    shares and ETFs, the New York Stock Exchange calendar, holidays
+    included; for forex and crypto, one session is tolerated. A day's bar is
+    expected from the following day. The orders on the symbols that are
+    behind wait, and so do those that increase exposure; reductions on the
+    other symbols go out. Update the data: the held orders go out at the
+    first cycle with fresh data. The closes ordered by the account's
+    kill-switch go out regardless. \\
+\enquote{real orders cannot start on this account}
+  & The account cannot receive orders from Lyra, and the line says why: on
+    MT5, a \emph{hedging} account (a \emph{netting} account is needed),
+    trading disabled or not allowed to expert advisors, \voce{Algo Trading}
+    off, the Python API switched off in the terminal's options; on IBKR, a
+    login with several accounts and no account given in
+    \pulsantesec{Connect}; on both, an account in another currency with no
+    rate to convert it. \\
+\rigaTenue
+\enquote{the real orders of this runner were confirmed for \ldots{}}
+  & The broker is connected to an account different from the one the runner
+    started on after the confirmation. If it is the right account, go back
+    to simulation and switch real orders on again (\vediSez{bound-account}). \\
+\enquote{cycle skipped, nothing sent}
+  & An obstacle that appeared while the runner was on, for example
+    \voce{Algo Trading} switched off or the account data not yet in sync.
+    The runner skips the cycles without sending anything and resumes by
+    itself when it goes away. \\
+\rigaTenue
+\enquote{kill-switch: this account was closed}
+  & The account was closed by the kill-switch: the runner starts only to
+    close the positions left, then stops (\vediSez{kill-switch}). \\
+\enquote{an order is still working at the broker}
+  & On that symbol there is an order still open --- Lyra's or one placed by
+    hand. While it stays open, the runner does not send another: when the
+    first was filled, the position would double. \\
+\rigaTenue
+\enquote{order(s) that add exposure not sent}
+  & Part of the book did not go out (one of the lines above, or a holding
+    with no price in that cycle) or a sale did not go through: in that cycle
+    only the reductions go out, and the purchases are worked out again at
+    the next cycle. \\
+An order \emph{rejected}
+  & The reason is the broker's, written in the line: permissions, market
+    closed, quantity below the minimum. In TWS and IB Gateway the
+    \voce{Read-Only API} option must be off, otherwise every order is
+    rejected. \\
+\rigaTenue
+An order \emph{cancelled} on IBKR
+  & It was not filled within \num{30} seconds, usually because the market
+    was closed, and the runner cancelled it: left open, it would have been
+    filled later while the runner was working out another one. \\
+An order \emph{pending}
+  & The broker accepted it but has not filled it yet (MT5), or its
+    cancellation is not yet confirmed (IBKR): it can still be filled. The
+    runner sends no other orders on that symbol while it stays open, and
+    cancels it when it stops. \\
+\rigaTenue
+An order \emph{skipped}
+  & The quantity is below the broker's minimum lot, and nothing went out: the
+    difference is smaller than one lot. \\
+\enquote{the broker is not answering}
+  & Connection dropped, TWS or MetaTrader~5 closed or restarting. The runner
+    sends nothing and keeps trying without giving up, with waits that grow
+    up to a quarter of an hour; when the broker answers again, it says so. \\
+\rigaTenue
+\enquote{cycle failed (1 of 3 in a row)}
+  & An error of another kind. The runner tries again within a minute; three
+    errors in a row stop it, with the cause in the journal --- except when it
+    is closing an account closed by the kill-switch. \\
+\enquote{cannot connect to TWS/IB Gateway}
+  & TWS or IB Gateway off or not logged in, API not enabled
+    (\percorso{Configure \freccia API \freccia Settings}), wrong port, or
+    another program is using the same client ID. \\
+\bottomrule
+\end{longtable}
+
+\section{The simulator}\label{sez:simulator}
+
+The \voce{TEST SIMULATOR} panel at the top says how long a simulated day
+lasts --- in the screenshot, two seconds --- and how much time it will cover
+in all. Pressing \pulsantesec{Config} changes the pace.
+
+\begin{nota}{What speeding up time is for}
+A strategy that retrains every thirty days, on a real account, retrains for
+the first time in thirty days. In the simulator it happens in a minute, and
+if the retraining has a problem you find out at once instead of next month.
+\end{nota}
+
+\section{Credentials}\label{sez:credentials}
+
+The broker credentials stay \textbf{on the computer of whoever uses the
+application}, in a local file. They do not go through the site, they do not
+end up in any database and they do not leave the machine.
+
+For Interactive Brokers, \pulsantesec{Connect} saves the host, the port, the
+client ID and the account. Port and client ID must be numbers, and the window
+says so at once. The usual ports are \num{7497} for TWS in paper and
+\num{7496} for real, \num{4002} and \num{4001} for IB Gateway. The account
+must be given if the login manages more than one.
+
+\begin{attenzione}{Two consequences}
+The first: nobody can recover them for you: if they are lost, you set them
+up again with the broker. The second, more important: whoever has access to
+that computer has access to the account. The application is meant to run on
+a personal machine, not on a server others can reach.
+\end{attenzione}
+
+\section{Starting and stopping}\label{sez:start-stop}
+
+Once saved, the runner appears in the list at the bottom right, with the
+commands to start and stop it. The two counters at the top ---
+\voce{RUNNING} and \voce{STOPPED} --- say how many are in each state.
+
+\figuraSchermata{1.0}{figure/schermate/live-runner.png}
+  {Two runners on the same model: one stopped in simulation, one running
+   with real orders.}
+  {live-runner}
+
+\noindent
+The first cycle starts at once. The following ones follow the shortest bar
+among those the runner watches, a quarter of a bar at a time: for daily
+strategies, one cycle every six hours. Asking the broker more often would
+produce identical cycles.
+
+\noindent
+With real orders, \pulsante{RUN} asks for confirmation once more and says
+which account the orders will go to; if the account was closed by the
+kill-switch, it says that starting will only serve to close positions.
+
+\begin{nota}{Stopping: no new orders}
+Once \pulsante{Stop} is pressed, the orders of the current cycle not yet sent
+do not go out any more; those already sent reach their outcome, which goes
+into the journal. With real orders, Lyra's orders still open at the broker
+are cancelled: none of them is filled later without the runner watching.
+\end{nota}
+
+\begin{attenzione}{One broker per runner}
+Two runners on the same account fight over the positions: the first opens,
+the second sees a position it does not expect and closes it. The page says
+so in step~\num{3}, and does not let a second runner start on the same
+broker while the first is running.
+\end{attenzione}
+
+\flushbottom

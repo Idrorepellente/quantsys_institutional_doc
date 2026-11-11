@@ -1,0 +1,109 @@
+% ===========================================================================
+%  user/03-studio/00-chapter.tex
+% ===========================================================================
+\chapter{Studio}\label{cap:studio}
+
+Studio is where things are built. You get there from \voce{Studio} in the
+menu, or from the \pulsante{Open Studio} button on the home screen.
+
+\figuraSchermata{1.0}{figure/schermate/studio.png}
+  {Studio. At the top the three ways of working, below them the five families
+   of artifacts, in the middle the drawing board.}
+  {studio}
+
+\section{The five families}\label{sez:studio-families}
+
+The row of tabs below the title says \emph{what} you are building. They are
+five different things, and it is worth knowing which one you need before you
+start.
+
+\begin{center}
+\begin{tabular}{@{}L{28mm}L{110mm}@{}}
+\toprule
+\textbf{Tab} & \textbf{What it is} \\
+\midrule
+\rigaTenue
+\voce{Strategies} & A strategy: it decides what to buy and sell, and when.
+  It is the thing you build most often. \\
+\voce{Approaches} & An approach: it skips the whole engine and produces the
+  series of gains and losses directly. It is for people who already have a
+  calculation of their own and just want to bring it into the system. \\
+\rigaTenue
+\voce{Weight mode} & A rule for sharing capital among several strategies.
+  Fourteen come already installed. \\
+\voce{Overlay} & A brake: it reduces exposure when the market behaves in a
+  certain way. It does not earn, it protects. \\
+\rigaTenue
+\voce{Metrics} & A measure to add to the ones already shown on the result
+  cards. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{The three ways to build}\label{sez:studio-modes}
+
+At the top right you choose how to work. The result is the same --- a code
+file installed in the system --- and only the road changes.
+
+\subsection{Blueprint: with blocks}
+
+You drag blocks from the library on the left onto the board and connect
+outputs to inputs. The library is divided into categories: prices, numbers,
+external data such as earnings and fundamentals.
+
+\begin{pratica}{The quickest way to see how it works}
+Press \pulsante{Load an example}: an example appears, already wired (the
+crossing of two moving averages with a stop). Take it apart and put it back
+together: in ten minutes you understand the mechanism without writing a
+line.
+\end{pratica}
+
+\subsection{Code: by writing}
+
+The \pulsantesec{\{ \} Code} button switches to the text editor. It is the
+same artifact, seen as Python code. You can switch between the two views.
+
+\subsection{AI agent: in words}
+
+The \voce{AI agent} tab opens a conversation: you describe the strategy in
+words and the model writes it. It needs a model installed locally; without
+one, the tab says so and the other two ways keep working.
+
+\figuraSchermata{1.0}{figure/schermate/agent.png}
+  {The assistant. You describe what you want, and it writes the artifact and
+   installs it.}
+  {agent}
+
+\begin{attenzione}{Read what the assistant writes}
+The generated code is installed in the system and runs on your data --- and
+one day, perhaps, on your account. The assistant does not know whether a
+strategy makes financial sense: it knows how to write code that does what it
+was asked. The \voce{Code} tab is there for this too.
+\end{attenzione}
+
+\section{Genetics}\label{sez:studio-genetics}
+
+The \voce{Genetics} tab opens an area of its own: instead of writing one
+strategy, you let many of them be born and keep those that survive. You
+choose the universe of instruments and let it run.
+
+\figuraSchermata{1.0}{figure/schermate/genetic.png}
+  {The genetics section. You declare what the strategies should evolve on,
+   and the rest is waiting.}
+  {genetic}
+
+\begin{nota}{It takes a long time}
+It is the slowest job in the application. It starts as a background process:
+you can close the page, and the bell tells you when it is finished.
+\end{nota}
+
+\section{What happens when you press \enquote{Install}}\label{sez:studio-install}
+
+The artifact is written to a folder of the system, and from then on it
+appears in the lists: a strategy among those you can run, a weighting mode
+among those you can choose in a project, an overlay among those you can
+switch on.
+
+Before writing, the system checks the code: it must not read or write files,
+must not open connections and must not run commands. If it contains any of
+these, the installation is refused and the reason is shown.

@@ -1,0 +1,127 @@
+% ===========================================================================
+%  user/05-projects/00-chapter.tex
+% ===========================================================================
+\chapter{Projects}\label{cap:projects}
+
+A \voce{project} is a combination of several strategies, with the rule that
+decides how much each one weighs and any brakes. It is what you put into
+production: running a single strategy is rarely a good idea.
+
+\figuraSchermata{1.0}{figure/schermate/projects.png}
+  {The list of saved projects.}
+  {projects}
+
+\section{The builder, in four steps}\label{sez:builder}
+
+It opens with \voce{Ensemble builder}, or with \pulsantesec{Use in
+Ensemble} from the page of a stream. The four steps at the top always say
+where you are.
+
+\subsection{Step 1 --- Strategies}
+
+You choose the streams to combine. You need at least two: with one there is
+nothing to combine, and the \pulsante{Next} button stays off until two are
+chosen.
+
+\figuraSchermata{1.0}{figure/schermate/composizione.png}
+  {Choosing the streams. Next to each one are its Sharpe ratio and return, so
+   you do not have to look them up elsewhere.}
+  {builder-streams}
+
+\begin{perche}{Do not pick the best three}
+The temptation is to take the three highest Sharpe ratios. It is almost
+always the mistake: if the three strategies make the same bet, putting them
+together reduces nothing --- you are just making it three ways. The
+\voce{Corr} column on the home screen is there for this: two strategies with
+low correlation, even with modest Sharpe ratios, do better together than
+three good strategies that are all alike.
+\end{perche}
+
+\subsection{Step 2 --- Weighting}
+
+How to share the capital among the chosen streams. Fourteen methods, grouped
+by family.
+
+\figuraSchermata{1.0}{figure/schermate/composizione-pesi.png}
+  {The weighting methods, by family. Each one carries its line of
+   explanation.}
+  {builder-weights}
+
+\begin{center}
+\begin{tabular}{@{}L{36mm}L{102mm}@{}}
+\toprule
+\textbf{Family} & \textbf{The idea} \\
+\midrule
+\rigaTenue
+\voce{Naive} & All the same. \voce{Equal}, an equal share each. Always worth
+  trying: it is the benchmark the others are measured against. \\
+\voce{Risk / covariance} & Weights by how much each one swings and how much
+  they move together. Whatever swings less weighs more. \\
+\rigaTenue
+\voce{Robust} & As above, but without trusting the estimated correlations
+  too much --- on little data they are unstable. \\
+\voce{Tail-risk} & Looks at extreme losses instead of the average swing. \\
+\rigaTenue
+\voce{Return-aware} & Also takes into account how much each one is expected
+  to earn, not only how much it risks. \\
+\voce{Regime-adaptive} & Changes the weights according to the state of the
+  market. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{pratica}{Where to start}
+\voce{Equal}. Then try \voce{Min-Variance LW} or \voce{ERC} and see whether
+the drawdown really falls. If a complicated method does not beat equal
+weighting, equal weighting is the answer: it has one parameter fewer to get
+wrong.
+\end{pratica}
+
+\subsection{Step 3 --- Overlay}
+
+Overlays reduce exposure when something happens. Several can be switched on
+together: their effects multiply, and the order in which you choose them
+does not change the result.
+
+\begin{center}
+\begin{tabular}{@{}L{34mm}L{104mm}@{}}
+\toprule
+\textbf{Overlay} & \textbf{Reduces exposure when\ldots} \\
+\midrule
+\rigaTenue
+\voce{Vol-Regime} & realised volatility rises. \\
+\voce{Jump-Vol} & there is a sudden jump: it reacts within a day. \\
+\rigaTenue
+\voce{Corr-Gate} & the strategies start moving all together, that is when
+  diversification disappears. \\
+\voce{Regime-GMM}, \voce{Iso-Stress} & market conditions look like those of
+  past periods of stress. \\
+\rigaTenue
+\voce{Macro-Regime} & the macroeconomic signals worsen. \\
+\voce{News-Pressure} & the volume of news goes above normal. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{attenzione}{An overlay also takes away gains}
+A brake that reduces exposure reduces everything: the losses and the gains.
+It is worth looking at the two numbers together --- how much the drawdown
+fell, and how much the return fell. Switching on five because \enquote{it
+can't hurt} leads to a portfolio that is almost always out of the market.
+\end{attenzione}
+
+\subsection{Step 4 --- Costs}
+
+The costs: commissions and slippage. The backtest subtracts them.
+
+\begin{nota}{Raising the costs is the most honest check you can make}
+A strategy that stays good with the costs doubled is robust. One that stops
+working was earning inside the spread, and on a real account it will not
+earn.
+\end{nota}
+
+\section{Saving}\label{sez:projects-save}
+
+At the end you give it a name and save it. From then on the project appears
+in the list, its performance is what the home screen draws, and --- most
+importantly --- it can be chosen on the \voce{Live} page (\vediCap{live}).

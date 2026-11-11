@@ -9,13 +9,22 @@
 %  un'altra, che è il modo in cui la documentazione smette di essere creduta.
 % ===========================================================================
 
+% --- la lingua del documento -----------------------------------------------
+%  \iflyraInglese la definisce comune/preambolo.tex. Qui la si crea se manca,
+%  perché `make figure' include questo file senza il preambolo. Il nome del
+%  condizionale si scrive con \csname: scritto per esteso dentro un ramo
+%  saltato, TeX lo conterebbe come un \if aperto e sbaglierebbe i \fi.
+\ifcsname iflyraInglese\endcsname\else
+  \expandafter\newif\csname iflyraInglese\endcsname
+\fi
+
 % --- nomi del prodotto ------------------------------------------------------
 \newcommand{\Lyra}{\textsc{Lyra}}
 \newcommand{\LyraCapital}{\textsc{Lyra Capital}}
-\newcommand{\app}{l'applicazione}
-\newcommand{\App}{L'applicazione}
-\newcommand{\sito}{il sito}
-\newcommand{\Sito}{Il sito}
+\newcommand{\app}{\iflyraInglese the application\else l'applicazione\fi}
+\newcommand{\App}{\iflyraInglese The application\else L'applicazione\fi}
+\newcommand{\sito}{\iflyraInglese the site\else il sito\fi}
+\newcommand{\Sito}{\iflyraInglese The site\else Il sito\fi}
 
 % --- i pacchetti del motore -------------------------------------------------
 %  Si scrivono \pkgCore e non \file{core/}: così il giorno in cui una cartella
@@ -134,21 +143,27 @@
   \end{figure}}
 
 %  Schermata con cornice: una schermata senza bordo si confonde con il fondo
-%  della pagina, e non si capisce dove finisce l'interfaccia.
+%  della pagina, e non si capisce dove finisce l'interfaccia. La cornice sta
+%  DENTRO la larghezza chiesta: altrimenti una schermata larga quanto la
+%  pagina sborda di un punto per lato.
 \newcommand{\figuraSchermata}[4]{%
   \begin{figure}[htbp]
     \centering
     \setlength{\fboxsep}{0pt}\setlength{\fboxrule}{0.5pt}%
-    {\color{lyraGrigioChiaro}\fbox{\includegraphics[width = #1\linewidth]{#2}}}
+    {\color{lyraGrigioChiaro}\fbox{\includegraphics[width = \dimexpr #1\linewidth - 2\fboxrule\relax]{#2}}}
     \caption{#3}\label{fig:#4}
   \end{figure}}
 
 % --- riferimenti incrociati con la parola davanti ---------------------------
-\newcommand{\vediFig}[1]{figura~\ref{fig:#1}}
-\newcommand{\vediTab}[1]{tabella~\ref{tab:#1}}
-\newcommand{\vediCap}[1]{capitolo~\ref{cap:#1}}
-\newcommand{\vediSez}[1]{\S\,\ref{sez:#1}}
+%  In inglese la parola vuole la maiuscola («see Chapter 4»), in italiano no.
+\newcommand{\vediFig}[1]{\iflyraInglese Figure\else figura\fi~\ref{fig:#1}}
+\newcommand{\vediTab}[1]{\iflyraInglese Table\else tabella\fi~\ref{tab:#1}}
+\newcommand{\vediCap}[1]{\iflyraInglese Chapter\else capitolo\fi~\ref{cap:#1}}
+\newcommand{\vediSez}[1]{\iflyraInglese Section~\else \S\,\fi\ref{sez:#1}}
 
 % --- numeri e unità ---------------------------------------------------------
-\newcommand{\perc}[1]{#1\,\%}
-\newcommand{\eur}[1]{#1\,\texteuro}
+%  Ogni lingua con la sua convenzione, la stessa dell'applicazione e del sito:
+%  in italiano «10\,%» e «49\,€», in inglese «10%» e «€49» (le migliaia, in
+%  inglese, si scrivono con la virgola nell'argomento: \eur{1,490}).
+\newcommand{\perc}[1]{\iflyraInglese #1\%\else #1\,\%\fi}
+\newcommand{\eur}[1]{\iflyraInglese \texteuro#1\else #1\,\texteuro\fi}

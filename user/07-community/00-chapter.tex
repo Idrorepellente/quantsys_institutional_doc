@@ -1,0 +1,128 @@
+% ===========================================================================
+%  user/07-community/00-chapter.tex
+% ===========================================================================
+\chapter{Community}\label{cap:community}
+
+It is the area where users meet, and the only one in the application that
+needs an account. In the menu it sits under \voce{Share}; the page has four
+tabs:
+
+\begin{center}
+\begin{tabular}{@{}L{34mm}L{104mm}@{}}
+\toprule
+\textbf{Tab} & \textbf{What it is for} \\
+\midrule
+\rigaTenue
+\voce{Marketplace} & Buying and selling strategies, approaches, overlays and
+  weighting methods. It is the subject of this chapter. \\
+\voce{Messages} & Conversations with other users, for example with the
+  author of a strategy. \\
+\rigaTenue
+\voce{Feedback} & The reports and suggestions sent to the Lyra team. \\
+\voce{My account} & Profile, security and subscription
+  (\vediCap{account}). \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\figuraSchermata{1.0}{figure/schermate/marketplace.png}
+  {The \voce{Community} without an account. The rest of the application keeps
+   working: the page says so.}
+  {community-signed-out}
+
+\section{Why an account is needed here and not elsewhere}\label{sez:why-account}
+
+Because here there is someone on the other side. Building and testing
+strategies happens entirely on your own computer, and asking for an account
+to do it would make no sense. Buying, selling and granting a licence require
+the system to know who is who.
+
+\section{Buying}\label{sez:buy}
+
+\begin{pratica}{From the storefront to the system}
+\begin{enumerate}
+  \item Open the artifact's page: description, metrics declared by the
+        seller, comments, sometimes a video.
+  \item \pulsante{Buy} --- if it is free, access is immediate; if it is paid,
+        the payment flow opens.
+  \item Once the payment is done you go back to the application. If access
+        does not show as active yet, \textbf{it is not an error}: the
+        confirmation arrives a moment later. The page says so and asks you to
+        wait.
+  \item \pulsante{Install} --- the artifact is written to the system, and
+        from then on it appears in the lists like all the others.
+\end{enumerate}
+\end{pratica}
+
+\begin{nota}{Before installing, the conflicts}
+If something with the same name already exists in the system, the
+application says so \emph{before} writing. It is worth reading: an
+installation that overwrites a strategy you were working on is lost work.
+\end{nota}
+
+\subsection{If a purchase does not show up}
+
+There is a command for exactly this, on the artifact's page, that explains
+why it does not show as purchased. It tells apart two things that at first
+sight look the same: \enquote{you did not buy it} and \enquote{I could not
+ask}. They are opposites, and the second is solved by trying again.
+
+If the payment went through but access does not open, there is a
+reconciliation command: it checks the payment again with the provider and,
+only if it shows as collected, completes the operation.
+
+\section{Selling}\label{sez:sell}
+
+To publish you need two things, in this order:
+
+\begin{enumerate}
+  \item \textbf{The marketplace must be open.} During the beta it is closed:
+        nobody uploads anything. Items already in the storefront stay
+        visible.
+  \item \textbf{A paid plan.} With the marketplace open, any paid plan will
+        do, from Pro up (\vediCap{account}). On Free you can browse, download
+        and buy, but not sell.
+\end{enumerate}
+
+\begin{perche}{Why a subscription even to publish for free}
+It is not about the money. Whoever publishes puts their name next to a
+strategy that others will run with their own money: a filter at the entrance
+is worth more than any check after the fact. Someone without a subscription
+remains a full user --- they browse, download, buy and use. They just cannot
+put things in the storefront.
+\end{perche}
+
+\noindent
+A published artifact goes online at once: there is no approval queue. The
+description and the video can be corrected later; the bundle of files
+cannot.
+
+\section{If an artifact does not perform as declared}\label{sez:dispute}
+
+You open a dispute from the artifact's page. It is not a discussion: the
+system runs two automatic checks.
+
+\begin{center}
+\begin{tabular}{@{}L{44mm}L{94mm}@{}}
+\toprule
+\textbf{Check} & \textbf{What it compares} \\
+\midrule
+\rigaTenue
+\voce{Integrity} & The installed files with those sold, one by one. \\
+\voce{Performance} & The metrics declared by the seller with those obtained
+  by running the calculation again on your own system. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+The case is a conversation between buyer, seller and the administration,
+with the results of the two checks attached. It can be withdrawn at any
+time.
+
+\begin{nota}{Two different results do not mean a deception}
+A strategy can perform differently because the data are different: a
+different universe of instruments, a different period, different costs. The
+check is there to establish \emph{by how much} they differ, which is the
+starting point of any sensible discussion.
+\end{nota}

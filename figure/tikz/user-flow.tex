@@ -1,0 +1,37 @@
+% ===========================================================================
+%  figure/tikz/user-flow.tex
+%  The order in which the areas of the application are used. For the user
+%  guide.
+% ===========================================================================
+\begin{tikzpicture}[x = 1mm, y = 1mm]
+
+  \foreach \i/\x/\st/\titolo/\sotto in {
+      1/  0/sito/{Settings}/{download the data},
+      2/ 37/interfaccia/{Studio}/{build},
+      3/ 74/motore/{Streams}/{test},
+      4/111/motore/{Projects}/{combine},
+      5/148/esterno/{Live}/{run}} {
+    \node[\st, minimum width = 30mm, minimum height = 13mm] at (\x,0)
+      (n\i) {\titolo\\{\scriptsize \sotto}};
+    \node[passo] at (\x-17,8) {\i};
+  }
+
+  \foreach \a/\b in {1/2, 2/3, 3/4, 4/5}
+    \draw[flusso] (n\a) -- (n\b);
+
+  % The way back: hardly anyone reaches the end on the first round.
+  \draw[ritorno] (n3.south) .. controls (74,-20) and (37,-20) .. (n2.south)
+    node[etichetta, pos = 0.5] {does not hold up: redo};
+
+  \node[sito, minimum width = 30mm, minimum height = 13mm] at (74,30) (mk)
+    {Marketplace\\{\scriptsize buy or sell}};
+  \draw[dipendenza] (mk.south west) -- (n2.north)
+    node[etichetta, pos = 0.55] {installed};
+  \draw[dipendenza] (n3.north) -- (mk.south)
+    node[etichetta, pos = 0.5] {published};
+
+  \node[nota, anchor = north, text width = 120mm, align = center] at (74,-28)
+    {Only the Marketplace, in the Community, needs an account. Everything else
+     runs on your own computer.};
+
+\end{tikzpicture}

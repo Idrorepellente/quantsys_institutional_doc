@@ -1,0 +1,90 @@
+% ===========================================================================
+%  user/02-overview/00-chapter.tex
+% ===========================================================================
+\chapter{Overview}\label{cap:overview}
+
+It is the page that opens first. It answers a single question: how is
+everything going, right now.
+
+\figuraSchermata{1.0}{figure/schermate/overview.png}
+  {The home screen. Four panels: the ensemble chart, the metrics, the list of
+   active streams, and the shortcut to Studio.}
+  {overview}
+
+\section{The chart at the top left}\label{sez:overview-chart}
+
+It shows the performance of the chosen \voce{Project}: the combination of
+several strategies, net of estimated costs, on the data the strategy had
+\emph{not} seen while it was being built.
+
+Until a project has been saved, an invitation to create one takes its place.
+It is not an error: there is simply nothing to draw yet.
+
+\section{Metrics OOS}\label{sez:overview-metrics}
+
+Six numbers, and they are meant to be read together. \voce{OOS} stands for
+\emph{out of sample}: computed on data the strategy did not know.
+
+\begin{center}
+\begin{tabular}{@{}L{32mm}L{106mm}@{}}
+\toprule
+\textbf{Metric} & \textbf{What it tells you} \\
+\midrule
+\rigaTenue
+\voce{Sharpe ratio} & How much it earns relative to how much it swings. It is
+  the number most used to compare two strategies, and the easiest to make
+  look good by looking at the wrong data. \\
+\voce{CAGR net} & The compound annual return, already net of estimated
+  costs. \\
+\rigaTenue
+\voce{Max drawdown} & The largest loss from a previous peak. It is the
+  question \enquote{how much would I have had to endure before recovering}. \\
+\voce{Ann. volatility} & How much it swings in a year. \\
+\rigaTenue
+\voce{Alpha vs SPY ann.} & How much it earns \emph{beyond} the market, once
+  the part explained by the market itself is removed. A strategy with a good
+  return and an alpha close to zero is buying the market under other
+  names. \\
+\voce{Win rate} & The percentage of days in profit. On its own it says
+  little: you can win nine times out of ten and still lose. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{perche}{Which numbers to look at first}
+\voce{Max drawdown} and \voce{Alpha vs SPY}. The first because it is the
+figure that decides whether a strategy can be lived with: an excellent Sharpe
+with a \perc{45} drawdown is a strategy nobody holds to the end. The
+second because it tells a strategy that does something apart from one that
+follows the market with longer strides.
+\end{perche}
+
+\begin{attenzione}{A backtest is not a forecast}
+It says how a strategy \emph{would have} behaved on past data, with
+estimated costs. It does not say how it will behave. \vediCap{streams}
+explains which signs tell a strategy that worked from one that got lucky.
+\end{attenzione}
+
+\section{Active streams}\label{sez:overview-list}
+
+The list of all available results, sorted. The columns:
+
+\begin{description}[leftmargin = 1.4em, style = nextline, itemsep = 4pt]
+  \item[\voce{Sharpe}] As above.
+  \item[\voce{OOS Return}] The out-of-sample return. Green above zero, red
+    below.
+  \item[\voce{Corr}] The correlation with the other streams. It is the column
+    that matters most when combining: two highly correlated strategies, put
+    together, diversify nothing --- they make the same bet twice.
+  \item[\voce{Watch}] The star adds the stream to your favourites.
+\end{description}
+
+\noindent
+The three menus above the list choose the period (\voce{OOS} or all of it),
+the sort order and the reference project.
+
+\section{Tutorials}\label{sez:overview-tutorials}
+
+At the bottom right, four steps that tick themselves off as you do them:
+build the first stream, validate it, combine it, put it into production. It
+is the path this guide follows in the next chapters.

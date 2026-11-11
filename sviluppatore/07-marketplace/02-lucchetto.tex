@@ -2,6 +2,10 @@
 %  sviluppatore/07-marketplace/02-lucchetto.tex
 % ===========================================================================
 \section{I due strati del permesso di pubblicare}\label{sez:lucchetto}
+% Codice, tabella dei piani e riquadri non si spezzano: con il fondo pagina
+% allineato, lo spazio avanzato finiva tutto fra due paragrafi. In questa
+% sezione il fondo resta libero; alla fine si torna all'allineamento del libro.
+\raggedbottom
 
 Chi può caricare un artefatto sul marketplace è deciso da due condizioni in
 cascata, e confonderle è il modo tipico di sbagliare una modifica in
@@ -44,44 +48,72 @@ Tre proprietà, tutte deliberate:
 
 \subsection{Secondo strato: l'abbonamento}
 
-A marketplace aperto, serve uno dei tre livelli. I livelli sono quattro
-contando chi non è abbonato:
+A marketplace aperto, per pubblicare serve un piano a pagamento, dal Pro in
+su. I piani sono quelli della pagina Prezzi del sito, che è il riferimento:
+cinque livelli contando il Gratuito.
 
-\begin{codiceInterno}{python}{I quattro livelli}{dashboard/community.py:98}
-# I QUATTRO LIVELLI, con i nomi che l'interfaccia mostra. Il livello 0 non e'
-# un ripiego: e' un utente pieno, che sfoglia, scarica, compra e usa. Non
-# mette soltanto roba in vetrina.
-NOMI_LIVELLO = {0: "Free", 1: "Author", 2: "Studio", 3: "Desk"}
+\begin{codiceInterno}{python}{I cinque livelli}{dashboard/community.py:106}
+# I CINQUE LIVELLI, con i nomi che l'interfaccia mostra: gli stessi piani
+# della pagina Prezzi del sito. Il livello 0 non e' un ripiego: e' l'app
+# intera, con cui si sfoglia, scarica, compra e usa tutto. I nomi veri (e i
+# prezzi, e le voci) arrivano dal sito con il catalogo; questi servono solo
+# quando il catalogo non c'e'.
+NOMI_LIVELLO = {0: "Free", 1: "Pro", 2: "Professional", 3: "Quant", 4: "Desk"}
+LIVELLO_MAX = max(NOMI_LIVELLO)
 \end{codiceInterno}
 
 \begin{center}
-\begin{tabular}{@{}R{10mm}L{20mm}L{108mm}@{}}
+\begin{tabular}{@{}R{8mm}L{22mm}L{30mm}L{78mm}@{}}
 \toprule
-\textbf{Liv.} & \textbf{Nome} & \textbf{Che cosa può fare} \\
+\textbf{Liv.} & \textbf{Piano} & \textbf{Prezzo} & \textbf{Che cosa aggiunge} \\
 \midrule
 \rigaTenue
-\num{0} & Free & Tutto il sistema: sfoglia, scarica, compra, usa. \emph{Non}
-  pubblica. \\
-\num{1} & Author & In più: pubblicare sul marketplace. \\
+\num{0} & Free & \eur{0} & L'app intera: costruire, provare, far girare;
+  sul marketplace sfoglia, scarica, compra. \emph{Non} pubblica. Quota sul
+  generato \perc{0}: la strategia allocata entra nel track record. \\
+\num{1} & Pro & \eur{49} al mese, \eur{490} l'anno & Privacy totale,
+  vendita sul marketplace e acquisti al $-$\perc{10}, sandbox sui dati
+  istituzionali (2030), \perc{10} del generato. \\
 \rigaTenue
-\num{2} & Studio & Idem, prezzo diverso. \\
-\num{3} & Desk & Idem, prezzo diverso. \\
+\num{2} & Professional & \eur{149} al mese, \eur{1490} l'anno & Storico
+  grezzo in locale (2030) e $-$\perc{10} sui vendor di dati, marketplace
+  $-$\perc{20}, sandbox su più mercati, \perc{30} del generato. \\
+\num{3} & Quant & da \eur{200} al mese, \eur{2000} l'anno, più i dati &
+  Real-time con licenza di borsa (2032) a pacchetti per mercato, sandbox
+  esteso. \\
+\rigaTenue
+\num{4} & Desk & \eur{8000} l'anno & Cinque postazioni, installazione sui
+  server dello studio, export per la compliance, white-label e SLA. Si vende
+  a contratto, dopo una demo. \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-\begin{nota}{Perché oggi i tre piani fanno la stessa cosa}
-È uno stato intermedio dichiarato, non una dimenticanza. Durante la beta i
-tre livelli concedono solo la pubblicazione e differiscono per prezzo; la
-decisione su che cosa aggiungere a Studio e Desk --- o se ridurli a uno solo
---- è rimandata all'uscita dalla beta. I prezzi attuali sono segnaposto e si
-cambiano dal pannello di amministrazione senza toccare il codice.
+\noindent
+L'ordine dei livelli è l'ordine dei piani: l'interfaccia lo usa per dire
+«Upgrade» o «Downgrade». Pro, Professional e Quant si provano per due mesi,
+una volta per account; Desk non ha checkout, e la sua scheda apre una
+richiesta di demo che arriva al team come una richiesta di assistenza.
+
+\begin{nota}{Il catalogo sta nel database, non nel codice}
+Nomi, prezzi, frasi e voci delle schede stanno nella tabella
+\cod{SubscriptionPlan} del sito; il catalogo lo scrive
+\file{marketplace\_abbonamenti.sql}, una volta sola (un segno in
+\cod{AppSetting} impedisce che una seconda esecuzione riscriva i prezzi
+cambiati poi dal pannello). La colonna \cod{features} tiene due specie di
+chiavi: i \emph{fatti} del piano --- privacy, sconto, sandbox, storico,
+real-time, quota, postazioni --- da cui l'app costruisce la tabella di
+confronto, e le chiavi di \emph{presentazione} --- voci della scheda,
+etichetta, mesi di prova, solo annuale, solo a contratto, prezzo «da» ---
+che il sito toglie da \cod{features} e passa come campi del piano. Il motivo
+è l'app già installata: non conosce quelle chiavi, e trovandole dentro
+\cod{features} le scriverebbe come funzionalità.
 \end{nota}
 
 \subsection{Gli amministratori}
 
-\begin{commento}{dashboard/community.py:111 $\cdot$ \cod{livello\_utente()}}
-La categoria dell'utente: 0 se non abbonato, 1..3 secondo il piano.
+\begin{commento}{dashboard/community.py:115 $\cdot$ \cod{livello\_utente()}}
+La categoria dell'utente: 0 se non abbonato, 1..4 secondo il piano.
 
 Gli amministratori risultano al livello massimo, perche' possono fare
 tutto cio' che fa il livello massimo e anche di piu'. Non sono un livello
@@ -102,3 +134,5 @@ amministratori, che passano da un'altra strada. Chi collauda una modifica in
 quest'area deve farlo con un utente \emph{non} amministratore, altrimenti
 collauda il ramo sbagliato.
 \end{attenzione}
+
+\flushbottom

@@ -1,0 +1,221 @@
+% ===========================================================================
+%  user/09-account/00-chapter.tex
+% ===========================================================================
+\chapter{Account and subscription}\label{cap:account}
+
+\section{What the account is for}\label{sez:account-for}
+
+Four things, and nothing else: entering the marketplace and receiving
+messages --- both in the \voce{Community} --- having a public profile, and
+taking out a subscription. The rest of the application works without one.
+
+\figuraSchermata{0.86}{figure/schermate/subscription.png}
+  {Pages that need an account say so and offer to sign you in, instead of
+   disappearing from the menu.}
+  {signed-out}
+
+\section{Signing in for the first time}\label{sez:first-sign-in}
+
+\begin{pratica}{During the beta}
+During the beta, access is reserved for people who signed up on the site.
+The first sign-in is not a registration: it is a password reset.
+
+\begin{enumerate}
+  \item On the sign-in page, choose \voce{Forgotten your password?}.
+  \item Enter the address you used to sign up for the beta.
+  \item A message arrives with a code; use it to set a new password.
+  \item From then on you sign in normally.
+\end{enumerate}
+
+An address that is not among the sign-ups is refused, both at sign-in and at
+registration.
+\end{pratica}
+
+\noindent
+You can also sign in with Google (\voce{Continue with Google}): the sign-in
+opens in the system browser and the application picks up the result.
+
+\section{The profile}\label{sez:profile}
+
+\voce{Profile}, in the account menu at the top right, gathers the account on
+one page. \pulsante{Sign out} is at the top right of the page.
+
+\figuraSchermata{1.0}{figure/schermate/profile.png}
+  {The top of the profile: the plan, two-step verification, the payout account
+   and the published artifacts at a glance; below, the account details,
+   marketplace publishing and earnings.}
+  {profile}
+
+\begin{description}[leftmargin = 1.4em, style = nextline, itemsep = 4pt]
+  \item[\voce{Account details}] Display name and bio --- what others see next
+    to a published artifact --- changed with \pulsantesec{Edit profile}.
+  \item[\voce{Marketplace publishing}] Whether you can sell, with links to
+    your purchases and your listings, and to \voce{My subscription}.
+  \item[\voce{Marketplace earnings}] The payout account that receives what
+    you sell. Selling for a price needs one, and linking it needs two-step
+    verification first.
+  \item[\voce{Security}] The password, the email address and two-step
+    verification. They are not stored by the application: they live on the
+    site, and the application only passes them on.
+  \item[\voce{Preferences}, \voce{Brokers and data keys}] The theme and the
+    notifications; the broker connections and the data keys, which stay on
+    this computer.
+  \item[\voce{Send us feedback}] A report or a suggestion for the Lyra
+    team.
+\end{description}
+
+\section{The plans}\label{sez:plans}
+
+The plans are the same as on the Pricing page of the site. Free is the whole
+application; you pay for privacy, data and a higher share of what your
+strategies earn --- not for using the application. They are on the
+\voce{My subscription} page, in the account menu at the top right.
+
+\begin{center}
+\begin{tabular}{@{}L{22mm}L{30mm}L{86mm}@{}}
+\toprule
+\textbf{Plan} & \textbf{Price} & \textbf{What it adds} \\
+\midrule
+\rigaTenue
+\voce{Free} & \eur{0}, forever & The whole application: building and
+  backtesting locally with your data, the local AI copilot, out-of-sample
+  validation, live runners and kill-switch. On the marketplace: browse,
+  download, buy. Share of earnings \perc{0}: an allocated strategy enters the
+  track record. \\
+\voce{Pro} & \eur{49} a month or \eur{490} a year & Full privacy for code
+  and metrics; selling on the marketplace and buying at $-$\perc{10}; the
+  institutional-data sandbox (from 2030); \perc{10} of what your allocated
+  strategies earn. \\
+\rigaTenue
+\voce{Professional} & \eur{149} a month or \eur{1,490} a year & Raw history
+  on your machine (from 2030) with $-$\perc{10} on data vendors; marketplace
+  $-$\perc{20}; sandbox on more markets; \perc{30} of earnings. It is the
+  recommended plan. \\
+\voce{Quant} & from \eur{200} a month or \eur{2,000} a year, plus data &
+  Exchange-licensed real-time (from 2032), in per-market packages; extended
+  sandbox; \perc{30} of earnings. \\
+\rigaTenue
+\voce{Desk} & \eur{8,000} a year & Five seats, installation on your servers,
+  compliance export, white-label and SLA; \perc{30} of earnings, per seat, by
+  contract. Sold by contract, after a demo. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\figuraSchermata{1.0}{figure/schermate/subscription-plans.png}
+  {The plans on \voce{My subscription}: price, share of earnings and what
+   each plan adds. \voce{Show the detailed comparison} opens the table with
+   every feature, plan by plan.}
+  {subscription-plans}
+
+\begin{nota}{The features with a year}
+Some features arrive with a later release: the sandbox and the raw history
+in 2030, real-time in 2032. The cards and the comparison table show the year
+next to them.
+\end{nota}
+
+\begin{nota}{During the beta}
+The paid plans open after the beta. Until then Free is the whole
+application, nothing can be bought or sold on the marketplace, nothing is
+charged, and the plan buttons say \voce{On sale after the beta}. A Desk demo
+can be requested already.
+\end{nota}
+
+\begin{nota}{The share of earnings}
+It is the part of what a strategy earns, once it is allocated to capital,
+that goes to its author: \perc{10} with Pro, \perc{30} with Professional,
+Quant and Desk, set by contract. On Free an allocated strategy enters the
+track record without a share. Every submission is opt-in, strategy by
+strategy and under a contract: nothing is submitted without your consent.
+The site describes the steps, from the protocol to the live track record.
+\end{nota}
+
+\subsection{The two-month trial}
+
+Pro, Professional and Quant start with a two-month trial, one per account.
+
+\begin{pratica}{Starting the trial}
+\begin{enumerate}
+  \item On the plan's card, press \pulsante{Start 2-month trial}; the hint
+        below the button says until when nothing is charged.
+  \item The window shows \voce{Charged today} at \eur{0}, the day the trial
+        ends and the price that applies afterwards. Choose monthly or yearly
+        there, then press \pulsante{Start the trial}.
+  \item The Stripe page opens: Stripe asks for your card but charges
+        nothing. The page updates by itself and shows \voce{Trial until} and
+        the date.
+  \item On that date the first payment is taken. Cancel before, and nothing
+        is ever charged.
+\end{enumerate}
+\end{pratica}
+
+\noindent
+Changing plan during the trial costs nothing, and the trial keeps its end
+date. An account that has already had a trial, or a paid plan, pays from the
+first day: the button then says \pulsante{Choose} followed by the plan's
+name.
+
+\subsection{Desk}
+
+Desk is not bought with a card: it starts with a demo on your firm's own
+strategies, and a contract. \pulsantesec{Request a demo} on the Desk card
+opens a short form --- the firm, how many people would use the platform, a
+message --- and the request reaches the Lyra team, who reply by email and in
+\voce{Messages}.
+
+\subsection{Monthly or yearly}
+
+Both. Yearly costs ten monthly payments: two months are free. Desk is yearly
+only. You choose when you subscribe and switch whenever you like, from the
+button next to your plan: Stripe works out the adjustment for the period
+already paid.
+
+\subsection{Changing plan}
+
+\pulsantesec{Upgrade} and \pulsantesec{Downgrade} on the cards change the plan
+at once: Stripe credits what you have already paid for the current period and
+charges the difference to the card on file. Before you confirm, the window
+lists what you gain or what you lose.
+
+\subsection{Cancelling, card, invoices}
+
+From \pulsante{Manage in Stripe} on \voce{My subscription}. The billing
+portal hosted by Stripe opens: there you cancel the subscription, change the
+payment method and download the invoices. The card never reaches the
+application.
+
+\begin{nota}{Cancelling takes nothing you already have}
+The plan stays active until the end of the period you paid for. A purchased
+artifact stays purchased and installed, and strategies, code and data stay on
+your computer: you go back to Free, which is still the complete application.
+What stops is selling on the marketplace and the benefits of the plan.
+\end{nota}
+
+\section{When something does not add up}\label{sez:account-problems}
+
+\begin{center}
+\begin{tabular}{@{}L{50mm}L{88mm}@{}}
+\toprule
+\textbf{Symptom} & \textbf{What to do} \\
+\midrule
+\rigaTenue
+\enquote{You cannot sell} but you have a subscription
+  & Close and reopen the application: the link with the site is made at
+    start-up. \\
+The marketplace is empty
+  & Same reason. If it persists, sign out and sign back in. \\
+\rigaTenue
+I paid and I cannot see the artifact
+  & Wait a few seconds and reload. If it stays like that, use the command
+    that explains why it does not show as purchased, on the artifact's page
+    (\vediCap{community}). \\
+The trial is not offered
+  & The trial is one per account: an account that has already had one, or a
+    paid plan, pays from the first day. \\
+\rigaTenue
+A page says it does not know, instead of showing a number
+  & Not a fault: the application could not ask the site, and says so instead
+    of making up an answer. Try again later. \\
+\bottomrule
+\end{tabular}
+\end{center}
