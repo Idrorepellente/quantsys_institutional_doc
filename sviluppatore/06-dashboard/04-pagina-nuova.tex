@@ -13,11 +13,75 @@
   \item Dentro, registrare le rotte con \cod{@app.route}.
   \item Se serve una pagina, aggiungere il template in
         \file{dashboard/templates/} con \cod{\{\% extends "base.html" \%\}}.
+        Il contenuto si mostra quando i suoi dati sono arrivati
+        (\vediSez{pagina-pronta}).
   \item Se la rotta tocca l'account, metterla sotto uno dei prefissi di
         \cod{\_SERVE\_ACCOUNT} (\vediSez{permessi}).
   \item Riavviare. Non c'è nessun elenco da aggiornare.
 \end{enumerate}
 \end{pratica}
+
+\subsection{Il contenuto si mostra quando è pronto}\label{sez:pagina-pronta}
+
+Ogni pagina è un documento nuovo, e prima il browser ne mostrava ogni passo:
+il guscio senza i fogli di stile in fondo al body, poi il contenuto vuoto,
+poi i dati, tre immagini in pochi centesimi di secondo. Ora il cambio di
+pagina segue due regole, scritte in \file{static/js/pagina\_pronta.js} (il
+primo script del \cod{<head>} di \file{base.html}) e nelle regole CSS
+accanto a lui.
+
+Il guscio, cioè barra di sistema e barra laterale, non si nasconde mai: si
+disegna dal primo fotogramma, già completo, perché il primo disegno aspetta
+che il documento sia letto fino a \cod{\#qs-fine}, l'ultimo elemento del
+body. Il contenuto invece compare solo quando è pronto, e fino ad allora
+resta quello della pagina lasciata: una transizione fra documenti ne tiene
+la foto nel riquadro del contenuto e la dissolve sul nuovo quando arriva.
+
+\emph{Pronta} vuol dire: documento letto, testi tradotti, richieste partite
+durante il caricamento concluse \emph{e lette} (\cod{fetch} e corpo della
+risposta, poi 40~ms senza richieste nuove: le catene di richieste sono
+coperte), grafici Plotly disegnati, caratteri caricati. Se la pagina tarda,
+dopo 400~ms l'icona della voce premuta pulsa e dopo 450~ms compare un filo
+di caricamento in alto; oltre 1,8~s il contenuto si mostra comunque, con i
+suoi segnaposto.
+
+\begin{pratica}{Cosa fare in una pagina nuova}
+\begin{itemize}
+  \item Nel caso normale niente: le richieste fatte all'avvio vengono
+        contate da sole.
+  \item Una richiesta \emph{di fondo}, che la pagina non deve aspettare (un
+        giro periodico, un conteggio per un'icona):
+        \cod{fetch(url, \{ qsSfondo: true \})}.
+  \item Per far aspettare alla pagina anche un lavoro che non passa da
+        \cod{fetch} né da Plotly, lo si consegna a
+        \cod{qsPagina.attendi(promessa)}.
+  \item Per eseguire del codice a contenuto visibile:
+        \cod{qsPagina.quandoPronta(f)}.
+  \item Se la pagina disegna con Plotly lo include lei, prima di
+        \file{charts.js}, come fa \file{stream.html}: \file{base.html} non lo
+        carica più.
+\end{itemize}
+\end{pratica}
+
+\begin{attenzione}{Una richiesta lenta all'avvio tiene il contenuto in attesa}
+Fino al tetto di 1,8~s, con il contenuto della pagina di prima ancora sullo
+schermo. Se la pagina può mostrarsi senza quel dato, la richiesta è di fondo
+e va marcata: altrimenti chi apre la pagina aspetta un dato che non gli
+serve per cominciare.
+\end{attenzione}
+
+\begin{attenzione}{Il guscio si vede dal primo fotogramma}
+Ciò che si aggiunge alla barra laterale o alla barra di sistema deve essere
+già nel suo stato al primo disegno: lo sistema uno script sincrono prima di
+\cod{\#qs-fine} e, se dipende dal server, riparte dall'ultima risposta
+salvata nella sessione, come fanno la voce «Refund» e il pallino della
+campanella. Un elemento del guscio che compare all'arrivo di una richiesta
+lampeggia a ogni cambio di pagina.
+\end{attenzione}
+
+\noindent
+Il perché delle due regole, i tempi e le reti di sicurezza sono in
+\file{ARCHITETTURA.md}, \S\,5.1.
 
 \subsection{Il modello da copiare}
 
