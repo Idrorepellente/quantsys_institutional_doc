@@ -34,8 +34,9 @@ start.
 \voce{Overlay} & A brake: it reduces exposure when the market behaves in a
   certain way. It does not earn, it protects. \\
 \rigaTenue
-\voce{Metrics} & A measure to add to the ones already shown on the result
-  cards. \\
+\voce{Metrics} & A measure of your own, a number or a chart, shown on the
+  page of every stream next to the default ones. It can read all the data
+  loaded in the system (\vediSez{studio-metrics}). \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -80,6 +81,42 @@ one day, perhaps, on your account. The assistant does not know whether a
 strategy makes financial sense: it knows how to write code that does what it
 was asked. The \voce{Code} tab is there for this too.
 \end{attenzione}
+
+\section{Metrics}\label{sez:studio-metrics}
+
+A metric is a few lines of Python on the results of a strategy. Two fields
+above the editor say what it produces: \voce{Output} --- \voce{Number} or
+\voce{Chart} --- and, for a chart, \voce{Chart type}. \voce{Figure} is the
+type for a chart with several series, points and an axis of numbers instead
+of dates.
+
+\begin{codiceInterno}{python}{A number: beta against the S\&P 500}{}
+r_m = data.assets.returns("SPY", timeframe="D1")
+both = returns.notna() & r_m.notna()
+result(returns[both].cov(r_m[both]) / r_m[both].var(), "Beta vs SPY", fmt="ratio")
+\end{codiceInterno}
+
+\noindent
+\cod{returns} is the strategy's own series; \cod{data} is everything loaded
+in the system: prices, earnings, fundamentals, rates, macro series, news,
+and the categories you created in \percorso{Settings \freccia Data}. Where
+the data comes in several timeframes, the metric reads the one of the
+strategy, the lowest if it uses more than one; \cod{timeframe="D1"} picks
+another. The full list, with a CAPM chart as an example, is in the
+\pulsantesec{Template} of the editor and in the guide
+\file{metrics/METRIC\_TEMPLATE.md}.
+
+\figuraSchermata{1.0}{figure/schermate/stream-capm.png}
+  {A \voce{Figure} metric on the page of a stream: the CAPM against the
+   S\&P 500. The dashed line is what the market pays for each unit of beta;
+   the strategy, above it, earned more than its beta was worth.}
+  {stream-capm}
+
+\begin{nota}{Saving a metric whose data is missing}
+If the metric reads something that is not in the system yet, Studio says so
+and saves it anyway: it is not an error in the code. On the stream page it
+shows \voce{Data not available} until the data arrives.
+\end{nota}
 
 \section{Genetics}\label{sez:studio-genetics}
 

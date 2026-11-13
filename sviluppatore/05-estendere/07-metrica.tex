@@ -1,0 +1,164 @@
+% ===========================================================================
+%  sviluppatore/05-estendere/07-metrica.tex
+% ===========================================================================
+\section{Una metrica: i dati del sistema e la pagina dello stream}\label{sez:nuova-metrica}
+
+Una metrica è il più piccolo degli artefatti: un file \file{metrics/<nome>.py}
+con un \cod{META} di soli letterali e, sotto, codice vettoriale sull'equity
+della pagina. Produce un numero (\cod{result(...)}) o uno o più grafici
+(\cod{plot}, \cod{bars}, \cod{heatmap}, \cod{chart}). La si scrive in Studio,
+che il \cod{META} lo compone da sé con i campi \voce{Output} e \voce{Chart
+type}; il contratto completo, con gli esempi, è in
+\file{metrics/METRIC\_TEMPLATE.md}.
+
+Gira in \file{dashboard/metric\_runtime.py}, in una sandbox: builtins ridotti,
+niente \cod{import}, niente attributi \cod{\_\_dunder\_\_} né privati. Fino a
+questa versione vedeva soltanto l'equity della pagina e, quando la pagina lo
+passava, il benchmark. Ora legge anche i dati del sistema.
+
+\subsection{L'oggetto \cod{data}}
+
+Nel codice di una metrica c'è \cod{data}, istanza di \cod{Data}
+(\file{dashboard/metric\_data.py}). Ogni cartella di \pkgDati{} è una
+categoria e ogni categoria è una classe, tutte con gli stessi metodi:
+
+\begin{center}
+\begin{tabular}{@{}L{36mm}L{102mm}@{}}
+\toprule
+\textbf{Metodo} & \textbf{Che cosa restituisce} \\
+\midrule
+\rigaTenue
+\cod{names()} & i file della categoria: simboli per le categorie 1:1, file
+  condivisi per le 1:N (\cod{settore\_tech}, \cod{USD}) \\
+\cod{timeframes(nome)} & le sottocartelle di timeframe presenti, dalla più
+  fine \\
+\rigaTenue
+\cod{columns(nome)} & i campi veri di un file \\
+\cod{get(nome)} & il file com'è sul disco (con \cod{start} ed \cod{end} se
+  ne ritaglia un periodo) \\
+\rigaTenue
+\cod{series(nome, campo)} & un campo, allineato alle date della metrica
+  (\cod{align=False} lo dà grezzo) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+Tranne \cod{timeframes}, accettano tutti \cod{timeframe=}: senza, vale quello
+predefinito (sotto).
+Le categorie del sistema hanno una classe propria: \cod{Assets} (con
+\cod{close}, \cod{returns}, \cod{ohlcv}), \cod{Earnings} (con \cod{events}),
+\cod{Fundamentals}, \cod{Rates}, \cod{Macro} (anche i campi del driver
+macro), \cod{News} (titoli al giorno), \cod{MMS} (file \cod{<SIMBOLO>\_<TF>}).
+Quelle create dalla pagina Dati sono \cod{Category}.
+
+\begin{codiceInterno}{python}{Una metrica che legge un asset}{metrics/beta\_spy.py}
+META = {"label": "Beta vs SPY", "type": "number", "chart_kind": None, "active": True}
+
+r_m = data.assets.returns("SPY", timeframe="D1")   # aligned to the equity dates
+both = returns.notna() & r_m.notna()
+result(returns[both].cov(r_m[both]) / r_m[both].var(), "Beta vs SPY", fmt="ratio")
+\end{codiceInterno}
+
+Tre regole fanno il comportamento.
+
+\begin{description}[leftmargin = 1.4em, style = nextline, itemsep = 4pt]
+  \item[Il timeframe predefinito] È quello della strategia dietro la pagina,
+    letto dal \cod{DESCRIPTOR} per albero sintattico, senza importare la
+    strategia (\cod{strategy\_timeframes}). Per una strategia su più
+    timeframe vale il più basso, cioè il più fine; per approcci e pagine
+    senza strategia D1; in un ensemble il più basso fra le strategie dei suoi
+    stream. Il codice ne sceglie un altro con \cod{timeframe="H1"}.
+  \item[Il timeframe che manca] Se su disco non c'è, lo si costruisce da uno
+    più fine che lo divide esattamente (H4 da H1 prima che da M5, D1 da M5),
+    con le regole OHLCV del motore. Se non si può, \cod{DataError} elenca i
+    timeframe che ci sono e propone \cod{timeframe=...}.
+  \item[L'allineamento] \cod{series}, \cod{close} e \cod{returns} sono
+    allineate alle date della metrica con la regola del motore: alla data
+    $t$ l'ultimo valore noto a $t$, mai uno successivo. I dati intraday
+    prima si chiudono al giorno, così la data $t$ riceve la chiusura di $t$.
+\end{description}
+
+\begin{nota}{Un dato che manca non è un errore del codice}
+\cod{DataError} (sottoclasse di \cod{LookupError}) arriva alla pagina come
+\enquote{Data not available}, non come errore. Studio salva comunque la
+metrica, con un avviso: funzionerà quando il dato sarà caricato. La prova che
+precede il salvataggio gira sullo stream con più dati, non su un'equity
+finta: una metrica che legge \cod{data} si prova davvero.
+\end{nota}
+
+\subsection{Grafici a più serie}
+
+Con \cod{chart\_kind: "figure"} un grafico ha più serie, punti con
+etichetta, dispersioni, barre, aree e linee di riferimento, su un asse x di
+date oppure di numeri --- quello che serve per la Security Market Line del
+CAPM, dove sull'asse x c'è il beta. Il runtime produce una specifica JSON
+(\cod{kind: "figure"}, \cod{traces}); \cod{plotCustomFigure} di
+\file{static/js/charts.js} la disegna con Plotly.
+
+\begin{codiceInterno}{python}{Un grafico con l'asse x numerico}{}
+fig = chart("CAPM - Security Market Line", x="Beta", y="Annual return", y_format="pct")
+fig.line([0.0, 2.0], [rf, rf + 2.0 * premium], name="SML", dash="dash")
+fig.point(1.0, market, name="S&P 500")
+fig.point(beta, holding, name="Holding", label="beta %.2f" % beta)
+\end{codiceInterno}
+
+\subsection{La pagina di uno stream}
+
+Ogni metrica della pagina, predefinita o personale, numerica o grafica, si
+nasconde e si rimette. Le predefinite sono gli elementi con \cod{data-sv} in
+\file{templates/stream.html}; le personali le dispone
+\file{static/js/stream\_metrics.js}.
+
+\begin{center}
+\begin{tabular}{@{}L{44mm}L{94mm}@{}}
+\toprule
+\textbf{Pezzo} & \textbf{Che cosa fa} \\
+\midrule
+\rigaTenue
+\cod{/api/stream-view/prefs} & la scelta, una per tutti gli stream:
+  \cod{shown} (le chiavi accese) e \cod{known} (quelle esistenti quando la
+  scelta è stata fatta). \cod{shown: null} = predefinite più personali
+  attive \\
+\cod{sv\_off(chiave)} & nel template: le predefinite nascoste partono
+  nascoste, senza comparire per un istante \\
+\rigaTenue
+\cod{/api/metrics/compute} & con \cod{stream}, \cod{ids} e
+  \cod{include\_inactive}: calcola solo le personali accese, sui risultati
+  dello stream e con il suo benchmark \\
+\cod{/studio?tab=metric} & con \cod{output=number} o \cod{output=chart}
+  (\voce{New number metric}, \voce{New chart metric}): l'uscita scelta, un
+  nome libero e, con \cod{from=}, il ritorno allo stream; con
+  \cod{metric=<id>} riapre una metrica \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{perche}{Perché \cod{known} oltre a \cod{shown}}
+Una metrica creata dopo la scelta --- per esempio con \voce{New chart
+metric} dalla pagina stessa --- non è stata scartata da nessuno. Senza
+\cod{known} resterebbe nascosta finché qualcuno non va a cercarla
+nell'elenco; con \cod{known} compare da sola, se è attiva.
+\end{perche}
+
+\subsection{La guardia: numpy e pandas filtrati}
+
+Il codice di una metrica o di un indicatore può arrivare dalla Community.
+numpy e pandas gli arrivavano così com'erano, e da un loro sottomodulo si
+raggiungeva il sistema operativo senza scrivere un import
+(\cod{pd.core.config\_init.os}); \cod{pd.read\_pickle} di un indirizzo
+eseguiva codice arrivato dalla rete. \file{dashboard/sandbox\_guard.py} li
+passa filtrati: funzioni e classi restano quelle vere, i sottomoduli solo
+quelli di calcolo (\cod{np.linalg}, \cod{np.random}, \cod{pd.offsets},
+\ldots); lettura e scrittura di file, \cod{eval}, \cod{query} e \cod{plot}
+sono rifiutati già nel sorgente, anche chiamati per nome
+(\cod{agg("to\_parquet")}). I dati del sistema si leggono con \cod{data}.
+
+\begin{attenzione}{Uno strato, non un isolamento}
+Come il validatore AST delle strategie (\file{adapters/ast\_validator.py}),
+la guardia lavora nel processo dell'applicazione: chiude gli abusi diretti,
+non un attaccante che costruisce i nomi a pezzi. La barriera vera resta
+l'isolamento di processo. Il validatore delle strategie ha la stessa
+apertura su numpy e pandas: una strategia può arrivare a \cod{os} per la
+stessa strada.
+\end{attenzione}

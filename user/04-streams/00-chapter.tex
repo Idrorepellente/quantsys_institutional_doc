@@ -87,8 +87,8 @@ common way of fooling yourself.
 
 \subsection{The metrics}
 
-Twelve panels. Besides those already seen on the home screen
-(\vediCap{overview}):
+Ten numbers, unless you choose otherwise (see below). Besides those already
+seen on the home screen (\vediCap{overview}):
 
 \begin{description}[leftmargin = 1.4em, style = nextline, itemsep = 4pt]
   \item[\voce{Beta vs SPY}] How closely the strategy follows the market.
@@ -102,6 +102,49 @@ Twelve panels. Besides those already seen on the home screen
   \item[\voce{N obs}] How many observations. Few observations make
     everything else less reliable.
 \end{description}
+
+\subsection{Choosing the metrics}\label{sez:stream-metrics}
+
+Every metric on the page can be hidden: the numbers, the robustness panel,
+the charts, the tables, and the metrics you wrote yourself in Studio. Move
+the pointer over one and a small eye appears in its corner: pressing it
+hides that metric, and the message that follows has an \pulsantesec{Undo}.
+To see the whole list, press \pulsantesec{Choose metrics}, at the top of
+the metrics.
+
+\figuraSchermata{1.0}{figure/schermate/stream-metrics.png}
+  {\pulsantesec{Choose metrics}. Numbers, charts and tables, the default
+   ones and yours, each with its tick. Next to the button, how many are
+   shown.}
+  {stream-metrics}
+
+\begin{itemize}
+  \item The choice holds for \emph{every} stream: you make it once.
+  \item \pulsantesec{Show all}, \pulsantesec{Hide all} and
+    \pulsantesec{Default} change everything at once. \voce{Default} is how
+    the page looks before any choice: the default metrics and your active
+    ones.
+  \item A metric you create after making your choice appears by itself; you
+    hide it like the others if you do not want it.
+  \item Your metrics are computed only when they are shown, on the results
+    of the stream and with its benchmark.
+\end{itemize}
+
+\noindent
+One of your metrics can show a word instead of a value. \voce{Data not
+available}: it reads data that is not in the system yet --- load it in
+\percorso{Settings \freccia Data} and the metric works. \voce{Error in the
+code}: the metric has to be fixed in Studio, and the word takes you there.
+\voce{No results yet}: the stream has never been run.
+
+\begin{pratica}{Adding a metric from here}
+At the end of the numbers, and at the end of the charts, move the pointer:
+\pulsantesec{New number metric} and \pulsantesec{New chart metric} appear.
+They open the \voce{Metrics} section of Studio with the output already
+chosen, a template and a free name; save, and the metric is on the stream
+page (\vediSez{studio-metrics}). The pencil on one of your metrics opens it
+in Studio, and Studio has a link back to the stream.
+\end{pratica}
 
 \subsection{The three buttons at the top}
 
