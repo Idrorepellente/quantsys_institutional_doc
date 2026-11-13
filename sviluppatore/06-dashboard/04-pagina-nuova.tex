@@ -13,8 +13,9 @@
   \item Dentro, registrare le rotte con \cod{@app.route}.
   \item Se serve una pagina, aggiungere il template in
         \file{dashboard/templates/} con \cod{\{\% extends "base.html" \%\}}.
-        Il contenuto si mostra quando i suoi dati sono arrivati
-        (\vediSez{pagina-pronta}).
+        Il suo foglio di stile va nel blocco \cod{page\_css}, che finisce nel
+        \cod{<head>}, non nel contenuto. Il contenuto si mostra quando i suoi
+        dati sono arrivati (\vediSez{pagina-pronta}).
   \item Se la rotta tocca l'account, metterla sotto uno dei prefissi di
         \cod{\_SERVE\_ACCOUNT} (\vediSez{permessi}).
   \item Riavviare. Non c'è nessun elenco da aggiornare.
@@ -24,18 +25,20 @@
 \subsection{Il contenuto si mostra quando è pronto}\label{sez:pagina-pronta}
 
 Ogni pagina è un documento nuovo, e prima il browser ne mostrava ogni passo:
-il guscio senza i fogli di stile in fondo al body, poi il contenuto vuoto,
-poi i dati, tre immagini in pochi centesimi di secondo. Ora il cambio di
-pagina segue due regole, scritte in \file{static/js/pagina\_pronta.js} (il
-primo script del \cod{<head>} di \file{base.html}) e nelle regole CSS
-accanto a lui.
+il guscio senza i suoi fogli di stile, poi il contenuto vuoto, poi i dati,
+tre immagini in pochi centesimi di secondo. Ora il cambio di pagina segue
+due regole, scritte in \file{static/js/pagina\_pronta.js} (il primo script
+del \cod{<head>} di \file{base.html}) e nelle regole CSS accanto a lui.
 
 Il guscio, cioè barra di sistema e barra laterale, non si nasconde mai: si
-disegna dal primo fotogramma, già completo, perché il primo disegno aspetta
-che il documento sia letto fino a \cod{\#qs-fine}, l'ultimo elemento del
-body. Il contenuto invece compare solo quando è pronto, e fino ad allora
-resta quello della pagina lasciata: una transizione fra documenti ne tiene
-la foto nel riquadro del contenuto e la dissolve sul nuovo quando arriva.
+disegna dal primo fotogramma già completo, in qualunque momento arrivi,
+perché tutti i fogli di stile stanno nel \cod{<head>} e lo stato del guscio
+ricordato fra le pagine lo rimettono \file{base.js} e
+\file{claim\_badge.js}, che girano subito dopo la barra laterale, prima di
+ogni script della pagina. Il contenuto invece compare solo quando è pronto,
+e fino ad allora resta quello della pagina lasciata: una transizione fra
+documenti ne tiene la foto nel riquadro del contenuto e la dissolve sul
+nuovo quando arriva.
 
 \emph{Pronta} vuol dire: documento letto, testi tradotti, richieste partite
 durante il caricamento concluse \emph{e lette} (\cod{fetch} e corpo della
@@ -47,8 +50,10 @@ suoi segnaposto.
 
 \begin{pratica}{Cosa fare in una pagina nuova}
 \begin{itemize}
-  \item Nel caso normale niente: le richieste fatte all'avvio vengono
-        contate da sole.
+  \item Il foglio di stile della pagina nel blocco \cod{page\_css}, mai nel
+        contenuto (\vediSez{fogli-nel-head}).
+  \item Per il resto, nel caso normale niente: le richieste fatte all'avvio
+        vengono contate da sole.
   \item Una richiesta \emph{di fondo}, che la pagina non deve aspettare (un
         giro periodico, un conteggio per un'icona):
         \cod{fetch(url, \{ qsSfondo: true \})}.
@@ -72,16 +77,47 @@ serve per cominciare.
 
 \begin{attenzione}{Il guscio si vede dal primo fotogramma}
 Ciò che si aggiunge alla barra laterale o alla barra di sistema deve essere
-già nel suo stato al primo disegno: lo sistema uno script sincrono prima di
-\cod{\#qs-fine} e, se dipende dal server, riparte dall'ultima risposta
-salvata nella sessione, come fanno la voce «Refund» e il pallino della
-campanella. Un elemento del guscio che compare all'arrivo di una richiesta
-lampeggia a ogni cambio di pagina.
+già nel suo stato al primo disegno: il suo aspetto lo decide un foglio nel
+\cod{<head>}, il suo stato lo sistema uno script sincrono che gira subito
+dopo la barra laterale (\file{base.js}), non uno in fondo al body. Se
+dipende dal server, riparte dall'ultima risposta salvata nella sessione,
+come fanno la voce «Refund» e il pallino della campanella. Un elemento del
+guscio che compare all'arrivo di una richiesta lampeggia a ogni cambio di
+pagina.
 \end{attenzione}
 
 \noindent
 Il perché delle due regole, i tempi e le reti di sicurezza sono in
 \file{ARCHITETTURA.md}, \S\,5.1.
+
+\subsection{I fogli di stile stanno tutti nel \texorpdfstring{\cod{<head>}}{head}}\label{sez:fogli-nel-head}
+
+\file{base.html} carica prima i fogli comuni, poi quelli della pagina (il
+blocco \cod{page\_css}), poi \file{ui-system.css} e \file{ui-v2.css}. È lo
+stesso ordine di quando i fogli della pagina stavano nel contenuto e questi
+due in fondo al body, quindi vincono le stesse regole: le regole comuni
+continuano a valere sopra a quelle della pagina.
+
+\begin{codiceInterno}{html}{Il foglio di una pagina}{dashboard/templates/live.html}
+{% block page_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/live.css') }}">
+{% endblock %}
+\end{codiceInterno}
+
+\begin{attenzione}{Un foglio di stile nel body fa lampeggiare il guscio}
+Il primo disegno di solito aspetta che il documento sia letto fino a
+\cod{\#qs-fine}, l'ultimo elemento del body (\cod{<link rel="expect">} nel
+\cod{<head>}). Ma Chromium~126 smette di aspettare appena uno script
+interpreta un pezzo di HTML con il suo lettore lento: \cod{innerHTML} con
+\cod{<svg>} o \cod{<table>}, \cod{insertAdjacentHTML},
+\cod{createContextualFragment}. Gli script delle pagine lo fanno spesso,
+mentre il documento è ancora in lettura. Da quel momento il browser disegna
+ciò che ha: un foglio nel body non ancora letto vuol dire un guscio senza le
+sue regole per qualche fotogramma. Era il lampeggio del marchio
+«Lyra Capital» e dei titoletti della barra laterale, finché
+\file{ui-v2.css} stava in fondo al body.
+\end{attenzione}
+
 
 \subsection{Il modello da copiare}
 
