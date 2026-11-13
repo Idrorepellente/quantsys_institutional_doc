@@ -108,7 +108,9 @@ fig.point(beta, holding, name="Holding", label="beta %.2f" % beta)
 Ogni metrica della pagina, predefinita o personale, numerica o grafica, si
 nasconde e si rimette. Le predefinite sono gli elementi con \cod{data-sv} in
 \file{templates/stream.html}; le personali le dispone
-\file{static/js/stream\_metrics.js}.
+\file{static/js/stream\_metrics.js}: i numeri dopo quelli predefiniti, i
+grafici in fondo alla pagina, dopo grafici e tabelle predefiniti, con
+\voce{New chart metric} per ultima.
 
 \begin{center}
 \begin{tabular}{@{}L{44mm}L{94mm}@{}}
@@ -129,7 +131,8 @@ nasconde e si rimette. Le predefinite sono gli elementi con \cod{data-sv} in
 \cod{/studio?tab=metric} & con \cod{output=number} o \cod{output=chart}
   (\voce{New number metric}, \voce{New chart metric}): l'uscita scelta, un
   nome libero e, con \cod{from=}, il ritorno allo stream; con
-  \cod{metric=<id>} riapre una metrica \\
+  \cod{metric=<id>} riapre una metrica. \voce{Save} valida e salva in un
+  colpo solo \\
 \bottomrule
 \end{tabular}
 \end{center}
