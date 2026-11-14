@@ -103,6 +103,23 @@ fig.point(1.0, market, name="S&P 500")
 fig.point(beta, holding, name="Holding", label="beta %.2f" % beta)
 \end{codiceInterno}
 
+La label del valore è quella dei grafici predefiniti: una sola, unificata
+sulla x (\cod{hovermode: "x unified"}), con il valore di ogni serie.
+
+\begin{perche}{Perché le linee radi si riempiono di punti}
+Con la label unificata Plotly cerca, per ogni serie, il punto più vicino
+sulla x entro 20 pixel. La SML qui sopra ha due vertici: fra l'uno e l'altro
+la label non troverebbe nulla e sparirebbe. Prima le figure su un asse di
+numeri usavano \cod{closest}, ed era peggio: la label saltava dal punto alla
+retta e ritorno, e a vederla lampeggiava. Ora \cod{\_densify} di
+\file{charts.js} aggiunge punti intermedi \emph{sul tracciato} delle linee
+(interpolazione fra vertici consecutivi, i buchi restano buchi) finché
+nessun tratto copre più di 1/500 dell'asse x: la linea disegnata è la
+stessa, e la label trova un valore in ogni suo punto. Le figure di soli
+punti tengono \cod{closest}: lì la label giusta è quella del punto sotto il
+puntatore.
+\end{perche}
+
 \subsection{La pagina di uno stream}
 
 Ogni metrica della pagina, predefinita o personale, numerica o grafica, si
@@ -143,6 +160,68 @@ metric} dalla pagina stessa --- non è stata scartata da nessuno. Senza
 \cod{known} resterebbe nascosta finché qualcuno non va a cercarla
 nell'elenco; con \cod{known} compare da sola, se è attiva.
 \end{perche}
+
+\subsubsection{I riquadri come finestre}
+
+Grafici e tabelle, predefiniti e personali, stanno in \cod{\#sv-grid}: righe
+di al massimo tre riquadri visibili, che l'utente sposta dalla testata,
+allunga dal bordo basso, allarga col divisore fra due riquadri e massimizza
+col doppio clic sulla testata. La disposizione sta nello stesso file della
+scelta, sotto \cod{layout}, una per tutti gli stream:
+
+\begin{codiceInterno}{json}{La disposizione salvata}{}
+"layout": [ {"h": 420, "items": ["chart.equity", "metric:capm#0"],
+             "w": {"chart.equity": 1.4, "metric:capm#0": 0.6}},
+            {"h": null, "items": ["table.stress"]} ]
+\end{codiceInterno}
+
+\begin{center}
+\begin{tabular}{@{}L{30mm}L{108mm}@{}}
+\toprule
+\textbf{Campo} & \textbf{Che cosa vuol dire} \\
+\midrule
+\rigaTenue
+\cod{items} & le chiavi dei riquadri nell'ordine della riga: \cod{chart.*}
+  e \cod{table.*} sono le \cod{data-sv} predefinite; \cod{metric:<id>\#<n>}
+  è l'n-esimo grafico di una metrica personale (una metrica che ne disegna
+  quattro fa quattro riquadri) \\
+\cod{h} & altezza dell'area del grafico o della tabella, in px
+  (160--1600), uguale per tutta la riga; \cod{null} = normale \\
+\rigaTenue
+\cod{w} & larghezze relative dei riquadri affiancati (0,2--5); assente =
+  uguali \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+\cod{POST /api/stream-view/prefs} aggiorna solo ciò che riceve: \cod{\{shown,
+known\}} la scelta, \cod{\{layout\}} la disposizione (\cod{null} =
+\voce{Reset layout}). Il server (\cod{\_clean\_layout} in
+\file{app.py}) controlla solo la forma; il resto lo fa la pagina, che sa
+quali riquadri si vedono.
+
+\begin{perche}{Perché una riga può avere più di tre chiavi}
+Un riquadro nascosto, o il grafico di una metrica che non è ancora stato
+calcolato, tiene il suo posto nella riga e lo ritrova quando compare. Il
+limite è di tre riquadri \emph{visibili}: se ricompare un quarto, la riga va
+a capo. Un riquadro che la disposizione non conosce (una metrica nuova, un
+grafico predefinito arrivato con un aggiornamento) va in fondo, in una riga
+sua.
+\end{perche}
+
+\begin{attenzione}{Durante lo spostamento il grafico non si muove}
+Al suo posto resta il contorno; sotto il puntatore va una copia ferma
+(\cod{cloneNode}), e il grafico vero si sposta una volta sola, al
+rilascio, con \cod{insertBefore}: Plotly non si ridisegna. Il contenuto del
+riquadro lasciato si nasconde con l'opacità, non con \cod{visibility}: i
+\cod{clipPath} del grafico, a cui punta anche la copia, smetterebbero di
+ritagliare. I grafici seguono la nuova misura con
+\cod{Plotly.relayout(gd, \{autosize: true\})}, solo se è cambiata: niente
+\cod{ResizeObserver}, che faceva lampeggiare la label del valore. Mentre si
+trascina, i risultati delle metriche personali che arrivano aspettano la fine
+(\cod{Grid.whenIdle}).
+\end{attenzione}
 
 \subsection{La guardia: numpy e pandas filtrati}
 
