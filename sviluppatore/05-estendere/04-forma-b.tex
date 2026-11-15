@@ -121,12 +121,13 @@ def compute(eng, stream_pnls: dict[str, pd.Series]) -> dict[str, float]:
 \end{codiceInterno}
 
 \noindent
-E uno che dichiara dati esterni e una scadenza:
+E uno che dichiara dati esterni e una scadenza (la categoria la tiene
+aggiornata la sua fonte, \vediSez{nuova-fonte}):
 
 \begin{codiceInterno}{python}{Quando l'artefatto ha bisogno di dati freschi}{overlays/news\_pressure/overlay.py:30}
     # QUALI dati servono e OGNI QUANTO vanno rinfrescati. Il sistema legge di
-    # qui per sapere quando chiamare la porta: senza, la scadenza non
-    # esisterebbe e in live i dati resterebbero fermi al giorno
+    # qui quale categoria tenere aggiornata, e ogni quanto: senza, la
+    # scadenza non esisterebbe e in live i dati resterebbero fermi al giorno
     # dell'installazione.
     "required_external_data": ["news"],
     "maintenance": {

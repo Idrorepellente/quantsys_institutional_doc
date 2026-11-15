@@ -147,8 +147,13 @@ entra nel libro della strategia (\simbolo{LivePortfolioMirror.record\_fill}).
 \rigaTenue
 IBKR & L'ordine va al conto indicato (\cod{order.account}) e porta il
   riferimento del runner (\cod{orderRef} \cod{lyra:<id>}); equity e
-  posizioni si leggono di quel conto e solo per i contratti \cod{STK}, così
-  un'opzione su AAPL non viene letta come azioni AAPL. Un ordine non
+  posizioni si leggono di quel conto e solo per i contratti che Lyra opera
+  (\simbolo{simbolo\_da\_contratto}: \cod{STK}, \cod{CASH}, \cod{CRYPTO},
+  con i simboli di Lyra --- \cod{BRK B} diventa \cod{BRK-B}, \cod{EUR.USD}
+  \cod{EURUSD}), così un'opzione su AAPL non viene letta come azioni AAPL. Il
+  contratto di un ordine dipende dall'asset class (azioni ed ETF su
+  \cod{SMART}, cambi su \cod{IDEALPRO}, cripto su \cod{PAXOS}) ed è
+  qualificato una volta sola. Un ordine non
   eseguito entro \cod{fill\_timeout\_s} viene cancellato; se la
   cancellazione non arriva entro \cod{cancel\_timeout\_s} l'esito è
   \cod{pending}, e un ordine \cod{Inactive} viene cancellato perché può
@@ -156,7 +161,7 @@ IBKR & L'ordine va al conto indicato (\cod{order.account}) e porta il
   \cod{NetLiquidation} della valuta base del conto con il tag
   \cod{ExchangeRate} (in riserva il cambio dei dati di Lyra): senza, un
   conto in euro risultava a equity zero. \simbolo{open\_orders()} legge
-  \simbolo{reqAllOpenOrders()} (solo \cod{STK}, solo il conto);
+  \simbolo{reqAllOpenOrders()} (gli stessi contratti, solo il conto);
   \simbolo{cancel\_open\_orders()} cancella solo i riferimenti
   \cod{lyra}. Il collegamento passa \cod{account} e un \cod{timeout} di
   \num{20}\,s. Posizioni, valori del conto e stati degli ordini di
@@ -185,7 +190,12 @@ MT5 & Il riempimento segue \cod{symbol\_info.filling\_mode} (IOC, FOK o
   \simbolo{is\_connected()} interroga il terminale, così dopo un suo
   riavvio ci si ricollega. Il pacchetto parla con un terminale per
   processo: le chiamate passano da un lucchetto, e \simbolo{shutdown()} lo
-  chiama solo l'ultimo che si scollega. \\
+  chiama solo l'ultimo che si scollega. I nomi dei simboli sul broker
+  (\cod{AAPL.US}, \cod{EURUSD.r}, \cod{\#AAPL}, \cod{BTCUSD} per
+  \cod{BTC-USD}) si trovano da soli (\simbolo{\_nome\_broker}: prima i nomi
+  scritti dall'utente, poi il nome identico, poi prefissi e suffissi del
+  broker, mai un altro strumento) e posizioni e ordini tornano con i simboli
+  di Lyra. \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -197,7 +207,12 @@ nessun percorso che le porti in rete. Questo è il motivo per cui la porta
 della dashboard non va esposta: chi la raggiunge può leggerle. Per IBKR
 porta e client ID sono controllati al salvataggio, e
 \simbolo{live\_runners.cfg\_ibkr()} li passa al collegamento come
-\cod{broker\_cfg}.
+\cod{broker\_cfg}. Per MT5 lo stesso file tiene i nomi dei simboli che
+l'abbinamento automatico non trova (\voce{MetaTrader 5 · Symbols} sulla
+pagina Live; \simbolo{leggi\_nomi\_simboli} controlla le righe al
+salvataggio, \simbolo{cfg\_mt5()} li passa come \cod{simboli}); all'avvio
+\simbolo{\_annota\_nomi\_broker} scrive nel registro quanti simboli del
+runner il broker ha, con che nome, e quali no.
 \end{attenzione}
 
 \subsection{Simulazione o ordini reali}\label{sez:live-ordini-reali}
@@ -261,10 +276,12 @@ la storia della normalizzazione (\file{ensemble.json}), lo stato del
 
 \subsection{Dati vecchi}\label{sez:live-dati-vecchi}
 
-\simbolo{LoaderLiveFeed} legge gli stessi file del backtest e non scarica
-niente. Se nessuno li aggiorna, il motore continua a decidere sugli stessi
-prezzi --- e con ordini veri dimensiona le quantità su prezzi di giorni
-prima. \simbolo{live.freshness.motivo\_dati\_vecchi} conta le \emph{sedute
+Su MT5 e IBKR le barre le procura il contesto (\vediSez{live-contesto}); sul
+broker su carta e nelle prove da terminale \simbolo{LoaderLiveFeed} legge i
+file del deposito e non scarica niente. In entrambi i casi un simbolo può
+restare indietro --- un provider irraggiungibile, una chiave rifiutata --- e
+allora il motore deciderebbe sugli stessi prezzi, e con ordini veri
+dimensionerebbe le quantità su prezzi di giorni prima. \simbolo{live.freshness.motivo\_dati\_vecchi} conta le \emph{sedute
 mancanti} fra l'ultima barra e l'ultimo giorno di borsa prima di oggi
 (UTC), sul calendario del mercato del simbolo (\simbolo{calendario\_per},
 dall'asset class). Prima di oggi, perché il feed legge i file con una data
@@ -308,6 +325,364 @@ ordinate dal kill-switch del conto, che vendono la quantità che c'è e non
 dipendono dal prezzo. Il controllo vale per ogni broker tranne quello su
 carta (\cod{guard\_stale\_data}), che il simulatore TEST e la prova da
 terminale guidano con il proprio orologio.
+
+\subsection{I dati dei componenti}\label{sez:live-dati}
+
+I prezzi li legge il feed; tutto il resto --- utili, notizie, serie macro,
+tassi, feature MMS, i dati di una categoria dell'utente --- sta nelle
+categorie che i componenti dichiarano (\vediSez{nuova-fonte}). Su MT5 e IBKR
+il runner le tiene aggiornate con \simbolo{live.dati.ManutenzioneDati}.
+
+\begin{description}[leftmargin = 1.4em, style = nextline, itemsep = 4pt]
+  \item[All'avvio, il piano] \simbolo{fonti.piano} legge la manutenzione dei
+    componenti (\file{core/maintenance.py}) e ne ricava, per ogni categoria,
+    chi la legge, la cadenza più stretta fra le loro (un solo dato scaduto
+    basta a sbagliare il calcolo), i simboli, la fonte e la chiave che le
+    manca. Il registro riceve una riga per categoria, di tipo
+    \cod{maintenance}: \enquote{data · earnings (pead\_classic): Polygon ·
+    quarterly filings (EPS), every day --- needs POLYGON\_API\_KEY in the
+    .env of the app}.
+  \item[A ogni giro, in sottofondo] \simbolo{controlla} avvia le categorie
+    scadute (\simbolo{fonti.in\_background}, un thread per categoria, mai due
+    sulla stessa). Il ciclo non aspetta: decide con i file che ci sono.
+    Quando un aggiornamento porta righe nuove, il runner si sveglia
+    (\cod{dati\_nuovi}) e rifà il ciclo subito, invece di decidere per sei
+    ore sui dati di prima.
+  \item[Nel registro] le righe nuove (\enquote{data · news: +7 rows in 1
+    file(s), 3 checked}); un errore o una chiave mancante una volta, non a ogni
+    tentativo; lo stesso esito di un controllo senza novità, una volta.
+\end{description}
+
+\noindent
+Le scadenze non sono più quelle di \simbolo{\_Scadenze} (giorni dall'avvio,
+azzerati a ogni riavvio, il download nel ciclo): stanno in
+\file{data/.aggiornamenti.json}, comuni a tutti i runner --- dal vivo in
+\file{data/live/.aggiornamenti.json}, perché le righe nuove vanno in
+\file{data/live} e non nei file dei backtest (\vediSez{live-dati-vivo}). La
+simulazione TEST conserva le sue, sul tempo simulato.
+
+\subsubsection{I dati extra delle strategie}
+
+In backtest \file{run\_walkforward.py} chiama \cod{prepare\_extra\_data}
+della strategia e passa il risultato al costruttore: gli eventi di
+\cod{pead\_classic}, le serie di \cod{macro\_regime}, l'archivio di
+\cod{llm\_news\_macro}. Dal vivo non succedeva: \cod{pead\_classic} girava
+senza eventi, \cod{macro\_regime} falliva a ogni ciclo. Ora
+\simbolo{live.wiring.StrategyProvider} fa lo stesso. Il motore lo chiama con
+\simbolo{prepara(t\_decision)} prima di ogni ciclo, e i dati si rifanno
+quando cambia l'\emph{impronta}:
+
+\begin{center}
+\begin{tabular}{@{}L{44mm}L{94mm}@{}}
+\toprule
+\textbf{Cambia} & \textbf{Perché conta} \\
+\midrule
+\rigaTenue
+il giorno della decisione (la barra, per le strategie intraday) & i dati
+  extra dipendono anche dai prezzi: la conferma di prezzo di
+  \cod{pead\_classic} \\
+la versione di una categoria della strategia & sono arrivate righe nuove
+  (\simbolo{fonti.versione}) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+La configurazione è quella del backtest (\cod{QUANTSYS\_CONFIG}, altrimenti
+\file{config/quantsys.yaml}) con la fine del periodo alla barra della
+decisione, i parametri del runner, \cod{cfg["base\_path"]} e
+\cod{cfg["live"] = True}. Se il ricalcolo fallisce restano i dati del ciclo
+prima, e il registro lo dice; \cod{\_\_replace\_data\_for\_symbols\_\_} si
+ignora (le barre le dà il feed). Una strategia che gira come stream
+(\vediSez{live-stream}) li riceve alla ricostruzione: un'impronta nuova dei
+dati extra fa ricostruire lo stream con l'istanza che li ha.
+
+\begin{attenzione}{Lo stato di una strategia deve venire dalle barre}
+\cod{pead\_classic} teneva le posizioni in \cod{self.\_active} e calcolava
+l'uscita a \cod{pos + hold\_days} con un tetto all'ultima barra. In backtest
+l'indice copre il periodo intero; dal vivo finisce oggi, quindi l'uscita
+cadeva oggi --- e con il vecchio ciclo, che creava un'istanza a ogni giro, la
+memoria si perdeva comunque. Ogni posizione durava un giorno invece di
+sessanta. Oggi lo stream tiene l'istanza da una barra all'altra e la rifà
+rigiocando le barre: uno stato che è funzione delle barre e dei dati extra
+sopravvive, uno che dipende dall'orologio o da ciò che il rigioco non vede
+no. Ora le finestre si ricavano a ogni
+chiamata dalla tabella degli eventi, contando le sedute del simbolo; il
+tetto vale solo quando il futuro è visibile (in backtest, un titolo uscito dal
+listino). \file{tests/prova\_pead\_senza\_stato.py} confronta i segnali con
+la versione di prima, barra per barra.
+\end{attenzione}
+
+\subsubsection{Le serie degli overlay}
+
+L'overlay Macro-Regime legge \cod{eng.\_macro\_riskoff}; dal vivo l'engine
+degli overlay era costruito vuoto, e l'overlay era sempre neutro.
+\simbolo{live.overlays\_live.SerieDelVivo} gli passa
+\file{output/macro\_riskoff.parquet}, riletto quando cambia --- lo estende
+ogni giorno la fonte \cod{macro}; se manca lo costruisce
+(\simbolo{ensure\_macro\_riskoff}, che chiede alla fonte le serie macro se
+non ci sono). Se l'ultima data è più vecchia di
+\num{14} giorni l'overlay resta neutro e il registro dice perché: l'ultimo
+valore riportato in avanti comanderebbe l'esposizione per sempre. La storia
+dei rendimenti degli overlay si registra con la data della barra, così una
+serie datata vi si allinea.
+
+\subsection{Il contesto: le barre dal broker, completate}\label{sez:live-contesto}
+
+Su MT5 e IBKR il runner non legge più i file del deposito com'erano: si
+procura le barre che i suoi componenti dichiarano. Il codice sta in
+\file{live/contesto/}; il punto d'ingresso è la classe \simbolo{ContestoLive}
+di \file{contesto.py}.
+
+\begin{description}[leftmargin = 1.4em, style = nextline, itemsep = 4pt]
+  \item[Chi chiede che cosa] Una \simbolo{Richiesta} è simbolo, timeframe,
+    quante barre (\cod{0} = tutta la storia) e chi la fa. Una strategia
+    chiede il suo \cod{min\_lookback\_days} al suo timeframe più il tratto
+    da rigiocare (\vediSez{live-stream}); il regime i driver della sua asset
+    class, con tutta la storia, perché il rilevatore si calibra sulla serie
+    intera come in backtest; lo stress di mercato il panel delle azioni.
+    Due richieste per la stessa serie si fondono e vince la più lunga.
+  \item[In che ordine] Prima il \textbf{broker}
+    (\simbolo{FonteBroker}: \simbolo{capacita\_storico} e
+    \simbolo{storico} dell'adattatore), in una copia locale che si allunga
+    (\file{data/live/\_contesto/<broker>/<TF>/<SIMBOLO>.parquet}, con il server
+    nel nome per MT5); poi il \textbf{deposito} (\simbolo{FonteDeposito},
+    con la chiusura rettificata come il loader); poi i \textbf{provider}
+    (\simbolo{FonteYahoo}, \simbolo{FonteDukascopy},
+    \simbolo{FontePolygon}) per il tratto fra il file e il broker, la storia
+    più vecchia, le barre recenti di un simbolo che il broker non quota.
+  \item[Quale provider] \simbolo{ordina\_provider}: quello da cui viene il
+    file del deposito; per i cambi Dukascopy; per l'intraday Polygon prima di
+    Yahoo (che si ferma a \num{60}--\num{730} giorni); per il giornaliero
+    Yahoo prima di Polygon. \simbolo{capacita} dichiara i limiti --- asset,
+    timeframe, profondità, chiave --- e un provider che non può non si
+    interpella. Una chiave rifiutata (\num{401}) o un mercato non coperto
+    dal piano (\num{403}) si ricordano per la sessione.
+  \item[Le giunzioni] \simbolo{cuci} mette i tratti dal più recente al più
+    vecchio. Sulle barre in comune i rendimenti devono coincidere
+    (\simbolo{accordo}: mediana e ottantesimo percentile degli scarti, con
+    soglie che crescono con la radice del timeframe); il tratto vecchio si
+    riporta al livello del recente con il rapporto delle ultime chiusure in
+    comune (un CFD quota a un livello diverso dall'ETF). Se non coincidono
+    non si cuce, e il registro lo dice.
+  \item[Le regole] Solo barre chiuse (\simbolo{tempo.solo\_chiuse}: azioni
+    \num{30} minuti dopo la chiusura di New York, cambi e cripto a
+    mezzanotte UTC). Il file del deposito si allunga solo con barre del suo
+    provider --- dal vivo nella sua copia in \file{data/live/assets}
+    (\vediSez{live-dati-vivo}); le altre stanno nella cache del contesto. I tentativi falliti
+    si riprovano sull'orologio del contesto: \num{3} minuti il broker,
+    \num{20} le barre recenti di un provider, \num{6} ore la storia.
+  \item[A lotti] \simbolo{\_prendi\_a\_lotti}: le serie giornaliere che il
+    broker non ha e che sono indietro si chiedono insieme al loro primo
+    provider (\simbolo{barre\_molti}: Yahoo \num{80} simboli per richiesta,
+    Polygon \cod{grouped daily}, tutte le azioni USA di una seduta in una
+    richiesta). Un simbolo che il lotto non dà si chiede da solo.
+  \item[Il calendario] \simbolo{tempo.conforma\_fine\_settimana}: i cambi
+    giornalieri sono lunedì--venerdì; la barra della domenica di un broker
+    che ricompone il giorno in UTC si fonde nel lunedì, così il rendimento
+    del lunedì si misura dal venerdì come nel file. Se il file ha le sue
+    domeniche, restano.
+\end{description}
+
+\noindent
+Il runner prepara il contesto prima del primo ciclo
+(\simbolo{\_prepara\_contesto}, con l'avanzamento sulla scheda e lo Stop
+ascoltato) e lo aggiorna a ogni ciclo. \simbolo{riassunto} dà al registro
+una riga per timeframe --- serie complete, fonti, serie corte con il
+perché --- di tipo \cod{data}.
+
+\subsection{Gli stream: ogni strategia come nel suo walk-forward}\label{sez:live-stream}
+
+Il vecchio ciclo istanziava le strategie a ogni giro e ne combinava i
+segnali: niente portafoglio, niente \simbolo{RiskManager} per strategia,
+niente uscite --- un'altra cosa rispetto a quella che il walk-forward misura.
+\file{live/stream\_live.py} fa girare ogni strategia come un backtest che non
+finisce.
+
+\begin{itemize}
+  \item \textbf{La stessa configurazione.} \file{execution/config\_strategia.py}
+        è usato sia da \file{run\_walkforward.py} sia dallo stream: parametri
+        dello YAML (che sostituiscono i default, come nel walk-forward),
+        \simbolo{PortfolioConfig} e \simbolo{AllocatorConfig} con gli
+        override permessi, universo, minimo di simboli.
+  \item \textbf{La ricostruzione.} \simbolo{StreamStrategia} rigioca
+        \simbolo{BacktestEngine.run} --- il motore stesso, con il regime
+        calcolato fuori (parametro \cod{regime}) --- da un'\emph{ancora}
+        salvata in \file{stream\_<nome>.json}: circa un anno di barre
+        giornaliere prima del primo avvio (\cod{REPLAY\_GIORNI} per
+        timeframe). Quando il tratto da rigiocare supera quattro volte quella
+        lunghezza, l'ancora avanza: un nuovo fold. Il motore lascia
+        \cod{stato\_finale} (uscite, metadati dei segnali, covarianze,
+        ultima barra) e lo stream riparte da lì.
+  \item \textbf{Il passo.} A ogni barra chiusa nuova: uscite sui massimi e
+        minimi della barra (non quelle aperte nella barra stessa),
+        valutazione, il PnL per asset class passato a
+        \simbolo{RiskManager.update} come nel backtest, decisione alla
+        chiusura, esecuzione al prezzo del broker. Fra un ciclo e l'altro \simbolo{sentinella} confronta i
+        prezzi del broker con stop e take profit, ogni minuto.
+  \item \textbf{Quando si ricostruisce.} Al riavvio; quando manca più di una
+        barra (le barre in mezzo seguono le regole del backtest invece di
+        essere saltate); quando cambia l'impronta di parametri e dati extra
+        (\simbolo{impronta\_contenuto}); quando una barra torna indietro. Una
+        ricostruzione che fallisce si dice una volta (\simbolo{\_fermo}) e
+        si riprova quando cambia l'impronta.
+  \item \textbf{Il libro.} \simbolo{GestoreStream.vettori} dà i pesi di ogni
+        stream; il motore li pesa con l'ensemble, seminato con i ritorni
+        degli stream del backtest (\file{live/semi\_backtest.py}), per gli
+        scale della normalizzazione e il fattore di regime, aggiunge gli
+        approcci, applica gli overlay (seminati con il PnL dell'ensemble del
+        backtest e salvati su disco). \simbolo{compute\_orders} non manda un
+        ridimensionamento sotto \cod{banda\_peso} (lo \num{0.2}\,\%
+        dell'equity, \cod{live.rebalance\_band}).
+\end{itemize}
+
+\begin{perche}{Perché rigiocare il motore invece di copiarlo}
+Il passo di una barra è scritto in \file{stream\_live.py}, ma la
+ricostruzione no: è \simbolo{BacktestEngine.run}. Una copia del motore
+divergerebbe alla prima modifica dell'originale, come la normalizzazione
+(\vediSez{live}). \file{tests/prova\_live\_fedele.py} controlla che lo stream
+dia lo stesso libro del motore sullo stesso periodo, che ribilanci alla
+cadenza della strategia e che dopo un riavvio abbia le stesse posizioni.
+\end{perche}
+
+\subsection{Regime e stress dal vivo}
+
+\simbolo{RegimeLive} (\file{live/regime\_live.py}) prende dai mercati di
+regime (\file{regime/markets.py}) la catena di driver di ogni mercato dei
+simboli del runner, li chiede al contesto giornalieri e con tutta la storia
+--- fino al primo della catena che ha dati, più il ripiego \cod{self} --- e
+rifà lo snapshot di regime quando la firma dei driver cambia: una barra
+nuova. \simbolo{StressLive}
+(\file{live/stress\_live.py}) calcola lo stress di mercato per
+\cod{iso\_stress} (\simbolo{compute\_market\_stress}) sul panel delle azioni,
+in un thread, quando arriva una barra nuova di SPY, e allunga il suo file;
+più vecchio di \num{14} giorni, l'overlay resta neutro.
+
+\subsection{I dati del live: \file{data/live} e l'unione con il deposito}\label{sez:live-dati-vivo}
+
+Ciò che un runner scaricava o calcolava --- le righe nuove delle categorie,
+le barre con cui i provider allungavano i file degli asset, il risk-off
+macro, lo stress di mercato --- finiva nei file di \file{data/} e
+\file{output/}, gli stessi dei backtest: un backtest rifatto dopo una
+settimana di live leggeva righe che nessuno aveva verificato, con un buco nei
+giorni in cui l'app era spenta. Ora tutto va in \file{data/live/}, con la
+struttura di \file{data/}, e nel file del live ci sono solo le righe che il
+deposito non ha (\file{data/vivo.py}):
+
+\begin{center}
+\begin{tabular}{@{}L{54mm}L{84mm}@{}}
+\toprule
+\textbf{Nel deposito} & \textbf{Dal vivo} \\
+\midrule
+\rigaTenue
+\file{data/<categoria>/X.parquet} & \file{data/live/<categoria>/X.parquet} \\
+\file{data/assets/<TF>/AAPL.parquet} & \file{data/live/assets/<TF>/AAPL.parquet},
+  con \file{\_meta.json} (la provenienza dei file nuovi) \\
+\rigaTenue
+\file{data/driver/SPY.parquet} & \file{data/live/driver/SPY.parquet} \\
+\file{output/market\_stress.parquet} (e il risk-off macro)
+  & \file{data/live/\_output/market\_stress.parquet} \\
+\rigaTenue
+\emph{nessuno}: le barre del contesto & \mbox{}\file{data/live/\_contesto/<fonte>/}\newline
+  \file{<TF>/<SIMBOLO>.parquet} \\
+\file{data/.aggiornamenti.json} & \file{data/live/.aggiornamenti.json} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+Le barre del broker restano nella cache del contesto e non nella copia di
+\file{data/assets}: sono i prezzi di un CFD, a un altro livello e senza
+rettifiche per i dividendi, e il file di un asset ha una sola provenienza.
+
+\paragraph{L'ambito.} È del thread, non del processo: lo apre il runner
+(\simbolo{vivo.ambito}, in \simbolo{live\_runners.start} e in
+\file{scripts/run\_live.py}) e lo passa ai thread che lancia --- gli
+aggiornamenti delle categorie e delle porte, lo stress --- con
+\simbolo{vivo.con\_ambito}. Fuori, un backtest, una pagina, uno script vedono
+solo il deposito, anche nello stesso processo. Nell'ambito:
+
+\begin{description}[leftmargin = 1.4em, style = nextline, itemsep = 4pt]
+  \item[Si legge l'unione] \cod{pandas.read\_parquet}, \cod{read\_csv} e
+    \cod{read\_feather} su un file di una categoria, di un asset, di un
+    driver o di \file{output/} restituiscono le righe del deposito seguite da
+    quelle del live (\simbolo{vivo.unisci}: una serie sulla data, una tabella
+    di eventi sulla chiave della sua fonte; senza tutte le colonne della
+    chiave --- chi legge solo \cod{date} --- non si toglie nulla). Vale anche
+    nel codice di una strategia dell'utente. \simbolo{vivo.esiste},
+    \simbolo{trova}, \simbolo{elenca} e \simbolo{firma} vedono i due.
+  \item[Si scrive nel live] \simbolo{data.estendi.estendi} aggiunge le
+    righe nuove rispetto a deposito \emph{e} live al file del live, con il
+    formato del deposito; chi riscrive un file intero chiede dove con
+    \simbolo{vivo.destinazione}.
+  \item[Le scritture dirette si intercettano] Una porta dati o una strategia
+    che scrivono con pandas (\cod{to\_parquet}, \cod{to\_csv} anche in coda,
+    \cod{to\_feather}) o mettono un temporaneo al suo posto
+    (\cod{os.replace}, \cod{os.rename}) sopra un file di dati del deposito
+    scrivono invece nel live le righe nuove, con \simbolo{estendi}; se non si
+    può, il file intero va nel live, mai nel deposito. Le scritture con
+    \cod{open()} restano fuori. Lo stato dei runner (\file{data/runners/},
+    anche quello degli stream di \file{scripts/run\_live.py}) e le uscite in
+    \file{output/} si scrivono dove si sono sempre scritti.
+\end{description}
+
+\paragraph{Salvare o no.} \percorso{Settings \freccia Data \freccia Live data},
+in \file{data/.dati\_live.json} (fuori da \file{data/live}, che si cancella).
+Spento, l'ambito scrive in una cartella temporanea
+(\file{<tmp>/lyra-live/<pid>-<hash>}) tolta alla chiusura dell'app, e quelle
+rimaste da una chiusura improvvisa all'avvio dopo; ciò che \file{data/live}
+aveva resta leggibile. Vale dal prossimo avvio di un runner.
+
+\paragraph{L'unione} (\file{data/vivo\_unione.py}). \simbolo{verifica} fa un
+piano, una voce per file del live, e prepara le righe in
+\file{data/live/\_verifica/<id>/}:
+
+\begin{description}[leftmargin = 1.4em, style = nextline, itemsep = 4pt]
+  \item[Categorie] le righe che il deposito non ha. Per una serie il passo
+    (giorni di borsa, giorni, settimane, mesi, trimestri:
+    \simbolo{\_passo}) dice dove mancano righe fra la fine del deposito e
+    quelle del live; un festivo non è un buco (si tollerano due giorni di
+    borsa). I vuoti si chiedono alla fonte, \cod{fetch(nome, since, until)}
+    (\vediSez{nuova-fonte}); ciò che resta vuoto va deciso. Una categoria
+    senza fonte è una serie se ha una data per riga, mai ripetuta, nel live
+    come nel deposito; altrimenti una tabella confrontata riga per riga.
+  \item[Asset e driver] le barre attese vengono dal calendario
+    (\simbolo{attese}: le sedute di New York; cambi lunedì--venerdì tranne
+    Natale e Capodanno; cripto ogni giorno; intraday gli orari degli ultimi
+    \num{60} giorni del file). Le fonti, in ordine: il \textbf{provider del
+    file}, che riscarica il periodo più \num{20} giorni di sovrapposizione
+    (a lotti per il giornaliero) ed è accettato se sulla sovrapposizione i
+    rendimenti coincidono; le \textbf{barre del live}; gli \textbf{altri
+    provider}, dalla cache del contesto e poi dalla rete per i vuoti
+    rimasti, riportati al livello del file e verificati
+    (\simbolo{allinea}); il \textbf{broker}, riportato al livello del file.
+  \item[Serie calcolate] stress e risk-off si ricalcolano dal deposito per i
+    periodi vuoti.
+\end{description}
+
+\noindent
+Gli esiti: \emph{pronta} (solo il provider del file o il live),
+\emph{colmata} (un'altra fonte ha riempito un vuoto), \emph{da decidere}
+(resta un vuoto, o servono barre del broker), \emph{vuota} (niente di nuovo:
+il file del live si toglie). \simbolo{unisci} aggiunge al deposito le pronte
+e le colmate, le da decidere solo se scelte, con \simbolo{estendi} (le righe
+che ci sono restano com'erano), e le toglie dal live; le righe scritte da un
+runner dopo la verifica restano. La provenienza dell'asset ricorda l'unione
+(\cod{unioni} in \file{\_meta.json}: quando, il periodo, le fonti, i vuoti
+accettati), lo stato della categoria la segna come novità
+(\simbolo{fonti.segna\_novita}: chi ne dipende rilegge). Verifica e unione
+girano in sottofondo; la pagina le segue (\cod{/api/data/live},
+\cod{/job}, \cod{/check}, \cod{/merge}, \cod{/delete}, \cod{/settings}).
+
+\begin{perche}{Perché un'unione con la verifica, e non il live direttamente nel deposito}
+Il deposito è ciò su cui si misurano le strategie: un buco di tre sedute
+lasciato da un'app spenta, o una settimana di barre di un CFD al posto di
+quelle del provider, cambiano un backtest senza che nessuno lo sappia. Con
+la cartella a parte il live funziona lo stesso (legge l'unione), e il
+deposito cambia solo quando qualcuno ha visto che cosa entra e da dove.
+\file{tests/prova\_dati\_live.py} copre ambito, scritture dirette, fonti,
+contesto, unione e rotte.
+\end{perche}
 
 \subsection{Il kill-switch del conto}\label{sez:live-kill}
 

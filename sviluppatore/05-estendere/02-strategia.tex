@@ -155,8 +155,10 @@ produce un \cod{TypeError} su un argomento inatteso.
 \cod{extra\_timeframes}
   & Per le strategie multi-timeframe. Il caricamento parte dal più fine. \\
 \cod{required\_external\_data}
-  & \cod{news}, \cod{fundamentals}, \cod{policy\_rates}. Il sistema li
-    \emph{scarica} se mancano. \\
+  & Le categorie di dati che legge (\cod{earnings}, \cod{news},
+    \cod{fundamentals}, \cod{rates}, \cod{macro}, o una dell'utente). Le
+    tiene aggiornate la loro fonte: in backtest fino alla fine del periodo,
+    dal vivo alla cadenza di \cod{maintenance} (\vediSez{nuova-fonte}). \\
 \rigaTenue
 \cod{required\_mms\_features},\newline\cod{required\_volume\_profile}
   & Feature specialistiche calcolate su richiesta. \\

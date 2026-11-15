@@ -57,12 +57,46 @@ one page. \pulsante{Sign out} is at the top right of the page.
   \item[\voce{Security}] The password, the email address and two-step
     verification. They are not stored by the application: they live on the
     site, and the application only passes them on.
-  \item[\voce{Preferences}, \voce{Brokers and data keys}] The theme and the
-    notifications; the broker connections and the data keys, which stay on
-    this computer.
+  \item[\voce{Preferences}, \voce{Brokers and data keys}] The theme, how
+    pages open, hardware acceleration and the notifications --- the same
+    choices as the \voce{Settings} window (\vediSez{speed}); the broker
+    connections and the data keys, which stay on this computer.
   \item[\voce{Send us feedback}] A report or a suggestion for the Lyra
     team.
 \end{description}
+
+\section{Speed: how pages open, hardware acceleration}\label{sez:speed}
+
+Two choices in the \voce{Settings} window (account menu at the top right),
+and in the preferences of the profile.
+
+\begin{description}[leftmargin = 1.4em, style = nextline, itemsep = 4pt]
+  \item[\voce{Opening pages}] \voce{Right away}, the default: a new page
+    opens at once and fills in as its data arrives, with the thin bar at the
+    top of the window running until it has everything. \voce{When loaded}:
+    the page you are leaving stays on screen until the new one has its data
+    and charts, up to two seconds --- no page filling in before your eyes,
+    steadier on slower computers. Quick pages look the same either way. The
+    choice applies from the next page you open.
+  \item[\voce{Hardware acceleration}] Only in the desktop application; in a
+    browser it is a setting of the browser. \voce{Automatic}, the default,
+    lets the graphics card draw the pages whenever Chromium supports it:
+    almost always the fastest. \voce{Always} uses the card even when Chromium
+    does not trust it (older integrated graphics, old drivers): smoother
+    pages where the processor was drawing them, but a faulty driver can make
+    the window flicker or go black. \voce{Off} draws with the processor only,
+    for driver problems; it is slower. Below the buttons, what the card is
+    doing in this session. A new choice applies when the application
+    restarts: \pulsantesec{Restart now} does it.
+\end{description}
+
+\begin{attenzione}{If the window goes black after choosing \voce{Always}}
+Start the application with the environment variable \cod{LYRA\_GPU=off}
+(or \cod{auto}): it overrides the saved choice for that session, and from
+\voce{Settings} you can set \voce{Automatic} again. If the graphics card
+stops responding twice with \voce{Always}, the application goes back to
+\voce{Automatic} by itself at the next start, and the section says so.
+\end{attenzione}
 
 \section{The plans}\label{sez:plans}
 

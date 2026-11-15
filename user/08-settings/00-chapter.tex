@@ -67,6 +67,128 @@ It means the category exists but has no data yet for any instrument. It
 fills up by downloading, or by dragging files into it.
 \end{nota}
 
+\subsection{Keeping a category up to date}\label{sez:data-sources}
+
+A strategy declares the categories it reads, and how often they must be
+refreshed. Each category has a \emph{source} that keeps it up to date: the
+system one for earnings, fundamentals, news, rates, macro series and MMS
+features; for a category of yours, a file you write in its folder. The card
+of each category says who updates it and how it went.
+
+\figuraSchermata{1.0}{figure/schermate/data-sources.png}
+  {The categories with their sources. \voce{macro} and \voce{rates} wait for
+   a FRED key; \voce{sentiment} has no source yet; \voce{meteo} has one
+   written by the user.}
+  {data-sources}
+
+\begin{description}[leftmargin = 1.4em, style = nextline, itemsep = 4pt]
+  \item[\voce{Updated by}] The source: a provider (Polygon, FRED), the
+    application itself (MMS), or your file \file{data/<category>/\_source.py}.
+  \item[\voce{Checked \ldots{} ago}] The last update and how many rows it
+    brought. In amber when the last attempt failed, with the reason when you
+    hover on it.
+  \item[\voce{Needs \ldots{} in the .env of the app}] The key the provider
+    needs is missing: \campo{POLYGON\_API\_KEY} for earnings and
+    fundamentals, \campo{FRED\_API\_KEY} for rates and macro series. They go
+    in the \file{.env} file of the application (FRED keys are free); the key
+    typed on this page for downloading prices stays in the browser and is not
+    used for the automatic updates.
+  \item[\voce{Read by}] The strategies, overlays and weight modes that
+    declare the category: they are the reason it is updated.
+\end{description}
+
+\noindent
+\pulsante{Update now} updates the category straight away, as a job.
+\pulsante{Create source file}, on a category with no source, creates the
+file to fill in, \file{data/<category>/\_source.py}, with the instructions
+written inside it: one function, \cod{fetch}, that returns the new rows of a
+file. \pulsante{Empty} removes the data and keeps the source.
+
+\begin{nota}{New rows are added, the old ones never change}
+An update \emph{adds} what is new to each file: the rows already there stay
+exactly as they were, even if the provider has corrected them since. A
+backtest repeated tomorrow sees the same past as today, and a value the
+provider revises later does not rewrite what was known on that day.
+\end{nota}
+
+\noindent
+You rarely need the button. A backtest extends the categories its strategy
+reads up to the end of its period, before starting; a live runner updates
+them in the background at the cadence the strategies declare
+(\vediSez{journal}) --- into a folder of its own, as the next section
+explains.
+
+\subsection{The data of the live runners}\label{sez:data-live}
+
+A live runner downloads and computes data while it works: the new rows of
+the categories, the bars of the instruments at every bar, the history it
+fetches from the broker and the providers to give the strategies their
+context, the market-stress and macro risk-off series. None of it goes into
+the files your backtests read. It goes into \file{data/live}, with the same
+folders as \file{data/}, and holds only what \file{data/} does not have yet.
+The runner reads the two together; backtests and every other page read only
+\file{data/}, so a runner never changes the data of a backtest --- not even
+one running at the same moment.
+
+\figuraSchermata{1.0}{figure/schermate/data-live.png}
+  {The \voce{Live data} section of the Data page: the setting, what is in
+   \file{data/live} by area, the runner sessions that wrote it.}
+  {data-live}
+
+\begin{description}[leftmargin = 1.4em, style = nextline, itemsep = 4pt]
+  \item[\voce{Keep the data the live downloads}] On, the data stays in
+    \file{data/live} and the runner starts again from there the next time.
+    Off, the runner works exactly the same, but what it downloads stays in a
+    temporary folder that is deleted when the application closes: nothing to
+    merge. A change applies from the next start of a runner; the page says
+    which runners are on.
+  \item[The summary] One line per area --- category rows, instrument bars,
+    regime drivers, computed series, the context cache --- with files, rows
+    and period; below, the last merge and the runner sessions that wrote.
+  \item[\pulsante{Delete live data}] Removes \file{data/live}. A runner that
+    is on downloads again what it needs, from where \file{data/} ends.
+\end{description}
+
+\paragraph{Merging into the data of the backtests.}
+\pulsante{Check and merge\ldots} compares every file of \file{data/live}
+with \file{data/} and looks for \emph{empty periods}: the market sessions
+with no bar, the days with no row --- typically the days the application was
+off. A holiday is not a gap. It then tries to fill them by itself: for a
+category, its source; for the bars, first the provider the file comes from
+(it downloads the period again, and is accepted if its returns match the
+file where the two overlap), then the bars of the live, then the other
+providers --- Yahoo Finance, Dukascopy, Polygon --- brought to the level of
+the file and checked on the bars they have in common.
+
+\figuraSchermata{1.0}{figure/schermate/data-live-merge.png}
+  {The check: two files to decide, two filled automatically, three ready.
+   \voce{NVDA} has only broker bars and is ticked to merge anyway.}
+  {data-live-merge}
+
+\begin{description}[leftmargin = 1.4em, style = nextline, itemsep = 4pt]
+  \item[\voce{Ready}] The live rows continue \file{data/} with no gap.
+  \item[\voce{Filled automatically}] There was a gap, and another source
+    filled it; the chips say how many rows came from where.
+  \item[\voce{Needs your decision}] A period no source could fill, or bars
+    that only the broker has. Tick \voce{Merge anyway} to accept it, or leave
+    the file in \file{data/live}.
+\end{description}
+
+\noindent
+The merge adds the rows to \file{data/} without changing the ones already
+there, removes them from \file{data/live}, and the instrument remembers the
+merge (when, from which sources, which gaps were accepted). The check and the
+merge run in the background: you can close the window and come back.
+
+\begin{attenzione}{\voce{Merge anyway} is a decision about every future backtest}
+A gap you accept stays in \file{data/}: the backtests over that period will
+find no bar, or no row, for those days. Broker bars are the
+prices of a CFD: they are brought to the level of the file, but the returns
+are the broker's, without the dividend adjustments of the provider. When in
+doubt, leave the file in \file{data/live}: a check the next day, when the
+provider has the period, may fill it.
+\end{attenzione}
+
 \section{Config: the limits}\label{sez:config}
 
 These are the parameters that apply to every calculation.

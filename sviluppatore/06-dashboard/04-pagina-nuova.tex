@@ -48,6 +48,16 @@ dopo 400~ms l'icona della voce premuta pulsa e dopo 450~ms compare un filo
 di caricamento in alto; oltre 1,8~s il contenuto si mostra comunque, con i
 suoi segnaposto.
 
+Questo è \voce{When loaded}. L'utente può scegliere \voce{Right away}
+(\percorso{Settings \freccia Opening pages}, il predefinito, in
+\cod{localStorage} come \cod{qs-apertura}): il contenuto si mostra al più
+150~ms dopo il primo fotogramma, con i segnaposto se i dati non ci sono
+ancora, e il filo in alto continua finché non arrivano (\cod{html.qs-dati}).
+Mostrata e completa diventano due momenti: \cod{qsPagina.quandoPronta(f)}
+gira a contenuto visibile, l'evento \cod{qs:pagina-pronta} pure; le
+richieste continuano a essere contate fino a \cod{completa()}. Una pagina
+quindi deve mostrarsi bene anche a metà: con i suoi segnaposto, non vuota.
+
 \begin{pratica}{Cosa fare in una pagina nuova}
 \begin{itemize}
   \item Il foglio di stile della pagina nel blocco \cod{page\_css}, mai nel
@@ -69,8 +79,9 @@ suoi segnaposto.
 \end{pratica}
 
 \begin{attenzione}{Una richiesta lenta all'avvio tiene il contenuto in attesa}
-Fino al tetto di 1,8~s, con il contenuto della pagina di prima ancora sullo
-schermo. Se la pagina può mostrarsi senza quel dato, la richiesta è di fondo
+Con \voce{When loaded}, fino al tetto di 1,8~s, con il contenuto della pagina
+di prima ancora sullo schermo; con \voce{Right away} tiene acceso il filo di
+caricamento. Se la pagina può mostrarsi senza quel dato, la richiesta è di fondo
 e va marcata: altrimenti chi apre la pagina aspetta un dato che non gli
 serve per cominciare.
 \end{attenzione}
@@ -84,6 +95,16 @@ dipende dal server, riparte dall'ultima risposta salvata nella sessione,
 come fanno la voce «Refund» e il pallino della campanella. Un elemento del
 guscio che compare all'arrivo di una richiesta lampeggia a ogni cambio di
 pagina.
+\end{attenzione}
+
+\begin{attenzione}{I file statici sono in cache per un anno}
+Il server manda i file di \file{static/} con la versione nell'indirizzo
+(\cod{?v=}, data di modifica e dimensione) come \cod{immutable}: il browser
+non li richiede più finché l'indirizzo non cambia. Vanno quindi sempre
+citati con \cod{url\_for('static', filename=\ldots)}, senza scrivere a mano
+\cod{v=}: un gettone scritto a mano resterebbe uguale anche cambiando il file,
+e la modifica non arriverebbe a chi l'ha già in cache. I file citati dentro
+un CSS (immagini, caratteri) non hanno versione e restano ricontrollati.
 \end{attenzione}
 
 \noindent

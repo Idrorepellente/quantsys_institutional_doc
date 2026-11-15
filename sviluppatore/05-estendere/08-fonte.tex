@@ -1,0 +1,219 @@
+% ===========================================================================
+%  sviluppatore/05-estendere/08-fonte.tex
+% ===========================================================================
+\section{Una fonte di dati: tenere aggiornata una categoria}\label{sez:nuova-fonte}
+
+Una \emph{categoria} è una cartella di \pkgDati{} (Settings › Data › Data
+categories): \cod{earnings}, \cod{fundamentals}, \cod{news}, \cod{rates},
+\cod{macro}, \cod{mms}, o una creata dall'utente. Un componente dichiara
+quali legge in \cod{required\_external\_data} e ogni quanto vanno aggiornate
+in \cod{maintenance}. La \emph{fonte} è il codice che sa procurare i dati di
+una categoria e li tiene aggiornati: \file{data/fonti/} per quelle di
+sistema, il file \file{data/<categoria>/\_source.py} per le altre.
+
+\subsection{Il buco che chiude}
+
+Fino a questa versione le dichiarazioni c'erano e nessuno le onorava. Il
+catalogo di \file{data/external\_data.py} scaricava solo ciò che mancava del
+tutto --- le notizie solo se non ce n'era nessuna, i fondamentali dei simboli
+mai visti, i tassi mai --- e \cod{earnings} e \cod{macro} non li conosceva.
+Le porte sui dati delle notizie (\file{data\_port.py} di
+\cod{llm\_news\_macro} e \cod{news\_pressure}) chiamavano una funzione che,
+trovato un archivio qualsiasi, non faceva nulla; ora non ci sono più, perché
+una porta che scrive nella cartella di una categoria è un secondo scrittore
+con regole sue. Dal vivo i file
+restavano fermi al giorno del primo download: una strategia sugli utili non
+vedeva il trimestre nuovo, e nessun messaggio lo diceva.
+
+\subsection{Le fonti di sistema}
+
+\begin{center}
+\begin{tabular}{@{}L{26mm}L{60mm}L{36mm}L{14mm}@{}}
+\toprule
+\textbf{Categoria} & \textbf{Fonte} & \textbf{Chiave} & \textbf{Ogni} \\
+\midrule
+\rigaTenue
+\cod{earnings} & Polygon, bilanci trimestrali (EPS). Chiede solo quando un
+  trimestre nuovo è atteso: \num{70} giorni dopo l'ultimo deposito, poi una
+  volta al giorno & \cod{POLYGON\_API\_KEY} & 1 g \\
+\cod{fundamentals} & Polygon, stesso endpoint e stessa regola (la risposta
+  si riusa nello stesso giro) & \cod{POLYGON\_API\_KEY} & 90 g \\
+\rigaTenue
+\cod{news} & Polygon; GDELT senza chiave. Riparte dal giorno dell'ultima
+  notizia del file & --- & 1 g \\
+\cod{rates} & FRED, tasso in vigore per valuta (otto valute) &
+  \cod{FRED\_API\_KEY} & 7 g \\
+\rigaTenue
+\cod{macro} & FRED (curva, spread, lavoro, CPI) e Yahoo (VIX, solo a seduta
+  chiusa); estende anche il risk-off macro & \cod{FRED\_API\_KEY} & 1 g \\
+\cod{mms} & calcolate dall'app sulle barre chiuse (heatmap di liquidità) &
+  --- & 1 g \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+Le chiavi si leggono dall'\file{.env} dell'app (\simbolo{dashboard.envload}).
+La chiave Polygon della pagina Data resta nel browser e non serve agli
+aggiornamenti automatici. Un \file{\_source.py} in una categoria di sistema
+prende il posto della fonte di sistema: gli utili da un altro provider si
+scrivono lì.
+
+\subsection{Il contratto}
+
+\begin{codiceInterno}{python}{La fonte di una categoria dell'utente}{data/sentiment/\_source.py}
+import os
+import pandas as pd
+import requests
+
+DESCRIPTION = "Acme Data - daily sentiment"   # pagina Data e registro del runner
+REQUIRES = ["ACME_API_KEY"]                   # nell'.env dell'app
+EVERY_DAYS = 1                                # se la strategia non dichiara la cadenza
+KEY = "index"                                 # o una lista di colonne
+AFTER_ONLY = True                             # serie: solo dopo l'ultima data
+
+def fetch(name, since, until, *, base_path, log):
+    start = "2015-01-01"
+    if since is not None:
+        start = (since + pd.Timedelta(days=1)).date().isoformat()
+    r = requests.get("https://api.acme.example/v1/sentiment",
+                     params={"symbol": name, "from": start, "to": until,
+                             "key": os.environ["ACME_API_KEY"]}, timeout=30)
+    r.raise_for_status()
+    df = pd.DataFrame(r.json()["data"])
+    if df.empty:
+        return df
+    df["date"] = pd.to_datetime(df["date"])
+    return df.set_index("date")[["score"]].sort_index()
+\end{codiceInterno}
+
+\noindent
+\cod{fetch} riceve il nome del file senza estensione (un simbolo nelle
+categorie 1:1, un file condiviso nelle 1:N), \cod{since} --- l'ultima data
+che il file ha già, \cod{None} se il file non c'è --- e \cod{until}, la data
+fin dove servono i dati. Restituisce righe: anche righe che il file ha già,
+che non entrano due volte. Tre funzioni facoltative:
+
+\begin{center}
+\begin{tabular}{@{}L{26mm}L{112mm}@{}}
+\toprule
+\textbf{Funzione} & \textbf{A che serve} \\
+\midrule
+\rigaTenue
+\cod{files} & \cod{(base\_path, symbols, context)}: quali file aggiornare.
+  Senza: i simboli dei componenti nelle 1:1 (tutti i file della cartella da
+  \voce{Update now}), i file presenti nelle 1:N. \cod{context} è
+  \cod{live}, \cod{backtest} o \cod{manual}. \\
+\cod{due} & \cod{(name, since, info, now)}: se vale la pena chiedere adesso;
+  gli utili la usano per non chiedere ogni giorno quattrocento bilanci che
+  non sono cambiati. \cod{info["controllato"]} è l'ultimo controllo del
+  file. \\
+\rigaTenue
+\cod{after\_update} & \cod{(base\_path, result, log)}: ciò che dipende
+  dalle righe nuove; la fonte \cod{macro} estende il risk-off macro. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{La regola dei file: si aggiunge, non si riscrive}
+
+Una fonte non scrive mai un file da sé. Le righe passano da
+\simbolo{data.estendi.estendi}, che aggiunge soltanto quelle la cui
+\emph{chiave} il file non ha ancora:
+
+\begin{description}[leftmargin = 1.4em, style = nextline, itemsep = 4pt]
+  \item[\cod{KEY = "index"}] serie datate, indice di date. Con
+    \cod{AFTER\_ONLY} entrano solo le date dopo l'ultima del file.
+  \item[\cod{KEY = ["filing\_date", "period\_end"]}] eventi: una riga entra
+    se il file non ne ha una con gli stessi valori in quelle colonne, anche
+    con una data passata --- un deposito che il provider pubblica in ritardo
+    era pubblico in quel giorno --- e va al suo posto di data.
+\end{description}
+
+\begin{perche}{Perché non «riscarico tutto e sovrascrivo»}
+Tre ragioni. Un backtest rifatto domani vede, per i giorni passati, gli
+stessi numeri di oggi. Un dato corretto a posteriori dal provider (un utile
+riesposto, una serie rivista) non riscrive ciò che si sapeva quel giorno, che
+è il modo onesto di tenere un archivio che serve anche dal vivo. Un download
+andato storto a metà non cancella nulla: al peggio aggiunge meno righe.
+\end{perche}
+
+\noindent
+Il file tiene il suo formato: un CSV si legge come testo e si riscrive con la
+stessa intestazione, lo stesso separatore e lo stesso stile delle date; un
+parquet con il suo indice. La scrittura è atomica (file temporaneo e
+\cod{os.replace}) sotto un blocco per file in \file{.lock/}, che funziona
+anche fra processi: due runner, o un runner e il pulsante, si mettono in fila
+invece di perdere righe a vicenda. Le serie che FRED pubblica una volta al
+mese si salvano alla data dell'osservazione e solo fino all'ultima: il mese
+che esce in ritardo entra con le sue date al primo aggiornamento utile. Il
+ritardo di pubblicazione lo applica chi legge (\cod{macro\_regime}).
+
+\subsection{Quando gira}
+
+\begin{center}
+\begin{tabular}{@{}L{26mm}L{112mm}@{}}
+\toprule
+\textbf{Dove} & \textbf{Che cosa succede} \\
+\midrule
+\rigaTenue
+live & il runner calcola il piano all'avvio e lo scrive nel registro; a ogni
+  giro avvia in sottofondo le categorie scadute, senza fermare il ciclo
+  (\vediSez{live-dati}). Le righe nuove vanno in
+  \file{data/live/<categoria>/}, non nei file dei backtest
+  (\vediSez{live-dati-vivo}). \\
+backtest & all'avvio, \emph{prima} di \cod{prepare\_extra\_data}: ogni
+  categoria dichiarata si estende fino alla fine del periodo; se un altro
+  lavoro la sta aggiornando, si aspetta che finisca. \\
+\rigaTenue
+pagina Data & \voce{Update now}, un job su tutti i file della categoria. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+Quando e come è andato ogni aggiornamento sta in
+\file{data/.aggiornamenti.json}: comune a tutti i runner e ai riavvii, letto
+dalla pagina Data. Mai fatto: scaduto. Andato bene: alla cadenza. Andato male
+o chiave mancante: si riprova dopo un'ora (o alla cadenza, se più breve).
+\simbolo{fonti.versione} cambia ogni volta che arrivano righe nuove: è così
+che il motore live sa quando rifare i dati extra di una strategia.
+
+\begin{attenzione}{Due cose che non si restituiscono mai}
+Un valore che diventa noto dopo la sua data va restituito con la data in cui
+è diventato noto (la pubblicazione), non con quella a cui si riferisce:
+altrimenti il backtest lo vede prima del tempo. E una barra ancora in corso
+(il prezzo di oggi a seduta aperta) non si restituisce: una volta aggiunta ci
+resta, come se fosse la chiusura. Per questo il VIX da Yahoo entra solo dopo
+le 16:30 di New York e le feature MMS solo sulle barre chiuse.
+\end{attenzione}
+
+\begin{pratica}{Dare una fonte a una categoria}
+\begin{enumerate}
+  \item Pagina Data, card della categoria: \voce{Create source file}. Crea
+        \file{data/<categoria>/\_source.py} dal modello
+        (\file{data/fonti/modello.py}) e non sovrascrive un file che c'è.
+  \item Scrivere \cod{fetch}; le chiavi nell'\file{.env} dell'app, mai nel
+        file.
+  \item \voce{Update now}: il job dice quante righe sono entrate e quali
+        file sono falliti; la card mostra l'esito.
+  \item Una fonte che non si carica (un errore di sintassi) compare in rosso
+        sulla card e nel piano del runner, e si riprova solo quando il file
+        cambia.
+\end{enumerate}
+\end{pratica}
+
+\begin{attenzione}{\cod{until} non è sempre oggi}
+L'unione dei dati del live con il deposito (\vediSez{live-dati-vivo}) cerca i
+periodi vuoti di una serie --- i giorni in cui l'app era spenta --- e li
+chiede alla fonte: \cod{fetch(nome, since, until)} con \cod{since} il giorno
+prima del vuoto e \cod{until} il suo ultimo giorno. Una fonte che onora solo
+\cod{since} restituisce fino a oggi, e va bene (le righe di troppo si
+scartano); una che ignora entrambi i limiti e restituisce sempre le ultime
+trenta righe non colma nulla, e l'utente si trova a decidere un buco che la
+fonte avrebbe potuto riempire.
+\end{attenzione}
+
+\noindent
+Il riferimento completo, in inglese, è \file{DATA\_SOURCE\_TEMPLATE.md}. La
+prova \file{tests/prova\_fonti\_dati.py} copre ogni fonte con provider finti.

@@ -55,7 +55,9 @@ the runner's card.
   computer is logged into: Lyra needs no credentials. At start-up it checks
   that MT5 is there; with real orders, also that the account is
   \emph{netting}, that the broker allows automated trading and that
-  \voce{Algo Trading} is on. \\
+  \voce{Algo Trading} is on. The names of the symbols on the broker are
+  found by themselves; the few that are not go in \pulsantesec{Symbols}
+  (\vediSez{mt5-symbols}). \\
 \rigaTenue
 \voce{Interactive Brokers} & Connects to TWS or IB Gateway with the host,
   port, client ID and account saved with \pulsantesec{Connect}. If they are
@@ -80,6 +82,71 @@ the runner's card.
 Skipping a step saves no time: it only means finding the same problems later,
 with the money in.
 \end{pratica}
+
+\section{Where the prices come from}\label{sez:live-prices}
+
+On MetaTrader 5 and Interactive Brokers the runner gets its bars by itself.
+Every part of what it runs declares the history it needs: a strategy, the
+bars its indicators look back over and the stretch it replays to rebuild its
+state; the regime, the series that drives it in each market (SPY for
+shares, the dollar index for currencies, Bitcoin for crypto), with its whole
+history; the \voce{IsoForest-Stress} overlay, the market stress measured on the
+stock panel.
+
+\begin{enumerate}
+  \item The runner asks the \textbf{broker} first: the first time all the
+        bars, then only the new ones.
+  \item What the broker does not have --- a symbol it does not quote,
+        history it does not go back to --- comes from the \textbf{data of
+        the backtest} and from the \textbf{providers}: Yahoo Finance,
+        Dukascopy and Polygon (Polygon with \cod{POLYGON\_API\_KEY} in the
+        \file{.env} of the application). Each is asked only for what it
+        can give: Yahoo has hourly bars for two years and minute bars for a
+        few weeks, Dukascopy only currencies, Polygon only the markets of
+        your plan.
+  \item Before an older stretch is joined to the broker's bars, the runner
+        checks that the two move together on the days they share; a
+        broker's CFD that quotes at another level is brought to the same
+        level. Only closed bars are used.
+\end{enumerate}
+
+\noindent
+The first start can take a few minutes: the runner's card says how far it
+has got (\enquote{Context: 182 of 254 series}), and the first cycle starts
+when the bars are in. If a series stays short even so, the runner uses what
+there is and the journal says which series and why --- for instance a
+Polygon key that was rejected. You do not need to update prices in
+\percorso{Settings \freccia Data} for a runner on a real broker.
+
+\begin{nota}{What the runner downloads does not touch your backtests}
+The bars, the category rows and the series the runner downloads or computes
+go into \file{data/live}, not into the data your backtests read; at the next
+start it picks up from there. You merge them into the backtest data, checking
+for the days the application was off, or delete them, from
+\percorso{Settings \freccia Data \freccia Live data} (\vediSez{data-live}).
+\end{nota}
+
+\subsection{Each strategy runs as in its backtest}
+
+A strategy does not just send signals: in the backtest it has its own
+portfolio, risk limits and exits, and the runner gives it the same. At
+start-up its state is rebuilt by replaying the backtest engine itself over
+the last year of bars, then it moves one closed bar at a time, deciding at
+the close as in the backtest. The positions it holds after a restart are the
+ones it would hold had it never stopped.
+
+\begin{itemize}
+  \item \textbf{Stops and take-profits} are checked every minute on the
+        broker's prices, not only at the cycles.
+  \item \textbf{The regime} is worked out live on its drivers, which the
+        runner keeps up to date.
+  \item \textbf{Small adjustments} --- a position that would change by less
+        than \num{0.2}\,\% of the account --- are not sent; openings,
+        closings and reversals always are.
+  \item A strategy whose data are missing (the macro series of
+        \voce{macro\_regime}, the earnings of \voce{pead\_classic}) says so
+        once in the journal and waits; it starts when the data arrive.
+\end{itemize}
 
 \section{Simulation or real orders}\label{sez:real-orders}
 
@@ -190,8 +257,23 @@ and the mode in which it happened:
   \item warnings, for example a symbol the broker does not trade, or data
         that are too old;
   \item the kill-switch events (\vediSez{kill-switch});
-  \item maintenance: retraining and data updates.
+  \item maintenance: retraining and data updates;
+  \item the data and the regime: which symbols the broker has, where each
+        series came from, which are short and why, each strategy rebuilt,
+        the regime of each market.
 \end{itemize}
+
+\noindent
+At the start, the maintenance lines say which data the runner keeps up to
+date: one line per category, with the components that read it, the source,
+how often --- and, if something is missing, what: \enquote{data · macro
+(macro\_regime): FRED and Yahoo · macro series, every day --- needs
+FRED\_API\_KEY in the .env of the app}. The updates then run in the
+background, without holding up the cycles; when one brings new rows, the
+journal says how many and the runner decides again straight away with them.
+The same error is written once, not at every attempt. The cards on
+\percorso{Settings \freccia Data} show the same state (\vediSez{data-sources}),
+and the new rows wait in \file{data/live} (\vediSez{data-live}).
 
 \figuraSchermata{1.0}{figure/schermate/live-registro.png}
   {The journal of a runner with real orders: two orders filled, one cancelled
@@ -200,7 +282,8 @@ and the mode in which it happened:
 
 \noindent
 The filters at the top separate orders and fills, kill-switch, warnings and
-errors. While the runner is running, the journal updates by itself.
+errors, data and regime. While the runner is running, the journal updates by
+itself.
 
 \begin{nota}{It lives on the computer}
 The journal is a file in the application folder,
@@ -301,16 +384,23 @@ so in one line. The most common ones, what they mean and what to do:
 \midrule\endhead
 \rigaTenue
 \enquote{orders NOT sent: the data are too old}
-  & The prices the runner decides on are those downloaded in
-    \percorso{Settings \freccia Data}, and they do not update by themselves.
-    Every symbol must reach the last closed session of its market: for US
-    shares and ETFs, the New York Stock Exchange calendar, holidays
-    included; for forex and crypto, one session is tolerated. A day's bar is
-    expected from the following day. The orders on the symbols that are
-    behind wait, and so do those that increase exposure; reductions on the
-    other symbols go out. Update the data: the held orders go out at the
-    first cycle with fresh data. The closes ordered by the account's
-    kill-switch go out regardless. \\
+  & Some symbols did not reach the last closed session of their market: for
+    US shares and ETFs, the New York Stock Exchange calendar, holidays
+    included; for forex and crypto, one session is tolerated. On MetaTrader
+    5 and Interactive Brokers the runner keeps asking the broker and the
+    providers for the missing bars, and the journal says why they are not
+    in (a provider that does not answer, a key that was rejected); with the
+    other brokers the prices are those of \percorso{Settings \freccia
+    Data}. The orders on the symbols that are behind wait, and so do those
+    that increase exposure; reductions on the other symbols go out. The held
+    orders go out at the first cycle with fresh data. The closes ordered by
+    the account's kill-switch go out regardless. \\
+\rigaTenue
+\enquote{N symbols not tradable on this broker}
+  & The strategy wants a position in symbols the broker does not offer:
+    their targets are ignored, the rest of the book goes out. On MetaTrader
+    5, check the start-up line \enquote{not found on this broker}
+    (\vediSez{mt5-symbols}). \\
 \enquote{real orders cannot start on this account}
   & The account cannot receive orders from Lyra, and the line says why: on
     MT5, a \emph{hedging} account (a \emph{netting} account is needed),
@@ -408,6 +498,29 @@ up again with the broker. The second, more important: whoever has access to
 that computer has access to the account. The application is meant to run on
 a personal machine, not on a server others can reach.
 \end{attenzione}
+
+\subsection{Symbol names on MetaTrader 5}\label{sez:mt5-symbols}
+
+Brokers name the same instrument in different ways: \cod{AAPL.US},
+\cod{\#AAPL}, \cod{EURUSD.r}, \cod{BTCUSD}. Lyra finds them by itself, with
+the broker's suffixes and prefixes, and at every start the journal says how
+many symbols of the runner it found and which it did not (\enquote{not found
+on this broker: \ldots}). A symbol that is not found gets its bars from the
+providers but cannot be traded.
+
+\noindent
+If the broker does have it, under a name Lyra does not recognise, press
+\pulsantesec{Symbols} on the MetaTrader~5 card and write one line per
+symbol, Lyra's name on the left and the broker's on the right:
+
+\begin{center}
+\cod{AAPL = Apple.US}\qquad\cod{BRK-B = BRK.B}
+\end{center}
+
+\noindent
+A wrong line is stopped when you save it. The names stay on this computer,
+like the credentials, and count from the next start of an MT5 runner; the
+button shows how many there are (\voce{Symbols · 2}).
 
 \section{Starting and stopping}\label{sez:start-stop}
 
