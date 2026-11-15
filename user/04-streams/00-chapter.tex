@@ -43,8 +43,8 @@ would fight over the same files and produce mixed-up results.
 Clicking on a stream opens its page.
 
 \figuraSchermata{1.0}{figure/schermate/stream.png}
-  {The page of a stream. At the top the robustness verdict, below it the
-   metrics, then the curve.}
+  {The page of a stream. Under its name the period and the benchmark; then
+   the robustness verdict, the metrics and the curve, with SPY next to it.}
   {stream}
 
 \subsection{Robustness: the panel to read first}
@@ -101,6 +101,39 @@ seen on the home screen (\vediCap{overview}):
   \item[\voce{Hit rate}] The percentage of periods in profit.
   \item[\voce{N obs}] How many observations. Few observations make
     everything else less reliable.
+\end{description}
+
+\subsection{The charts}\label{sez:stream-charts}
+
+Below the numbers, the charts. The first is the \voce{Equity Curve}: what
+one unit invested at the start would have become, day by day.
+
+\figuraSchermata{1.0}{figure/schermate/stream-equity.png}
+  {The equity curve of a stream. The dashed grey line is SPY over the same
+   period, starting from the same point.}
+  {stream-equity}
+
+\noindent
+The dashed grey line is \voce{SPY}, the fund that tracks the S\&P~500, over
+the same period and starting from 1 like the strategy: the comparison you
+would make anyway, already drawn. For a strategy tested with the
+walk-forward it is SPY over the very same test periods. It is also the
+benchmark behind \voce{Alpha vs SPY}, \voce{Beta vs SPY} and the
+correlation chart. The results of a project draw it in the same way
+(\vediSez{project-results}).
+
+\begin{description}[leftmargin = 1.4em, style = nextline, itemsep = 4pt]
+  \item[\voce{Drawdown (Underwater)}] How far below its previous peak the
+    strategy was, day by day. The deepest point is the \voce{Max DD}.
+  \item[\voce{Rolling Sharpe Ratio}] The Sharpe ratio over the last 90 and
+    252 days. A line that keeps falling is a strategy losing its edge.
+  \item[\voce{Rolling Correlation vs SPY}] How closely it moved with the
+    market, period by period.
+  \item[\voce{Yearly Returns}, \voce{Monthly Returns Heatmap}] The result
+    year by year and month by month.
+  \item[\voce{Stress Test Periods}] How it went in periods everyone
+    remembers: the end of 2018, the Covid crash, the rate shock and the bear
+    market of 2022, the recovery of 2023.
 \end{description}
 
 \subsection{Choosing the metrics}\label{sez:stream-metrics}

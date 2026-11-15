@@ -24,7 +24,7 @@ pagina nuova non deve aprire file.
 
 Gli stream si caricano all'avvio; due serie costose no.
 
-\begin{codiceInterno}{python}{Due eccezioni dichiarate}{dashboard/data\_layer.py:86}
+\begin{codiceInterno}{python}{Due eccezioni dichiarate}{dashboard/data\_layer.py:114}
         # Stress di mercato (iso_stress) e risk-off macro (macro_regime): caricati o
         # CALCOLATI ON-DEMAND e cacheati (lazy), solo quando l'overlay corrispondente e'
         # attivo -> vedi _get_market_stress / _get_macro_riskoff. Nessun calcolo a startup.
@@ -37,7 +37,7 @@ tutti, a beneficio di chi usa una funzione fra le sette.
 
 \subsection{Gli ensemble preconfigurati non esistono più}
 
-\begin{codiceInterno}{python}{La decisione, scritta nel codice}{dashboard/data\_layer.py:100}
+\begin{codiceInterno}{python}{La decisione, scritta nel codice}{dashboard/data\_layer.py:128}
         # Ensemble pre-configurati DISABILITATI: il sistema usa solo l'ensemble
         # custom (pagina /ensemble_custom), costruito a runtime dagli stream
         # selezionati. CORE/FULL rimossi su richiesta. Set vuoto => nessuna
@@ -50,6 +50,35 @@ Il metodo \cod{get\_ensemble(name)} esiste ancora e il suo docstring parla
 ancora di \cod{'core'} e \cod{'full'}: sono nomi che non si possono più
 ottenere. Chi cerca di capire perché la pagina \percorsoHTTP{/ensemble/core} dà
 \cod{404} lo trova qui.
+
+\subsection{SPY accanto a uno stream}\label{sez:spy-stream}
+
+Il grafico dell'equity di uno stream e quello di un ensemble hanno la stessa
+linea di confronto: SPY sullo stesso periodo, nel campo \cod{spy\_equity}
+del payload (\percorsoHTTP{/api/stream/<nome>}, \percorsoHTTP{/api/ensemble\_custom}).
+Per uno stream lo calcola \simbolo{\_spy\_equity\_periodo} all'avvio, con
+le altre serie:
+
+\begin{codiceInterno}{python}{Il benchmark dello stream, poi quello del registro}{dashboard/data\_layer.py:266}
+            spy_eq = _spy_equity_periodo(r.index, stream.benchmark_returns, spy)
+\end{codiceInterno}
+
+\noindent
+Le fonti sono in ordine di preferenza. Prima il benchmark scritto con i
+risultati dello stream: il walk-forward salva SPY sulle stesse finestre fuori
+campione della strategia (\cod{benchmark\_equity}), quindi le due linee
+partono e si fermano negli stessi giorni. Poi lo SPY del registro, lo stesso
+di alpha, beta e correlazione mobile, che copre i giorni che mancano al primo
+e serve da solo agli stream senza benchmark proprio (\cod{PNL\_DAILY},
+\cod{PNL\_SPARSE}). Si tengono solo i giorni di SPY dentro il periodo, in
+base 1.0.
+
+\begin{attenzione}{Fuori dalla copertura la linea non c'è}
+Un rendimento nullo nei giorni che SPY non copre disegnerebbe un tratto
+piatto, e un tratto piatto in un grafico si legge come un dato: «il mercato è
+stato fermo». \simbolo{\_spy\_equity\_periodo} non li inventa; la linea
+comincia dove comincia SPY.
+\end{attenzione}
 
 \subsection{Come uno stream entra nell'elenco}
 

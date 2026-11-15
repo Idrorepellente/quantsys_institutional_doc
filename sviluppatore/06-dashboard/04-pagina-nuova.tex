@@ -140,6 +140,42 @@ sue regole per qualche fotogramma. Era il lampeggio del marchio
 \end{attenzione}
 
 
+\subsection{Stream ed ensemble: un foglio in comune}\label{sez:fogli-risultati}
+
+La pagina di uno stream e quelle degli ensemble (il builder, i project, gli
+ensemble preconfigurati) mostrano le stesse cose: robustezza, indicatori,
+equity, drawdown, Sharpe mobile, rendimenti, stress. Hanno gli stessi
+componenti --- testate \cod{.group-head}, indicatori in
+\cod{section.kpi-grid}, riquadri \cod{.chart-section} e
+\cod{.table-section} con il titolo in \cod{<h3>} --- e il loro aspetto sta in
+un foglio solo, \file{v2-results.css}, caricato prima di quello della pagina:
+
+\begin{codiceInterno}{html}{Prima il foglio comune, poi il proprio}{dashboard/templates/ensemble\_custom.html}
+{% block page_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/robustness.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/v2-results.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/ensemble_custom.css') }}">
+{% endblock %}
+\end{codiceInterno}
+
+\noindent
+Il foglio della pagina tiene solo ciò che la pagina ha di suo: in
+\file{v2-stream.css} la scelta delle metriche e i riquadri come finestre, in
+\file{ensemble\_custom.css} la procedura guidata e il riepilogo. Negli
+ensemble i riquadri stanno in \cod{.rs-stack} (in colonna) e \cod{.rs-row}
+(due affiancati, alti uguali); la nota accanto a un titolo è
+\cod{.rs-aux}, come \cod{.sv-src} nello stream.
+
+\begin{perche}{Perché un foglio solo e non due fogli uguali}
+Prima ogni pagina aveva le sue regole per le stesse cose, e le due copie si
+erano allontanate: gli indicatori dell'ensemble in una striscia unita invece
+che in card, le testate con un rombo grigio, i riquadri con la barra del
+titolo. Due regole per la stessa cosa prima o poi divergono.
+\file{tests/prova\_risultati\_coerenti.py} controlla che le parti in comune
+abbiano lo stesso riquadro e lo stesso titolo nelle tre pagine, e che le loro
+regole non tornino nei fogli delle pagine.
+\end{perche}
+
 \subsection{Il modello da copiare}
 
 \file{ui\_ext\_e.py} è l'esempio migliore, per due ragioni che valgono per
