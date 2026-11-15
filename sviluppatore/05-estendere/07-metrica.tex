@@ -1,7 +1,7 @@
 % ===========================================================================
 %  sviluppatore/05-estendere/07-metrica.tex
 % ===========================================================================
-\section{Una metrica: i dati del sistema e la pagina dello stream}\label{sez:nuova-metrica}
+\section{Una metrica: i dati del sistema e le pagine dei risultati}\label{sez:nuova-metrica}
 
 Una metrica è il più piccolo degli artefatti: un file \file{metrics/<nome>.py}
 con un \cod{META} di soli letterali e, sotto, codice vettoriale sull'equity
@@ -120,14 +120,19 @@ punti tengono \cod{closest}: lì la label giusta è quella del punto sotto il
 puntatore.
 \end{perche}
 
-\subsection{La pagina di uno stream}
+\subsection{Le pagine dei risultati: stream ed ensemble}\label{sez:vista-metriche}
 
-Ogni metrica della pagina, predefinita o personale, numerica o grafica, si
-nasconde e si rimette. Le predefinite sono gli elementi con \cod{data-sv} in
-\file{templates/stream.html}; le personali le dispone
-\file{static/js/stream\_metrics.js}: i numeri dopo quelli predefiniti, i
-grafici in fondo alla pagina, dopo grafici e tabelle predefiniti, con
-\voce{New chart metric} per ultima.
+Sulla pagina di uno stream e su quelle degli ensemble (builder, project,
+preconfigurati) ogni metrica, predefinita o personale, numerica o grafica,
+si nasconde e si rimette. Lo fa un solo modulo,
+\file{static/js/metrics\_view.js}, con una \emph{vista} per tipo di pagina:
+\cod{stream} ed \cod{ensemble}, ognuna con la sua scelta e la sua
+disposizione, perché negli ensemble ci sono riquadri che negli stream non
+esistono. Le predefinite sono gli elementi con \cod{data-sv} in
+\file{templates/stream.html} e in \file{templates/\_ensemble\_results.html};
+le personali le dispone il modulo: i numeri dopo quelli predefiniti, i
+grafici in fondo, dopo grafici e tabelle predefiniti, con \voce{New chart
+metric} per ultima.
 
 \begin{center}
 \begin{tabular}{@{}L{44mm}L{94mm}@{}}
@@ -135,24 +140,37 @@ grafici in fondo alla pagina, dopo grafici e tabelle predefiniti, con
 \textbf{Pezzo} & \textbf{Che cosa fa} \\
 \midrule
 \rigaTenue
-\cod{/api/stream-view/prefs} & la scelta, una per tutti gli stream:
-  \cod{shown} (le chiavi accese) e \cod{known} (quelle esistenti quando la
-  scelta è stata fatta). \cod{shown: null} = predefinite più personali
-  attive \\
-\cod{sv\_off(chiave)} & nel template: le predefinite nascoste partono
-  nascoste, senza comparire per un istante \\
+\cod{/api/<vista>-view/prefs} & la scelta, una per tutte le pagine della
+  vista (\cod{stream}, \cod{ensemble}): \cod{shown} (le chiavi accese) e
+  \cod{known} (quelle esistenti quando la scelta è stata fatta).
+  \cod{shown: null} = predefinite più personali attive \\
+\cod{vista\_metriche(vista)} & in \file{app.py}, anche funzione dei
+  template: \cod{off(chiave)} fa partire nascoste le predefinite nascoste,
+  senza comparire per un istante; \cod{data} va in \cod{\#sv-data} \\
 \rigaTenue
-\cod{/api/metrics/compute} & con \cod{stream}, \cod{ids} e
-  \cod{include\_inactive}: calcola solo le personali accese, sui risultati
-  dello stream e con il suo benchmark \\
+\cod{/api/metrics/compute} & con \cod{ids} e \cod{include\_inactive}:
+  calcola solo le personali accese. Per uno stream basta \cod{stream}
+  (risultati e benchmark li ha il server); per un ensemble arrivano
+  \cod{equity}, \cod{bench\_equity} e \cod{streams} del calcolo appena
+  fatto (\cod{MetricsView.risultato}) \\
 \cod{/studio?tab=metric} & con \cod{output=number} o \cod{output=chart}
   (\voce{New number metric}, \voce{New chart metric}): l'uscita scelta, un
-  nome libero e, con \cod{from=}, il ritorno allo stream; con
+  nome libero e, con \cod{from=}, il ritorno: il nome dello stream,
+  \cod{project:<id>}, \cod{ensemble:<nome>} o \cod{builder:ensemble}; con
   \cod{metric=<id>} riapre una metrica. \voce{Save} valida e salva in un
   colpo solo \\
 \bottomrule
 \end{tabular}
 \end{center}
+
+\begin{attenzione}{Negli ensemble i risultati cambiano sotto la pagina}
+Uno stream ha un risultato solo; un ensemble ne ha uno a ogni calcolo
+(\voce{Edit configuration}, poi di nuovo il calcolo). A ogni calcolo
+\cod{risultato()} rimette in attesa le personali accese e le ricalcola; un
+contatore (\cod{GEN}) scarta la risposta di un calcolo precedente arrivata
+dopo quella nuova, che altrimenti disegnerebbe numeri di un'altra
+combinazione.
+\end{attenzione}
 
 \begin{perche}{Perché \cod{known} oltre a \cod{shown}}
 Una metrica creata dopo la scelta --- per esempio con \voce{New chart
@@ -167,7 +185,7 @@ Grafici e tabelle, predefiniti e personali, stanno in \cod{\#sv-grid}: righe
 di al massimo tre riquadri visibili, che l'utente sposta dalla testata,
 allunga dal bordo basso, allarga col divisore fra due riquadri e massimizza
 col doppio clic sulla testata. La disposizione sta nello stesso file della
-scelta, sotto \cod{layout}, una per tutti gli stream:
+scelta, sotto \cod{layout}, una per tutte le pagine della vista:
 
 \begin{codiceInterno}{json}{La disposizione salvata}{}
 "layout": [ {"h": 420, "items": ["chart.equity", "metric:capm#0"],
@@ -195,9 +213,11 @@ scelta, sotto \cod{layout}, una per tutti gli stream:
 \end{center}
 
 \noindent
-\cod{POST /api/stream-view/prefs} aggiorna solo ciò che riceve: \cod{\{shown,
-known\}} la scelta, \cod{\{layout\}} la disposizione (\cod{null} =
-\voce{Reset layout}). Il server (\cod{\_clean\_layout} in
+\cod{POST /api/<vista>-view/prefs} aggiorna solo ciò che riceve:
+\cod{\{shown, known\}} la scelta, \cod{\{layout\}} la disposizione
+(\cod{null} = \voce{Reset layout}, la disposizione predefinita: l'ordine
+della pagina, un riquadro per riga, salvo i vicini con lo stesso
+\cod{data-sv-row}, che stanno affiancati). Il server (\cod{\_clean\_layout} in
 \file{app.py}) controlla solo la forma; il resto lo fa la pagina, che sa
 quali riquadri si vedono.
 

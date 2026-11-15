@@ -127,7 +127,8 @@ is the same page that opens when you choose a saved project.
 
 \figuraSchermata{1.0}{figure/schermate/project-results.png}
   {The results of a project. At the top the configuration that produced
-   them, then the same parts as the page of a stream.}
+   them, then the same parts as the page of a stream, with
+   \pulsantesec{Choose metrics}.}
   {project-results}
 
 \begin{itemize}
@@ -135,18 +136,36 @@ is the same page that opens when you choose a saved project.
     overlays, the costs and the \voce{Period}: the days the strategies have
     in common, on which every number below is computed.
     \pulsante{Edit configuration} takes you back to the four steps.
-  \item \textbf{Metrics} and \textbf{Performance} --- the robustness panel,
-    the numbers and the charts of the page of a stream
-    (\vediSez{stream-detail}), with the same look and the same names: what
-    you learn to read there, you read here. The equity curve has SPY too.
-  \item \textbf{Diversification} --- how much each strategy contributed,
-    how they move together, and the weights. The highest correlation between
-    two of them over the last 90 days is the one to watch: above 0.8 they are
-    making the same bet.
-  \item \textbf{Attribution \& Risk} --- which strategies are behind the
-    current drawdown, the factor breakdown of the alpha, the stress periods
-    and the table of the strategies.
+  \item \textbf{Metrics} --- the robustness panel, the numbers, the charts
+    and the tables of the page of a stream (\vediSez{stream-detail}), with
+    the same look and the same names: what you learn to read there, you read
+    here. The equity curve has SPY too.
+  \item \textbf{What only a combination has} --- how much each strategy
+    contributed, how they move together, the weights, which strategies are
+    behind the current drawdown, the factor breakdown of the alpha, the table
+    of the strategies. The highest correlation between two of them over the
+    last 90 days is the one to watch: above 0.8 they are making the same bet.
 \end{itemize}
+
+\noindent
+You choose and arrange them as on the page of a stream
+(\vediSez{stream-metrics}, \vediSez{stream-layout}): the eye on a metric
+hides it, \pulsantesec{Choose metrics} lists them all, and charts and tables
+move and resize like windows. The choice and the arrangement hold for every
+project and for the Ensemble builder. They are separate from those of the
+streams, because here there are panels a stream does not have. By default
+the charts that go together sit side by side: drawdown and rolling Sharpe,
+yearly and monthly returns, contributions and correlations, the two
+attributions. \pulsantesec{Reset layout} brings that back.
+
+\begin{pratica}{A metric of yours on a project}
+Your metrics appear here too, computed on the results of the combination
+and again every time you change it. \pulsantesec{New number metric} and
+\pulsantesec{New chart metric}, after the numbers and at the bottom of the
+page, open Studio. Its link back takes you to the project, which is computed
+again, or to the Ensemble builder with the same configuration, computed
+again.
+\end{pratica}
 
 \section{Saving}\label{sez:projects-save}
 

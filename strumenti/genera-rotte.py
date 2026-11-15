@@ -61,8 +61,9 @@ def esc(t: str) -> str:
 
 def spezzabile(t: str) -> str:
     """Un percorso lungo deve poter andare a capo: senza, la colonna straborda
-    e LaTeX lo segnala come overfull hbox invece di spezzarlo."""
-    return esc(t).replace("/", r"/\allowbreak ")
+    e LaTeX lo segnala come overfull hbox invece di spezzarlo. Si spezza dopo
+    le barre e dopo i trattini bassi (source_template, i nomi delle funzioni)."""
+    return esc(t).replace("/", r"/\allowbreak ").replace(r"\_", r"\_\allowbreak{}")
 
 
 def raccogli(radice: pathlib.Path) -> list[dict]:
@@ -147,7 +148,7 @@ def main() -> int:
             riga = (r"\rigaTenue " if i % 2 else "")
             out.append(f"{riga}{{\\scriptsize\\sffamily {met}}} & "
                        f"{{\\ttfamily\\scriptsize {spezzabile(percorso)}}} & "
-                       f"{{\\ttfamily\\scriptsize {esc(fn)}}} \\\\")
+                       f"{{\\ttfamily\\scriptsize {spezzabile(fn)}}} \\\\")
             totale += 1
         out.append(r"\bottomrule")
         out.append(r"\end{longtable}")

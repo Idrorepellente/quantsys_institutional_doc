@@ -159,12 +159,15 @@ un foglio solo, \file{v2-results.css}, caricato prima di quello della pagina:
 \end{codiceInterno}
 
 \noindent
-Il foglio della pagina tiene solo ciò che la pagina ha di suo: in
-\file{v2-stream.css} la scelta delle metriche e i riquadri come finestre, in
-\file{ensemble\_custom.css} la procedura guidata e il riepilogo. Negli
-ensemble i riquadri stanno in \cod{.rs-stack} (in colonna) e \cod{.rs-row}
-(due affiancati, alti uguali); la nota accanto a un titolo è
-\cod{.rs-aux}, come \cod{.sv-src} nello stream.
+Le pagine hanno anche la stessa vista delle metriche, un solo modulo
+(\file{metrics\_view.js}, \vediSez{vista-metriche}): scelta delle
+metriche e riquadri come finestre, con le loro regole (\cod{sv-*}) in
+\file{v2-results.css}. Il foglio della pagina tiene solo ciò che la pagina
+ha di suo: in \file{v2-stream.css} l'intestazione dello stream, in
+\file{ensemble\_custom.css} la procedura guidata e il riepilogo. Le parti dei
+risultati degli ensemble stanno in \file{\_ensemble\_results.html}, incluso
+dalle due pagine; la nota accanto a un titolo è \cod{.rs-aux}, come
+\cod{.sv-src} per le metriche personali.
 
 \begin{perche}{Perché un foglio solo e non due fogli uguali}
 Prima ogni pagina aveva le sue regole per le stesse cose, e le due copie si
