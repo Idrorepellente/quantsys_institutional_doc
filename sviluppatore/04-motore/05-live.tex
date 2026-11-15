@@ -633,6 +633,100 @@ Spento, l'ambito scrive in una cartella temporanea
 rimaste da una chiusura improvvisa all'avvio dopo; ciò che \file{data/live}
 aveva resta leggibile. Vale dal prossimo avvio di un runner.
 
+\paragraph{La pulizia della cartella temporanea} (\file{data/vivo\_pulizia.py}).
+L'app può restare aperta per mesi con i runner accesi: senza pulizia la
+cartella temporanea crescerebbe senza fine (le barre del broker a ogni barra,
+le notizie di ogni giorno), e con lei il tempo per aggiungere una barra,
+perché \simbolo{estendi} riscrive il file intero. Con il salvataggio spento
+\cod{pulizia} in \file{data/.dati\_live.json} sceglie quando togliere ciò che
+i runner non usano più: \cod{subito} (ogni minuto, e alla fermata di un
+runner), \cod{1h} (il default), \cod{6h}, \cod{1g}, \cod{7g}, \cod{chiusura}
+(come prima). Vale subito, anche per i runner già accesi.
+
+Che cosa serve ancora lo sanno solo i runner, e lo dichiarano. Chi apre
+l'ambito con un nome --- \cod{vivo.crea\_ambito(base, chi=nome)} nei runner
+della dashboard, \cod{vivo.ambito(BASE, chi="terminal")} in
+\file{scripts/run\_live.py} --- si registra con un \simbolo{vivo.Uso} e lo chiude
+alla fermata (\simbolo{vivo.chiudi\_uso}; \simbolo{vivo.ambito} lo fa da sé
+all'uscita). L'uso raccoglie:
+
+\begin{description}[leftmargin = 1.4em, style = nextline, itemsep = 4pt]
+  \item[I file letti e scritti] ogni lettura unita (\simbolo{vivo.percorsi},
+    quindi anche \cod{pandas.read\_*} nel codice di una strategia) e ogni
+    scrittura (\simbolo{estendi}, \simbolo{vivo.destinazione}, le scritture
+    dirette intercettate) annota il file della cartella che tocca.
+  \item[Le cartelle del piano] \simbolo{ManutenzioneDati} dichiara le
+    categorie e le cartelle delle porte che il runner tiene aggiornate
+    (\simbolo{vivo.dichiara\_dati}), anche prima di averle lette.
+  \item[I contesti] \simbolo{ContestoLive} si dichiara da sé
+    (\simbolo{vivo.dichiara\_contesto}); \simbolo{finestre} dice, per ogni file
+    della sua cache, quante barre tenere.
+\end{description}
+
+\noindent
+Un ambito senza nome (la verifica dell'unione, uno script) non si registra.
+Una pulizia (\simbolo{pulisci}) fa, in quest'ordine:
+
+\begin{enumerate}[leftmargin = 1.4em, itemsep = 3pt]
+  \item \textbf{le barre del contesto} di una serie che un runner acceso
+    chiede: restano le ultime $\lceil 1{,}5 \times \max(\text{barre},
+    \text{massimo})\rceil + 100$ (\simbolo{barre\_da\_tenere}), da tutte le
+    richieste dei runner accesi, e \num{0} (chi vuole tutta la storia: regime,
+    stress) le tiene tutte. Il contesto ne usa al più
+    $1{,}1 \times \text{barre} + 8$, la serie cucita che tiene in memoria;
+    con il margine non le chiede mai di nuovo al broker. Si taglia oltre il
+    10\% in più (almeno \num{50} barre), con \simbolo{tentativo\_blocco}: se il
+    contesto sta scrivendo, la volta dopo. Dopo un taglio
+    \simbolo{ContestoLive.potate} dimentica che il broker «non aveva altro»;
+  \item \textbf{gli altri file che un runner acceso usa} restano interi. Se ne
+    tolgono solo le righe che il deposito (\file{data/} o \file{data/live})
+    ha anche lui, quando è cambiato dopo la nascita della cartella: serie
+    per data, tabelle di eventi per la chiave della fonte. L'unione che il
+    runner legge non cambia;
+  \item \textbf{ciò che nessun runner acceso usa} va via quando l'ultimo runner
+    che lo usava si è fermato da più del periodo (con \cod{subito}, appena).
+    Con i file di una categoria va la sua voce in
+    \mbox{\file{.aggiornamenti.json}} della cartella, e quella delle porte che la riempiono: il prossimo runner
+    la riscarica subito invece di aspettare la cadenza. Con le barre di un
+    asset va la sua provenienza nel \file{\_meta.json} della cartella. Una
+    categoria che si sta aggiornando in sottofondo aspetta il giro dopo;
+  \item \textbf{nessun runner acceso} da più del periodo: la cartella si
+    svuota.
+\end{enumerate}
+
+\noindent
+Il filo della pulizia (\simbolo{vivo\_pulizia.avvia}, uno per processo e
+cartella di lavoro) parte con la cartella temporanea e guarda ogni minuto se
+è ora; con \cod{subito} lo sveglia anche \simbolo{chiudi\_uso}. Ogni pulizia
+che toglie qualcosa lo scrive nel registro dei runner accesi
+(\cod{Uso.log}); \simbolo{stato} dà alla pagina Data quanto occupa la
+cartella, chi la usa, l'ultima pulizia e la prossima. Rotte: \cod{temporanea}
+in \cod{/api/data/live} e \cod{/job}, \cod{pulizia} in \cod{/settings},
+\cod{POST /api/data/live/temp/clean} («Clean now», senza attesa).
+
+\begin{attenzione}{Un componente che chiede sempre più barre dichiara il massimo}
+La pulizia tiene una volta e mezza ciò che una richiesta dichiara. Uno stream
+chiede più barre man mano che la sua ancora invecchia, fino a
+\simbolo{barre\_massime} ($\text{lookback} + 4 \times \text{replay} + 25$, poi
+l'ancora avanza): lo dichiara in \cod{Richiesta(simbolo, tf, barre, chi,
+massimo)}. Un componente nuovo con un bisogno che cresce fa lo stesso. Se non
+lo fa, il risultato resta giusto: il contesto richiede al broker la storia
+tolta, ma la scarica di nuovo.
+\end{attenzione}
+
+\begin{perche}{Perché non si tolgono le righe vecchie dei file che un runner usa}
+«Usato» non vuol dire «letto una volta». Dal vivo una strategia prepara i suoi
+dati dalla data d'inizio del backtest a ogni nuovo giorno
+(\simbolo{config\_live}), e \cod{news\_pressure} confronta il volume di
+notizie di oggi con una media espandente di tutta la storia: tagliare le
+righe vecchie della cartella aprirebbe un buco fra la fine del deposito e ciò
+che resta, e cambierebbe le decisioni. Le barre del contesto sono l'eccezione
+perché il loro uso ha una finestra dichiarata.
+\file{tests/prova\_pulizia\_live.py} lo verifica su un motore a stream vero:
+con la pulizia a ogni ciclo dà gli stessi ordini, le stesse posizioni e lo
+stesso capitale che senza.
+\end{perche}
+
 \paragraph{L'unione} (\file{data/vivo\_unione.py}). \simbolo{verifica} fa un
 piano, una voce per file del live, e prepara le righe in
 \file{data/live/\_verifica/<id>/}:
@@ -672,7 +766,8 @@ runner dopo la verifica restano. La provenienza dell'asset ricorda l'unione
 accettati), lo stato della categoria la segna come novità
 (\simbolo{fonti.segna\_novita}: chi ne dipende rilegge). Verifica e unione
 girano in sottofondo; la pagina le segue (\cod{/api/data/live},
-\cod{/job}, \cod{/check}, \cod{/merge}, \cod{/delete}, \cod{/settings}).
+\cod{/job}, \cod{/check}, \cod{/merge}, \cod{/delete}, \cod{/settings};
+\cod{/temp/clean} è la pulizia della cartella temporanea, sopra).
 
 \begin{perche}{Perché un'unione con la verifica, e non il live direttamente nel deposito}
 Il deposito è ciò su cui si misurano le strategie: un buco di tre sedute

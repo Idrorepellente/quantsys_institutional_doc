@@ -138,15 +138,50 @@ one running at the same moment.
 \begin{description}[leftmargin = 1.4em, style = nextline, itemsep = 4pt]
   \item[\voce{Keep the data the live downloads}] On, the data stays in
     \file{data/live} and the runner starts again from there the next time.
-    Off, the runner works exactly the same, but what it downloads stays in a
+    Off, the runner works exactly the same, but what it downloads goes to a
     temporary folder that is deleted when the application closes: nothing to
-    merge. A change applies from the next start of a runner; the page says
-    which runners are on.
+    merge. While the application stays open, what the runners no longer need
+    is deleted from it at the cadence you choose (below). A change applies
+    from the next start of a runner; the page says which runners are on.
   \item[The summary] One line per area --- category rows, instrument bars,
     regime drivers, computed series, the context cache --- with files, rows
     and period; below, the last merge and the runner sessions that wrote.
   \item[\pulsante{Delete live data}] Removes \file{data/live}. A runner that
     is on downloads again what it needs, from where \file{data/} ends.
+\end{description}
+
+\paragraph{With saving off: what the runners no longer need.}
+A runner can stay on for months, and so can the temporary folder. With saving
+off, \voce{Delete what the runners no longer need} chooses when it is cleaned:
+\voce{As soon as it is no longer needed} (checked every minute, and as soon as
+a runner stops), \voce{Every hour} (the default), \voce{Every 6 hours},
+\voce{Every day}, \voce{Every week}, or \voce{Only when the app closes}, as
+before --- the folder then grows as long as the application stays open. The
+choice applies at once, also to the runners already on.
+
+\figuraSchermata{1.0}{figure/schermate/data-live-cleanup.png}
+  {Saving off, cleanup once an hour. One runner is on; the one stopped three
+   hours ago had left six files. \pulsante{Clean now} removed them, together
+   with the bars the strategies can no longer ask for.}
+  {data-live-cleanup}
+
+\begin{description}[leftmargin = 1.4em, style = nextline, itemsep = 4pt]
+  \item[What goes] The bars older than what the strategies can still ask
+    for: every component declares how many bars it needs, and the most it
+    may need, and one and a half times that stays. The data of the runners
+    stopped for longer than the interval, unless a runner that is on uses it
+    too: a quick restart finds its data, and a category that went is
+    downloaded again as soon as a runner needs it. The rows \file{data/} has
+    as well, after an \pulsante{Update now}. With no runner on for longer
+    than the interval, the whole folder.
+  \item[What stays] Everything a runner that is on reads, whole. Its
+    strategies prepare their data from the start date of the backtest, and an
+    overlay like news pressure compares today's news with all of its history:
+    deleting old rows would change their decisions, not only the space.
+  \item[The line below] How much the folder holds, which runners use it, the
+    last cleanup and the next. \pulsante{Clean now} cleans at once, without
+    waiting for the interval. A cleanup that deletes something says so in the
+    log of the runners that are on.
 \end{description}
 
 \paragraph{Merging into the data of the backtests.}
