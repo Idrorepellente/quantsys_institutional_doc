@@ -3,8 +3,8 @@
 % ===========================================================================
 \section{Come sono scritte le prove}\label{sez:prove}
 
-Non c'è un \pkg{pytest} con mille asserzioni minute. Ci sono cinque suite,
-ciascuna dedicata a un \emph{contratto} del sistema, che si lanciano come
+Non c'è un \pkg{pytest} con mille asserzioni minute. Ci sono suite
+dedicate ciascuna a un \emph{contratto} del sistema, che si lanciano come
 script e stampano un resoconto leggibile. La scelta ha una conseguenza utile:
 ogni suite si apre con un docstring che dice quale problema sorveglia, e
 quello è il posto giusto dove cercare prima di modificare l'area che copre.
@@ -18,8 +18,9 @@ quello è il posto giusto dove cercare prima di modificare l'area che copre.
 \file{prova\_normalizzazione\_stream.py} & \num{691}
   & Backtest e live devono produrre lo \emph{stesso libro}
     (\vediSez{live}). \\
-\file{prova\_beta\_accesso.py} & \num{614}
-  & L'accesso riservato in beta, \textbf{contro il sito vero}. \\
+\file{prova\_beta\_accesso.py} & \num{617}
+  & La beta: account creati dal sistema, prima password, iscrizioni chiuse,
+    limite e lista d'attesa, \textbf{contro il sito vero}. \\
 \rigaTenue
 \file{prova\_covarianza.py} & \num{489}
   & Lo shrinkage di Ledoit--Wolf e la modalità \cod{covariance}. \\
@@ -27,8 +28,15 @@ quello è il posto giusto dove cercare prima di modificare l'area che copre.
   & Il contratto di \cod{Signal.target\_weight} e la modalità
     \cod{explicit}. \\
 \rigaTenue
-\file{prova\_permessi\_marketplace.py} & \num{429}
+\file{prova\_permessi\_marketplace.py} & \num{477}
   & I due strati del permesso di pubblicare, \textbf{contro il sito vero}. \\
+\file{prova\_esportazione.py} & \num{505}
+  & L'esportazione in Excel e CSV: valori, formati, grafici, immagini,
+    ordine dei fogli (\vediSez{esportazione}). \\
+\rigaTenue
+\file{prova\_dati\_ausiliari.py} & \num{278}
+  & Le categorie di dati che un artefatto legge, e come il marketplace le
+    mostra (\vediSez{dati-ausiliari}). \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -49,12 +57,12 @@ Tre, e tutte e tre sono state imparate rompendole.
 \begin{description}[leftmargin = 1.6em, style = nextline, itemsep = 6pt]
 
 \item[Ripetibile]
-  Una suite che modifica lo stato (prezzi dei piani, elenchi di ammessi) deve
-  azzerarlo all'inizio, non alla fine: se una esecuzione si interrompe a metà,
-  la pulizia finale non viene eseguita e la successiva parte da uno stato
-  sporco. \file{prova\_permessi\_marketplace.py} comincia con una
-  reimpostazione in SQL; \file{prova\_beta\_accesso.py} ha una funzione
-  \simbolo{azzera\_prova()} e un elenco fisso di indirizzi.
+  Una suite che modifica lo stato (il lucchetto del marketplace, elenchi di
+  ammessi) deve fissarlo all'inizio, non alla fine: se una esecuzione si
+  interrompe a metà, la pulizia finale non viene eseguita e la successiva
+  parte da uno stato sporco. \file{prova\_permessi\_marketplace.py} imposta
+  il lucchetto in SQL all'inizio di ogni sezione; \file{prova\_beta\_accesso.py}
+  ha una funzione \simbolo{azzera\_prova()} e un elenco fisso di indirizzi.
 
 \item[Senza soglie indovinate]
   Un'asserzione come \cod{assert scala < 1.3} è una soglia inventata: passa o

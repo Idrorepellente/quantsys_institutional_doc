@@ -222,6 +222,45 @@ yours appears at the bottom, just above \pulsantesec{New chart metric}, and
 you move it where you want. In a narrow window the panels go one below the
 other.
 
+\subsection{Exporting to Excel or CSV}\label{sez:stream-export}
+
+\pulsantesec{Export}, next to \pulsantesec{Choose metrics}, puts the data and
+the charts of the page in a file. The numbers are the ones on the page, not a
+new calculation.
+
+\figuraSchermata{1.0}{figure/schermate/export.png}
+  {\pulsantesec{Export}. Each choice says what it does; the ones that do not
+   apply to the chosen file disappear.}
+  {stream-export}
+
+\begin{itemize}
+  \item \textbf{File} --- an Excel workbook (\voce{.xlsx}), or CSV files in a
+    \voce{.zip}, one per section.
+  \item \textbf{Charts} --- \voce{Excel charts}, built on the data in the
+    file, that you can change in Excel; \voce{Pictures} of the charts as they
+    look on the page; \voce{Both}, side by side; or \voce{None}. The heatmaps
+    (monthly returns, correlations) become tables coloured like the page,
+    because Excel has no heatmap chart. With CSV the pictures are PNG files
+    next to the data.
+  \item \textbf{Layout} --- \voce{One sheet per section}, with a
+    \voce{Summary} sheet first (the details, the metrics, the robustness panel,
+    your numbers and a link to every sheet); or \voce{Everything on one sheet},
+    a single report with the metrics and the charts on the left and the long
+    series on the right.
+  \item \textbf{Separator} (CSV) --- \voce{;} with the decimal comma, the way
+    Excel in Italian opens it, or \voce{,} with the decimal point.
+  \item \textbf{Content} --- \voce{What the page shows}, or
+    \voce{Everything}: also what you hid with \pulsantesec{Choose metrics}.
+    Your hidden metrics are computed for the file.
+\end{itemize}
+
+\noindent
+In Excel the percentages are real percentages (\num{12.3}\% is the number
+\num{0.123} with the percentage format) and the dates are dates: you can
+compute with them. In the CSV files they are in points, with \voce{(\%)} in
+the column name. The sheets follow the order of the panels on the page, and
+the choices stay for the next time.
+
 \subsection{The three buttons at the top}
 
 \begin{itemize}

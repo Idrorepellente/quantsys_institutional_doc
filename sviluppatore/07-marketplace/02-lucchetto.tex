@@ -94,20 +94,41 @@ L'ordine dei livelli è l'ordine dei piani: l'interfaccia lo usa per dire
 «Upgrade» o «Downgrade». Pro, Professional e Quant si provano per due mesi,
 una volta per account; Desk non ha checkout, e la sua scheda apre una
 richiesta di demo che arriva al team come una richiesta di assistenza.
+Finché le demo per le aziende non aprono, però, il bottone resta spento e
+dice «Coming soon»: lo decide la costante \cod{DEMO\_APERTA} in
+\file{dashboard/static/js/v2-subscription.js}, oggi \cod{false}. Il modulo
+della richiesta resta nel file, pronto; per aprire le demo la costante
+diventa \cod{true} insieme ai tre bottoni del Desk sul sito (la scheda, la
+tabella della pagina Prezzi e il riquadro nei dettagli del piano, in
+\file{capital.html}), che oggi sono spenti allo stesso modo.
 
-\begin{nota}{Il catalogo sta nel database, non nel codice}
-Nomi, prezzi, frasi e voci delle schede stanno nella tabella
-\cod{SubscriptionPlan} del sito; il catalogo lo scrive
-\file{marketplace\_abbonamenti.sql}, una volta sola (un segno in
-\cod{AppSetting} impedisce che una seconda esecuzione riscriva i prezzi
-cambiati poi dal pannello). La colonna \cod{features} tiene due specie di
-chiavi: i \emph{fatti} del piano --- privacy, sconto, sandbox, storico,
-real-time, quota, postazioni --- da cui l'app costruisce la tabella di
-confronto, e le chiavi di \emph{presentazione} --- voci della scheda,
-etichetta, mesi di prova, solo annuale, solo a contratto, prezzo «da» ---
-che il sito toglie da \cod{features} e passa come campi del piano. Il motivo
-è l'app già installata: non conosce quelle chiavi, e trovandole dentro
-\cod{features} le scriverebbe come funzionalità.
+\begin{nota}{Un solo catalogo, nel progetto del sito}
+Nomi, prezzi, frasi e voci delle schede si decidono in
+\mbox{\file{src/lib/catalogo.ts}}, un solo file del sito. La pagina Prezzi
+prende i numeri da lì durante la build: in \file{capital.html} i prezzi sono
+segnaposto, e \mbox{\file{src/content/prezzi.ts}} li riempie controllando che
+le frasi che ne dipendono restino vere («10 mesi su 12», «tre volte il Pro»,
+gli sconti, le quote); se un prezzo nuovo ne smentisce una, la build si
+ferma. La tabella \cod{SubscriptionPlan} --- quella che l'app, il checkout e
+il webhook leggono --- la scrive il sito da solo
+(\mbox{\file{src/lib/allineaCatalogo.ts}}): alla prima lettura dei piani dopo
+una pubblicazione la confronta con il catalogo e, se differisce, in una
+transazione sotto un lucchetto di Postgres completa lo schema, sposta Desk
+dal livello 3 al 4 se trova il catalogo vecchio, scrive i piani e annota in
+\cod{AppSetting} l'impronta del catalogo. Prima la tabella la scriveva
+\file{marketplace\_abbonamenti.sql}, da eseguire a mano, e i prezzi si
+ritoccavano anche dal pannello: bastava una delle due cose perché l'app
+mostrasse piani diversi dal sito. Ora il pannello li mostra in sola lettura,
+con lo stato dell'allineamento.
+
+La colonna \cod{features} tiene due specie di chiavi: i \emph{fatti} del
+piano --- privacy, sconto, sandbox, storico, real-time, quota, postazioni ---
+da cui l'app costruisce la tabella di confronto, e le chiavi di
+\emph{presentazione} --- voci della scheda, etichetta, mesi di prova, solo
+annuale, solo a contratto, prezzo «da» --- che il sito toglie da
+\cod{features} e passa come campi del piano. Il motivo è l'app già
+installata: non conosce quelle chiavi, e trovandole dentro \cod{features} le
+scriverebbe come funzionalità.
 \end{nota}
 
 \subsection{Gli amministratori}

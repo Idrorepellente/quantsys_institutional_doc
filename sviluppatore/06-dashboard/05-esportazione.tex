@@ -1,0 +1,63 @@
+% ===========================================================================
+%  sviluppatore/06-dashboard/05-esportazione.tex
+% ===========================================================================
+\section{Esportare i risultati}\label{sez:esportazione}
+
+\pulsantesec{Export}, nella barra delle metriche di stream ed ensemble,
+scrive in un file \textbf{i dati che la pagina ha disegnato}. Non c'è un
+secondo calcolo: sarebbe una seconda versione dei numeri, e prima o poi
+diversa.
+
+\subsection{Chi raccoglie e chi scrive}
+
+\begin{center}
+\begin{tabular}{@{}L{46mm}L{98mm}@{}}
+\toprule
+\textbf{Pezzo} & \textbf{Che cosa fa} \\
+\midrule
+\rigaTenue
+\file{static/js/dashboard.js} & Conserva il payload delle API in
+  \cod{window.\_\_RISULTATI} ed emette \cod{lyra:risultati}. \\
+\file{static/js/metrics\_view.js} & \simbolo{MetricsView.esporta()}: chiavi
+  visibili, ordine dei riquadri, metriche personali con i risultati;
+  \simbolo{MetricsView.calcola(ids)}: le nascoste, con la stessa richiesta. \\
+\rigaTenue
+\file{static/js/esporta\_risultati.js} & La finestra delle scelte, le
+  immagini (\cod{Plotly.toImage}; le metriche mai disegnate si disegnano fuori
+  dallo schermo), la richiesta, lo scaricamento. \\
+\file{ui\_ext\_esporta.py} & \rotta{POST}{/api/export/results}: il file, con il
+  nome in \cod{Content-Disposition} e in \cod{X-Export-Filename}. \\
+\rigaTenue
+\file{esporta\_risultati.py} & Dal payload alle \emph{sezioni} (colonne con
+  il loro formato, il grafico che le descrive, l'immagine), poi XlsxWriter o
+  \pkg{csv}. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Le regole del file}
+
+\begin{itemize}
+  \item Le percentuali delle API arrivano in punti (\num{12.3}); in Excel si
+    scrivono come frazioni con il formato percentuale, nei CSV restano in punti
+    con \cod{(\%)} nell'intestazione.
+  \item Serie con date diverse si allineano per data: un grafico a linee di
+    Excel usa le categorie della prima serie per tutte.
+  \item Le heatmap diventano tabelle con la scala a tre colori; i pesi, le
+    barre nei dati. Le figure con l'asse x numerico, grafici a dispersione.
+  \item Nel foglio unico il rapporto è largo quanto la tabella più larga che
+    contiene: nessuna sua cella finisce dove stanno le serie lunghe.
+\end{itemize}
+
+\begin{pratica}{Aggiungere un riquadro esportabile}
+Un riquadro nuovo con \cod{data-sv} si esporta se \simbolo{Costruttore} sa
+farne una sezione: un metodo che legge il suo campo del payload e restituisce
+una \simbolo{Sezione}, aggiunto all'elenco di \simbolo{Costruttore.sezioni}.
+Se ha un grafico Plotly, l'immagine la prende da sé il client.
+\end{pratica}
+
+\noindent
+La libreria (\pkg{XlsxWriter}) è in \file{requirements.txt} e fra gli
+import impliciti di \file{build/lyra-backend.spec}, che ora dichiara anche i
+moduli \file{ui\_ext\_*.py}: \file{app.py} li carica per nome e PyInstaller da
+solo non li vedrebbe. La prova è \file{tests/prova\_esportazione.py}.

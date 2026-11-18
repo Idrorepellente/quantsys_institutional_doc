@@ -60,6 +60,40 @@ application says so \emph{before} writing. It is worth reading: an
 installation that overwrites a strategy you were working on is lost work.
 \end{nota}
 
+\subsection{The data an artifact needs}\label{sez:aux-data}
+
+Many strategies read only prices. Others also read \textbf{auxiliary data}:
+earnings releases, news, fundamentals, policy rates, macroeconomic series,
+the MMS features, or a category the author created on the \voce{Data} page
+(\vediSez{data}). Without those files such a strategy still runs, but on
+empty series: what it does on your computer has nothing to do with the
+author's results.
+
+\figuraSchermata{1.0}{figure/schermate/marketplace-aux.png}
+  {An artifact that reads two categories of auxiliary data. Before buying or
+   installing, the page says which ones, where they go and who keeps them up
+   to date.}
+  {marketplace-aux}
+
+\begin{itemize}
+  \item \textbf{In the storefront}, the card says \voce{Needs data:} with the
+    categories.
+  \item \textbf{On the artifact's page}, the \voce{Auxiliary data} panel lists
+    them with the warning \enquote{If you do not hold this data, it is not
+    guaranteed to work}: for each one the folder (\voce{data/earnings}) and who
+    keeps it up to date --- a system category the application can download
+    (with the provider's key, when it needs one), one the application
+    computes from the prices, or one of the author's, whose files are not in
+    the download. \voce{At a glance} repeats them; \voce{None} means the
+    artifact reads only prices.
+  \item \textbf{When you sell}, the page that publishes shows the same
+    categories before you press the button: it is what buyers will read.
+\end{itemize}
+
+\noindent
+The categories are read from the artifact's own code, not declared by the
+author: for a project they are those of all its strategies and approaches.
+
 \subsection{If a purchase does not show up}
 
 There is a command for exactly this, on the artifact's page, that explains

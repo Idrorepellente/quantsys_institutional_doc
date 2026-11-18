@@ -1,0 +1,56 @@
+% ===========================================================================
+%  sviluppatore/07-marketplace/05-dati-ausiliari.tex
+% ===========================================================================
+\section{I dati ausiliari di un artefatto}\label{sez:dati-ausiliari}
+
+Una strategia che legge gli utili trimestrali, senza quei file, gira lo
+stesso: \file{core/node\_data.py} restituisce serie a zero invece di un
+errore. Gira però su un segnale vuoto, e il backtest dell'autore non dice più
+niente di ciò che succederà sul computer di chi compra. Per questo la scheda
+prodotto elenca le categorie di dati che l'artefatto legge, con l'avviso che
+senza quei dati non ha la garanzia di funzionare; la card della vetrina le
+accenna.
+
+\subsection{Da dove si leggono}
+
+Dal \textbf{codice pubblicato}, non da una dichiarazione dell'autore:
+\file{data/dati\_ausiliari.py} analizza i file con \pkg{ast}, senza
+importarli (con un ripiego a espressioni regolari per il codice che non si
+lascia analizzare), e cerca gli stessi segni che il sistema usa per
+procurarsi i dati:
+
+\begin{itemize}
+  \item \cod{required\_external\_data=[...]} nei descrittori e la stessa chiave
+    nei \cod{META} di overlay e weight mode;
+  \item \cod{required\_mms\_features} diverso da \cod{None}: la categoria
+    \cod{mms};
+  \item le chiamate \cod{data\_series("earnings", ...)} e
+    \cod{custom\_series(...)}, anche delle strategie a blocchi;
+  \item gli import dei vecchi lettori (gli indizi di
+    \file{data/external\_data.py});
+  \item la cartella \cod{FOLDER} della porta sui dati (\file{data\_port.py}).
+\end{itemize}
+
+\noindent
+Le serie calcolate dal motore sui prezzi (\cod{volume\_profile}) e le
+cartelle di sistema non contano. Per un project i file sono quelli di tutti i
+componenti. Ogni categoria porta etichetta e origine: \cod{sistema} (con la
+fonte e le chiavi del \file{.env} lette da \file{data/fonti}), \cod{app} per
+le MMS, \cod{personale} per quelle create dall'autore.
+
+\subsection{Dove finiscono}
+
+Con la pubblicazione in \cod{details.datiAusiliari} (con \cod{portaDati}):
+un elenco vuoto vuol dire «controllato, nessuna», l'assenza del campo
+«pubblicato prima del controllo». Per questi ultimi la scheda le ricava al
+momento quando chi guarda vede il codice, e l'autore le salva aprendo la
+propria scheda o \voce{My products} (\simbolo{web\_db.salva\_dati\_ausiliari},
+che tocca solo artefatti propri). La vetrina le legge con
+\cod{a.details->'datiAusiliari'}; finché il sito non conosce quella query,
+\simbolo{web\_db.marketplace\_list} ripiega sulla precedente e la vetrina
+resta piena, senza le categorie sulle card.
+
+\noindent
+La prova è \file{tests/prova\_dati\_ausiliari.py}: le strategie vere del
+deposito, una strategia a blocchi compilata, la porta sui dati, la scheda
+disegnata da Flask e la card eseguita con \pkg{node}.

@@ -151,3 +151,60 @@ a mano: ciò che non è elencato nasce aperto.
 tre stili di autenticazione diversi. Non è un difetto che rompa qualcosa, ma
 è il posto dove cercare quando un dato dell'account è aggiornato in una
 schermata e vecchio in un'altra.
+
+\subsection{La beta: gli account li crea il sistema}\label{sez:beta-account}
+
+Con la beta accesa (\cod{AppSetting.beta\_enabled}) entrano solo gli
+indirizzi ammessi --- amministratori, richieste dal form del sito
+(\cod{beta\_signups}), aggiunte dal pannello (\cod{"BetaAccess"}) --- e
+\textbf{nessuno crea un account da sé}. Il meccanismo sta nel sito, in
+\file{src/lib/betaAccount.ts}; l'app ne è il pannello e lo sportello
+d'accesso.
+
+\begin{center}
+\begin{tabular}{@{}L{40mm}L{104mm}@{}}
+\toprule
+\textbf{Momento} & \textbf{Che cosa fa il sito} \\
+\midrule
+\rigaTenue
+Richiesta dal form & Crea l'account con una password generata (16 caratteri
+  in quattro gruppi, senza i caratteri che si confondono) se gli account del
+  database sono meno del limite (\cod{beta\_account\_limit}, \num{405}
+  predefinito); altrimenti la richiesta resta in lista d'attesa. Conteggio e
+  creazione sotto \cod{pg\_advisory\_xact\_lock}. \\
+Aggiunta dal pannello & Crea l'account anche oltre il limite. \\
+\rigaTenue
+\pulsante{Invite all} & Inviti a lotti di 8; le righe si prenotano
+  (\cod{FOR UPDATE SKIP LOCKED}) prima di spedire; il primo giro scrive
+  \cod{beta\_started\_at}, e da lì ogni account nuovo è invitato appena nasce. \\
+Primo accesso & \rotta{POST}{/api/app/login} non dà il token ma un
+  passaggio di trenta minuti (\cod{devePassword}); la password nuova va a
+  \rotta{POST}{/api/app/login/password}, che solo allora rilascia il token. \\
+\rigaTenue
+Iscrizione, codice, Google & Con la beta accesa rispondono
+  \cod{beta\_iscrizioni\_chiuse}; il recupero non crea mai un account. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+La tabella \cod{"BetaAccount"} (creata dal sito alla prima richiesta) lega
+indirizzo e account e tiene origine, invito e primo accesso; la prima password
+vi resta \textbf{cifrata} (AES-256-GCM, chiave derivata da
+\cod{APP\_TOKEN\_SECRET}) finché l'utente non sceglie la sua, per poter
+rimandare l'invito con le stesse credenziali.
+
+\begin{perche}{Perché il limite conta tutti gli account}
+Serve a contenere il caso peggiore di richieste al database, e quelle le
+fanno gli account, non le liste. L'app funziona anche senza account: il
+limite non chiude il motore a nessuno, chiude solo le parti che passano dal
+sito.
+\end{perche}
+
+\noindent
+Nell'app: \rotta{GET}{/api/admin/beta-access} e
+\rotta{POST}{/api/admin/beta-access} in \file{app.py} inoltrano al sito
+(\percorsoHTTP{/api/dashboard/beta}) con il segreto della dashboard; la scheda è
+\file{templates/admin.html} con \file{static/js/admin\_beta.js}. Il passo della
+password nuova è in \file{auth.py} (\simbolo{\_passo\_password}) e
+\file{app\_api.py} (\simbolo{login\_password}).
