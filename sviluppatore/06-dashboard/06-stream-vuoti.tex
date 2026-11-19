@@ -1,0 +1,132 @@
+% ===========================================================================
+%  sviluppatore/06-dashboard/06-stream-vuoti.tex
+% ===========================================================================
+\section{Gli stream vuoti}\label{sez:stream-vuoti}
+
+Uno stream nasce dai risultati di un backtest (\vediSez{data-layer}), un
+progetto si compone di stream, un runner del Live si costruisce su un
+progetto. La catena ha una conseguenza: senza backtest una strategia non entra
+in un progetto, quindi non arriva al Live se non da sola. Per una prova dal
+vivo --- o per vedere girare una strategia prima di averla misurata --- la
+scheda di \voce{Run backtest} crea uno stream \emph{vuoto}: c'è, si mette nei
+progetti, anche in progetti fatti solo di stream vuoti, e non ha metriche.
+
+\begin{perche}{Perché il Live non ha bisogno dello stream}
+Il runner fa girare il \emph{codice} delle strategie del progetto. Dello
+stream usa due cose, entrambe facoltative: la vol di backtest degli approcci
+per il warmup della normalizzazione (\simbolo{\_vol\_di\_backtest}, che salta
+chi non ha dati e lascia lo scale a 1) e niente altro: i pesi dal vivo li
+stima \file{live/ensemble\_live.py}, che parte con pesi uguali finché non ha
+abbastanza osservazioni sue. Un progetto di soli stream vuoti, su TEST, parte
+e cicla come un altro: lo verifica la prova nel browser.
+\end{perche}
+
+\subsection{Il segnaposto}
+
+\file{dashboard/stream\_vuoti.py} scrive
+\file{output/strategies/<nome>\_empty\_stream.json}: tipo, nome, quando. Il
+posto non è casuale: sta fra i risultati perché ne segue la vita senza codice
+in più.
+
+\begin{itemize}
+  \item \file{stream\_cleanup} conosce il suffisso \cod{\_empty\_stream}:
+        eliminando la strategia (\voce{Delete} della scheda) il segnaposto se
+        ne va con i risultati, e uno rimasto senza strategia è un residuo che
+        la Home propone di togliere.
+  \item Nascondere la strategia rinomina la sua cartella e lascia il
+        segnaposto dov'è: lo stream vuoto sparisce e torna con lei.
+  \item Il backtest lo rende inutile: \simbolo{DataLayer.startup}, dopo aver
+        caricato gli stream, toglie i segnaposto di quelli che ora hanno dati
+        (\simbolo{pulisci\_superati}). Da lì lo stream è uno stream e basta.
+\end{itemize}
+
+\subsection{Chi è vuoto: calcolato, non tenuto}
+
+\simbolo{DataLayer.get\_empty\_streams} dice quali stream sono vuoti a ogni
+richiesta: segnaposto presente, strategia o approccio \emph{in vista},
+stream registrato (la strategia dichiara \cod{output\_path\_pattern}: senza,
+non può avere uno stream, nemmeno vuoto), nessun dato.
+\simbolo{stream\_state(nome)} riassume in tre parole: \cod{data},
+\cod{empty}, \cod{missing}.
+
+\begin{attenzione}{Perché non è un attributo del DataLayer}
+Le ricariche dei dati costruiscono un DataLayer nuovo e ne \emph{copiano} gli
+attributi in quello che le rotte hanno catturato --- a mano, in più punti di
+\file{app.py}. Un attributo in più sarebbe quello che una delle copie
+dimentica, e la pagina mostrerebbe gli stream vuoti di prima. Calcolarlo dal
+registro e dal disco evita il problema; una piccola cache lo rilegge solo se
+cambiano il registro o le cartelle \file{strategies/}, \file{approaches/},
+\file{output/strategies/}. Per chi ricarica, c'è anche
+\simbolo{DataLayer.adotta(nuovo)}, che fa la copia in un posto solo.
+\end{attenzione}
+
+\subsection{Metriche: solo di chi ha dati}
+
+\simbolo{compute\_custom\_ensemble} divide i nomi in tre gruppi:
+
+\begin{center}
+\begin{tabular}{@{}L{34mm}L{100mm}@{}}
+\toprule
+\textbf{Gli stream} & \textbf{La risposta} \\
+\midrule
+\rigaTenue
+nessuno con dati & \cod{no\_metrics: true}, con \cod{empty\_streams} e
+                   \cod{missing\_streams}: la pagina mostra la spiegazione e
+                   il progetto si salva lo stesso, con metriche vuote \\
+uno con dati     & le sue metriche, con \cod{equal}: con una serie ogni modo
+                   di pesare dà il \num{100}\%, e \cod{equal} non può fallire
+                   (HRP e la minima varianza vogliono due serie). La risposta
+                   lo dice con \cod{weighting\_mode\_requested} \\
+\rigaTenue
+due o più        & l'ensemble di quelli, come sempre, con l'elenco di chi
+                   resta fuori \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\percorsoHTTP{/api/ensemble\_custom} rifiuta solo la richiesta in cui
+\emph{nessun} nome è uno stream noto. Prima rifiutava anche un progetto
+salvato con uno stream che non c'era più (risultati eliminati, strategia
+nascosta): ora si apre, calcolato su chi c'è, con la nota.
+
+\subsection{Il marketplace}
+
+\simbolo{rifiuto\_pubblicazione(kind, nome, stato\_di, progetto)} è l'unico
+punto della regola: uno stream vuoto non si pubblica (\cod{STRATEGY},
+\cod{APPROACH}), un progetto che contiene uno stream vuoto --- o uno stream
+senza dati --- nemmeno. La chiamano la rotta di pubblicazione, subito dopo aver
+trovato l'artefatto e prima di ogni altro controllo (\cod{409} con il motivo
+in \cod{error}), e la porta della pubblicazione automatica
+(\simbolo{\_pubblica\_gratis}); \file{autopubblica.py} registra
+\cod{empty\_stream} ed \cod{empty\_streams} come conclusioni \emph{non
+definitive}, che si riesaminano quando arrivano i backtest. Il messaggio nomina
+gli stream:
+
+\begin{quote}\small\sffamily
+A project cannot be made of empty streams: in «Live test», «live\_test\_rules»
+and «live\_test\_model» are empty streams, with no backtest results. Run their
+backtests, then publish the project.
+\end{quote}
+
+\subsection{Rotte e pagine}
+
+Le rotte sono in \file{dashboard/ui\_ext\_stream\_vuoti.py}:
+\rotta{GET}{/api/streams/empty},
+\rotta{GET, POST}{/api/strategies/<tipo>/<nome>/empty-stream} (lo
+stato, con i progetti che lo usano, oppure la creazione) e
+\rotta{POST}{.../empty-stream/remove}. Gli stream vuoti arrivano anche,
+\emph{a parte}, in \percorsoHTTP{/api/streams} e \percorsoHTTP{/api/a/overview}
+(chiave \cod{empty\_streams}: chi legge le metriche degli stream non se li
+trova mescolati), nello stato degli stream di ogni progetto in
+\percorsoHTTP{GET /api/projects} (calcolato, mai salvato), in
+\percorsoHTTP{/api/strategies} (\cod{stream}, \cod{stream\_possible} di ogni
+scheda) e in \percorsoHTTP{/api/stream/<nome>}. La pagina di uno stream vuoto è
+un ramo di \file{stream.html}: niente pannelli di metriche, una spiegazione.
+
+\begin{pratica}{Provarli}
+\file{tests/prova\_stream\_vuoti.py} li prova su una copia del progetto, con
+strategie scritte dalla prova e risultati veri in \file{output/}: le schede, i
+rifiuti, gli elenchi, l'ensemble nei tre casi, i progetti, il marketplace a
+mano e automatico, il Live, gli strumenti dell'agente, il backtest che
+sostituisce il segnaposto, la vita del segnaposto. \num{75} controlli.
+\end{pratica}

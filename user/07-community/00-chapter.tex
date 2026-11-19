@@ -131,6 +131,21 @@ A published artifact goes online at once: there is no approval queue. The
 description and the video can be corrected later; the bundle of files
 cannot.
 
+\begin{attenzione}{Empty streams do not go in the storefront}
+A strategy with an empty stream (\vediSez{run-empty}) has no backtest results
+to show whoever buys it, and a project that contains one would show the
+numbers of only part of what it sells. Neither can be published: the list
+marks them, the checks show the reason before you try, and
+\pulsante{Publish} answers with the names of the streams --- \enquote{A project
+cannot be made of empty streams: in «Live test», «live\_test\_rules» and
+«live\_test\_model» are empty streams\ldots}. Run their backtests, then publish.
+\end{attenzione}
+
+\figuraSchermata{0.62}{figure/schermate/marketplace-empty.png}
+  {Publishing a project made of empty streams: the checks name them before
+   the attempt, and the attempt is refused with the same reason.}
+  {sell-empty}
+
 \section{If an artifact does not perform as declared}\label{sez:dispute}
 
 You open a dispute from the artifact's page. It is not a discussion: the

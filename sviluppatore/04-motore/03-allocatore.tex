@@ -7,7 +7,7 @@ Una strategia dice \emph{che cosa}; l'allocatore decide \emph{quanto}. Sta in
 \file{core/allocator.py}, e il suo comportamento si governa con una sola
 \cod{dataclass} di configurazione.
 
-\subsection{Le quattro modalità}
+\subsection{Le modalità}
 
 \begin{center}
 \begin{tabular}{@{}L{28mm}L{110mm}@{}}
@@ -15,11 +15,19 @@ Una strategia dice \emph{che cosa}; l'allocatore decide \emph{quanto}. Sta in
 \cod{strategy\_mix\_mode} & \textbf{Come distribuisce} \\
 \midrule
 \rigaTenue
+\cod{correlation}
+  & Le correlazioni misurate fra gli asset decidono la \emph{taglia} del
+    libro e la sua \emph{forma}, cioè come il rischio si divide fra
+    posizioni correlate, con un grado che dice quanto i segnali sono la
+    stessa idea (\vediSez{sizing-correlato}). È la predefinita del sistema:
+    la sceglie \file{execution/config\_strategia.py}
+    (\cod{MODO\_PREDEFINITO}) quando il YAML non ne indica un'altra. \\
 \cod{equal\_weight}
   & Gerarchico classico: il portafoglio si divide fra le strategie, poi
     dentro ciascuna. Il fattore $\sqrt{N_\text{strat}}$ assume indipendenza
-    fra strategie. È il valore predefinito, ed è anche il ripiego quando le
-    altre modalità non hanno i dati che servono. \\
+    fra strategie. È il default di libreria di \simbolo{AllocatorConfig} (chi
+    la costruisce a mano senza dirlo ottiene questa), ed è il ripiego quando
+    le altre modalità non hanno i dati che servono. \\
 \cod{stream\_level}
   & Ogni strategia opera come stream indipendente con un proprio budget di
     volatilità (\cod{stream\_target\_vol\_annual}, \num{0.12} di
@@ -69,9 +77,25 @@ distingue «lo voglio» da «c'era». Qui l'assenza significa qualcosa:
 \cod{max\_gross\_leverage} & \num{1.5} & $\sum |w|$ totale. \\
 \rigaTenue
 \cod{min\_vol\_floor} & \num{0.05} & Pavimento sulla volatilità stimata. \\
+\cod{held\_rebalance\_band} & \num{0.25} & Solo \cod{correlation}: quanto
+  una posizione tenuta può scostarsi dalla forma nuova prima di essere
+  riallineata (relativo). \\
+\rigaTenue
+\cod{signal\_overlap} & \cod{None} & Solo \cod{correlation}: il grado
+  dichiarato; \cod{None} lo fa stimare al walk-forward. \\
 \bottomrule
 \end{tabular}
 \end{center}
+
+\noindent
+Sono i default della \cod{dataclass}. Quelli che girano davvero vengono dalla
+sezione \cod{portfolio} del YAML, letta da
+\simbolo{allocator\_config} in \file{execution/config\_strategia.py} con gli
+\cod{allocator\_overrides} della strategia sopra: lì \cod{max\_position\_weight}
+vale \num{0.05} se il YAML non lo dice, \cod{max\_asset\_class\_gross} e
+\cod{max\_gross\_leverage} \num{1.0}, la modalità \cod{correlation}. Una
+strategia può chiedere per sé anche \cod{strategy\_mix\_mode} ed
+\cod{explicit\_vol\_target} (\cod{OVERRIDE\_PERMESSI}).
 
 \begin{nota}{Il ragionamento dietro il tetto per classe}
 Il commento nel codice lo dice senza giri: quattro obbligazioni tutte lunghe
@@ -105,3 +129,106 @@ restituisce una copia nuova. Assegnare direttamente solleva
 \cod{FrozenInstanceError}, ed è voluto: una configurazione di rischio
 modificata a metà di un backtest renderebbe i risultati non riproducibili.
 \end{attenzione}
+
+\subsection{La modalità \cod{correlation}}\label{sez:sizing-correlato}
+
+Una strategia che propone la stessa operazione su due asset correlati si
+espone due volte a quello che è in parte lo stesso rischio. \cod{equal\_weight}
+presume la correlazione dall'asset class; \cod{covariance} la misura, ma solo
+per la taglia: ogni segnale riceve comunque la sua quota piena ($1/\sigma$),
+e un gruppo di asset correlati si prende il rischio di quelli che
+diversificano. I pezzi stanno in \file{core/sizing\_correlato.py}; il metodo
+è \simbolo{\_allocate\_correlation} di \file{core/allocator.py}.
+
+\paragraph{Rischio e informazione.} La correlazione fra asset dice quanto
+\emph{rischio} condividono due posizioni, non quanta \emph{informazione}. Con
+segnali \textbf{indipendenti} la seconda posizione aggiunge informazione e si
+sovrappone nel rischio: è la media-varianza, e due segnali opposti su asset
+correlati diventano una posizione sulla differenza. Con \textbf{la stessa
+idea} ripetuta l'accordo conferma e il disaccordo si annulla: proporzioni per
+convinzione e volatilità, e nessuna leva sulla differenza. Il grado
+$\theta\in[0.1,\,1]$ (\cod{signal\_overlap}) mescola le due letture nella
+forma e nella misura del rischio:
+\[
+  u = (1-\theta)\,\hat A + \theta\,\hat B,
+  \qquad
+  \text{rischio}^2(w) = (1-\theta)\, w^{\mathsf T}\Sigma w
+                       + \theta\, |w|^{\mathsf T}\Sigma |w| .
+\]
+$A$ è la media-varianza con il segno di ogni segnale vincolato
+(\simbolo{media\_varianza\_segni}: minimi quadrati non negativi sulla
+$\Sigma$ con i segni girati, rendimenti attesi $|c_i|\,\sigma_i$), portata a
+rischio vero~1; $B = c/\sigma$, portata a rischio \enquote{d'accordo}~1,
+$\sqrt{|B|^{\mathsf T}\Sigma|B|}$. Su un libro d'accordo le due misure
+coincidono, e la taglia si corregge con le correlazioni per qualunque grado;
+con $\theta=1$ la forma è quella di \cod{covariance}. Il segno di un segnale
+non si inverte mai, e $\theta\ge 0.1$ tiene ogni segnale emesso sopra zero.
+
+\paragraph{La taglia: il riempimento.} \simbolo{riempi\_fino\_al\_rischio}
+scala la forma fino al rischio voluto con la misura sopra; la posizione che
+tocca il suo tetto si ferma e le altre continuano con le stesse proporzioni,
+finché il libro arriva al bersaglio o al lordo massimo. Il tetto di una
+posizione è $\min(\cod{max\_position\_weight},\ \cod{target\_vol}/\sigma)$:
+una strategia che dichiara la taglia con \cod{target\_vol} la ottiene esatta.
+Poi i tetti per classe e il lordo, come sempre.
+
+\paragraph{Il libro intero.} La forma si calcola su tutte le posizioni della
+strategia: quelle aperte da segnali precedenti entrano con il loro ultimo
+segnale (\simbolo{MemoriaSegnali}, che il motore tiene e il runner ricostruisce
+dal replay). Il silenzio vuol dire \enquote{tengo}; un \cod{FLAT} chiude e fa
+dimenticare. Una posizione tenuta si riallinea solo se il nuovo peso esce
+dalla banda (\simbolo{fuori\_banda}). Senza una stima di $\Sigma$ si ripiega
+su \cod{equal\_weight} per i soli segnali della barra, e le tenute restano
+come sono.
+
+\paragraph{Il grado, stimato.} Se la strategia non lo dichiara, a ogni barra
+il motore registra il rendimento delle due forme pure e i sei prodotti
+($\hat A^{\mathsf T}\Sigma\hat A$, $\hat B^{\mathsf T}\Sigma\hat B$,
+$\hat A^{\mathsf T}\Sigma\hat B$ e gli stessi sui moduli) con cui si ricalcola
+il rischio di qualunque miscela (\simbolo{RegistroForme}). Il walk-forward,
+a ogni fold, rilegge solo le righe fuori campione dei fold \emph{precedenti}
+e prima del suo \cod{test\_start}, e su una griglia da \num{0.10} a \num{1.00}
+cerca la miscela con lo Sharpe giornaliero più alto, al netto del costo del
+cambio di forma (\simbolo{stima\_sovrapposizione}). Poi si sposta dal punto di
+partenza solo quanto lo giustifica la statistica $t$ della differenza:
+\[
+  p = \mathrm{clip}\Big(\frac{t-1}{2},\,0,\,1\Big),
+  \qquad
+  \theta = 1 + p\,(\theta^\star - 1).
+\]
+Sotto \num{40} giorni si resta a~1. Il fold gira con il suo $\theta$; quello
+stimato su tutti vale dopo l'ultima data. La serie $(\text{inizio},\theta)$ va
+in \file{output/strategies/wf\_<nome>\_sizing.json}; il live la rilegge
+(\simbolo{con\_sovrapposizione}) e \simbolo{theta\_as\_of} dà, a ogni data, lo
+stesso grado del backtest.
+
+\begin{perche}{Perché si parte da 1 e non da 0.5}
+Gli errori non costano uguale. Trattare come indipendenti segnali che sono la
+stessa idea mette leva sui loro disaccordi: nel mondo di prova costruito così
+(\file{tests/prova\_sizing\_correlato.py}, sezione F) lo Sharpe fuori campione
+scende in media da \num{0.92} a \num{0.10}. Trattare come la stessa idea
+segnali indipendenti rinuncia al guadagno della media-varianza, ma torna solo
+al dimensionamento di prima: da \num{5.55} a \num{3.58}, con la gerarchia a
+\num{3.56}. Partendo da \num{0.5} il primo mondo perdeva, nei fold senza
+ancora prove, da \num{0.92} a \num{0.75}. Con la partenza da~1 il walk-forward
+trova \num{0.10} nel mondo dei segnali indipendenti (Sharpe \num{6.09},
+\num{5.04}, \num{4.52} contro \num{4.45}, \num{3.32}, \num{2.90} della
+gerarchia) e resta a~1 nell'altro (\num{0.62}, \num{1.29}, \num{0.86} contro
+\num{0.45}, \num{1.43}, \num{0.81}).
+\end{perche}
+
+\paragraph{Il tetto per posizione.} In questa modalità
+\cod{max\_position\_weight} è un limite di sicurezza: se ferma quasi tutte le
+posizioni, il sizing non ha spazio. L'allocatore conta a ogni decisione quante
+posizioni ha fermato il tetto \emph{globale} (non la taglia dichiarata); il
+walk-forward ne fa la quota fuori campione (\simbolo{quota\_al\_tetto}), la
+scrive nel file del sizing e oltre \num{0.5} lo dice nel log e alla pagina
+dello stream, che mostra l'etichetta \enquote{Cap 5\% sets 82\% of sizes}.
+
+\begin{attenzione}{I checkpoint portano la firma della configurazione}
+Il walk-forward riprende da un checkpoint solo se è della versione~3 e se la
+configurazione dell'allocatore è la stessa (modalità, grado, tetti, banda).
+Prima un checkpoint fatto con un'altra modalità sarebbe stato riusato, e il
+risultato sarebbe stato un misto di due sizing senza che niente lo dicesse.
+\end{attenzione}
+

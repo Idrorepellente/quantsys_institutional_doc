@@ -241,7 +241,9 @@ These are the parameters that apply to every calculation.
 
 \figuraSchermata{1.0}{figure/schermate/config.png}
   {The parameters. Each field carries its unit below it, because the
-   difference between \num{0.12} and \num{12} is a factor of a hundred.}
+   difference between \num{0.12} and \num{12} is a factor of a hundred. At
+   the bottom of each section, how positions are sized and whether a project
+   corrects the strategies that overlap.}
   {config}
 
 \begin{center}
@@ -255,13 +257,23 @@ These are the parameters that apply to every calculation.
 \voce{Annual target volatility} & How much you accept the portfolio swinging
   in a year. It is the main risk dial. \\
 \rigaTenue
-\voce{Max weight per position} & The most a single instrument can weigh. \\
+\voce{Max weight per position} & The most a single instrument can weigh.
+  It is a safety limit, not the sizing: if most positions sit at it, they
+  all take the same size and the correlations can change nothing. The page
+  of a stream tells you when that happens (\vediSez{stream-sizing}). \\
 \voce{Max gross per asset class} & The most a whole class can weigh ---
   shares, bonds, currencies. It guards against diversification that is only
   apparent: four bonds all going the same way are a single position. \\
 \rigaTenue
 \voce{Max gross leverage} & The total exposure. \num{1.0} means no
   leverage. \\
+\voce{Position sizing} & How a strategy's positions are sized.
+  \voce{Correlation-aware}, the default: the measured correlations between
+  the assets set both the total risk and how it is split between
+  correlated positions (\vediSez{stream-sizing}). The other three are the
+  earlier ways: correlations measured for the total only, assumed from the
+  asset class, or weights declared by the strategy. A strategy can choose its
+  own. \\
 
 \addlinespace
 \multicolumn{2}{@{}l}{\textit{\small Ensemble}}\\[2pt]
@@ -270,6 +282,10 @@ These are the parameters that apply to every calculation.
   \emph{before} being weighted. \\
 \voce{Regime window}, \voce{thresholds} & How the state of the market is
   assessed for the modulation. \\
+\rigaTenue
+\voce{Overlap correction} & In a project, scales down the strategies whose
+  positions overlap more, at that moment, than their weights assume. Never
+  scales up (\vediSez{project-overlap}). On by default. \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -279,6 +295,12 @@ It is not a display setting. The same factor that normalises the streams in
 the backtest multiplies the positions the runner opens on a real account.
 Changing it changes how much you really risk, not just what you see on the
 chart.
+\end{attenzione}
+
+\begin{attenzione}{Changing \voce{Position sizing} changes every backtest}
+The sizing decides every position, so results made with one way are not
+comparable with those made with another. After changing it, run the
+backtests again: until you do, the pages show the results of the old way.
 \end{attenzione}
 
 \noindent

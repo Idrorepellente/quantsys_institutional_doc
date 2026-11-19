@@ -39,6 +39,12 @@ viene riletto a caldo.
 \cod{max\_asset\_class\_gross} & \num{1.00} & Tetto lordo per classe. \\
 \rigaTenue
 \cod{max\_gross\_leverage} & \num{1.0} & Tetto lordo totale. \\
+\cod{strategy\_mix\_mode} & \cod{correlation} & Come si dimensiona
+                                      (\vediSez{sizing-correlato}); se manca,
+                                      la predefinita. \\
+\rigaTenue
+\cod{held\_rebalance\_band} & \num{0.25} & Banda delle posizioni tenute,
+                                      solo \cod{correlation}. \\
 
 \addlinespace
 \multicolumn{3}{@{}l}{\textit{\small \cod{ensemble:}}}\\[2pt]
@@ -50,6 +56,9 @@ viene riletto a caldo.
 \cod{regime\_window}     & \num{90}  & Finestra del regime. \\
 \cod{regime\_sh\_low} / \cod{\_high} & \num{0.0} / \num{1.5} & Soglie di
                                       Sharpe per la modulazione. \\
+\cod{overlap\_correction} & \cod{true} & La correzione di sovrapposizione
+                                      dei progetti (\vediSez{sovrapposizione});
+                                      se manca, accesa. \\
 \bottomrule
 \end{tabular}
 \end{center}

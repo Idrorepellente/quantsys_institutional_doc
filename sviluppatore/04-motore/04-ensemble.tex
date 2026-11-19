@@ -117,6 +117,46 @@ quattordici plugin installati usano \cod{static} (dieci) e \cod{rolling}
 modello funzionerebbe per caso. Il modello è da correggere, il codice no.
 \end{attenzione}
 
+\subsection{Fra pesatura e overlay: la correzione di sovrapposizione}\label{sez:sovrapposizione}
+
+I pesi si decidono sulle curve, cioè sulla correlazione \emph{media} fra
+strategie. Ma due strategie con curve scorrelate in media --- una sull'euro,
+una sulla sterlina, con ragioni indipendenti --- nei giorni in cui stanno
+dalla stessa parte sono quasi la stessa scommessa sul dollaro.
+\file{reporting/sovrapposizione.py} lo corregge giorno per giorno, con i libri
+delle strategie della chiusura prima (moltiplicati per peso e scala nel
+progetto) e le correlazioni fra gli asset stimate fino a quel giorno:
+\[
+  \sigma_{\text{vero}} = \sqrt{x^{\mathsf T}\Sigma x},
+  \qquad
+  \sigma_{\text{creduto}} = \sqrt{\textstyle\sum_{n,m} s_n s_m R_{nm}},
+\]
+con $x$ la somma dei libri, $s_n$ il rischio del libro $n$ da solo e $R$ la
+correlazione delle curve, stimata alle stesse date di $\Sigma$ (Ledoit--Wolf
+su 252 giorni, ogni 21; volatilità a 60). Se il vero supera il creduto,
+\simbolo{fattori\_istante} riduce le strategie il cui contributo vero supera
+quello creduto finché i due tornano uguali (per bisezione); se non basta, il
+resto a tutte in proporzione; nessuna sotto \num{0.25}. Mai verso l'alto: una
+copertura fra strategie merita leva solo se sono informazione indipendente, ed
+è proprio quello che quel giorno non si sa.
+
+\simbolo{EnsembleEngine} riceve il fornitore (\cod{overlap=}) e moltiplica PnL
+e turnover di ogni strategia per il suo fattore; il runner fa lo stesso in
+\simbolo{\_combine\_targets} con \simbolo{fattori\_live}, sulle stesse
+funzioni: nei giorni di ristima i fattori coincidono al decimale. I libri li
+salva il walk-forward (\file{wf\_<nome>\_oos\_books.parquet}); una strategia
+senza libro resta fuori e non si riduce, e senza le chiusure giornaliere di un
+asset la correzione si spegne per quel progetto, con la nota che dice perché.
+Si spegne anche con \cod{ensemble.overlap\_correction: false}.
+
+\begin{nota}{Che cosa ha cambiato su un progetto di prova}
+Tre strategie con un vantaggio vero --- EURUSD e GBPUSD (correlazione
+\num{0.82}) con direzioni indipendenti, l'oro --- su sei semi: Sharpe da
+\num{1.59}, \num{2.14}, \num{1.27}, \num{2.15}, \num{2.87}, \num{2.22} a
+\num{1.77}, \num{2.17}, \num{1.41}, \num{2.31}, \num{2.94}, \num{2.38}, e la
+volatilità a tre mesi del progetto oscilla circa il \perc{30} in meno.
+\end{nota}
+
 \subsection{Terzo stadio: gli overlay}
 
 Ogni overlay attivo produce un moltiplicatore in $(0,1]$ calcolato dal

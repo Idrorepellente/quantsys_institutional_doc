@@ -150,7 +150,8 @@ produce un \cod{TypeError} su un argomento inatteso.
 \cod{allocator\_overrides}
   & Scavalca per questa sola strategia \cod{max\_position\_weight},
     \cod{max\_gross\_leverage}, \cod{max\_asset\_class\_gross},
-    \cod{portfolio\_target\_vol\_annual}. \\
+    \cod{portfolio\_target\_vol\_annual}, \cod{strategy\_mix\_mode},
+    \cod{explicit\_vol\_target}. \\
 \rigaTenue
 \cod{extra\_timeframes}
   & Per le strategie multi-timeframe. Il caricamento parte dal più fine. \\
@@ -170,6 +171,11 @@ produce un \cod{TypeError} su un argomento inatteso.
     (\num{16} barre M15 sono quattro ore sui cambi, \num{16}/\num{26} di
     seduta sulle azioni: \simbolo{giorni\_da\_barre}). \\
 \rigaTenue
+\cod{signal\_overlap}
+  & Solo per il sizing \cod{correlation}: quanto i segnali della strategia
+    su asset diversi sono la stessa idea (\num{1}) o informazione
+    indipendente (verso \num{0.1}). \cod{None}, il default, lo fa stimare al
+    walk-forward (\vediSez{sizing-correlato}). \\
 \cod{\_module\_path}, \cod{\_folder\_path}
   & \textbf{Li scrive il registro.} Non vanno impostati a mano. \\
 \bottomrule

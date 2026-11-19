@@ -169,8 +169,75 @@ again, or to the Ensemble builder with the same configuration, computed
 again.
 \end{pratica}
 
+\section{When strategies overlap}\label{sez:project-overlap}
+
+A project weighs its strategies by looking at their curves. Two strategies
+whose curves did not move together over the year are treated as two
+independent bets. But that is an average. One trading the euro and one
+trading the pound, each on its own reasons, have curves that move together
+little on average --- and yet on the days when both are long, they are
+almost the same bet on the dollar, and the project risks more than it
+believes.
+
+Day by day, the \voce{overlap correction} compares the risk the project
+really takes, from the strategies' positions and the correlations between
+the assets, with the risk its weights assume. When the real one is larger, it
+scales down the strategies that overlap until the two are equal; the others
+stay as they are. It never scales up: when two strategies' positions offset
+each other more than usual, adding leverage would be right only if they were
+truly independent, and that is exactly what cannot be known on that day.
+The backtest and the live runner apply it the same way.
+
+\figuraSchermata{0.86}{figure/schermate/project-overlap.png}
+  {Under the configuration, how the correction acted: on how many days the
+   strategies overlapped more than their weights assume, and how far the
+   overlapping ones were scaled down.}
+  {project-overlap}
+
+\noindent
+When it cannot apply, the note says why: a strategy whose backtest predates
+this version has no saved positions (run it again), an approach produces only
+its curve and is left as it is, and without daily prices for an asset the
+correction is off for that project. You can turn it off in Config
+(\vediSez{config}).
+
 \section{Saving}\label{sez:projects-save}
 
 At the end you give it a name and save it. From then on the project appears
 in the list, its performance is what the home screen draws, and --- most
 importantly --- it can be chosen on the \voce{Live} page (\vediCap{live}).
+
+\section{Projects with empty streams}\label{sez:project-empty}
+
+The list of step~1 also has the strategies with an \emph{empty stream}
+(\vediSez{run-empty}), under their own heading and with a dashed border. They
+count like the others --- a project still needs two strategies --- but they
+have no backtest, so they cannot have numbers:
+
+\begin{itemize}
+  \item \textbf{Some empty streams.} The metrics, the charts and the curve on
+        the home screen are those of the streams with results, and a note
+        above them says which strategies are left out. The configuration at
+        the top lists them under \voce{Not in the metrics}.
+  \item \textbf{Only empty streams.} There is nothing to measure: instead of
+        the metrics, the page says why. The project is saved all the same, and
+        on \voce{Projects} its card reads \voce{No metrics $\cdot$ empty
+        streams}.
+\end{itemize}
+
+\figuraSchermata{1.0}{figure/schermate/ensemble-partial.png}
+  {A project with one stream with results and one empty stream: the metrics
+   are those of the first, and the note says so.}
+  {project-partial}
+
+\figuraSchermata{1.0}{figure/schermate/ensemble-empty.png}
+  {A project made only of empty streams: no metrics, and it can be saved and
+   run live.}
+  {project-empty}
+
+\noindent
+In \voce{Live} these projects run like any other: the runner runs every
+strategy of the project, with or without a backtest (\vediSez{runner}). As
+the backtests arrive, the empty streams fill up and the project gets its
+numbers, with nothing to redo. A project that contains an empty stream cannot
+be published in the Marketplace.

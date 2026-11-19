@@ -24,16 +24,21 @@ quello è il posto giusto dove cercare prima di modificare l'area che copre.
 \rigaTenue
 \file{prova\_covarianza.py} & \num{489}
   & Lo shrinkage di Ledoit--Wolf e la modalità \cod{covariance}. \\
+\file{prova\_sizing\_correlato.py} & \num{937}
+  & La modalità \cod{correlation} (forme, riempimento, libro intero, stima
+    del grado, walk-forward su due mondi costruiti apposta) e la correzione
+    di sovrapposizione dei progetti, backtest uguale al live
+    (\vediSez{sizing-correlato}, \vediSez{sovrapposizione}). \\
+\rigaTenue
 \file{prova\_pesi\_dichiarati.py} & \num{484}
   & Il contratto di \cod{Signal.target\_weight} e la modalità
     \cod{explicit}. \\
-\rigaTenue
 \file{prova\_permessi\_marketplace.py} & \num{477}
   & I due strati del permesso di pubblicare, \textbf{contro il sito vero}. \\
+\rigaTenue
 \file{prova\_esportazione.py} & \num{505}
   & L'esportazione in Excel e CSV: valori, formati, grafici, immagini,
     ordine dei fogli (\vediSez{esportazione}). \\
-\rigaTenue
 \file{prova\_dati\_ausiliari.py} & \num{278}
   & Le categorie di dati che un artefatto legge, e come il marketplace le
     mostra (\vediSez{dati-ausiliari}). \\
@@ -105,6 +110,15 @@ una cartella temporanea che si cancella all'uscita) con quelle cartelle senza
 trattino, e la mette in testa a \cod{sys.path}. Una prova che si fa da sé la
 copia dell'app (\file{prova\_strategie\_obsolete.py}) usa
 \simbolo{rendi\_visibili} sulla sua copia. Il repository non si tocca mai.
+
+\noindent
+Quando la prova non ha bisogno di \emph{quella} strategia ma di una strategia
+qualsiasi con certe proprietà, la cosa più robusta è scriversela.
+\file{prova\_stream\_vuoti.py} mette nella sua copia cinque strategie di poche
+righe (\cod{alfa} e \cod{beta} con risultati veri in \file{output/},
+\cod{gamma} e \cod{delta} senza, \cod{senza\_uscita} senza
+\cod{output\_path\_pattern}): niente di ciò che la libreria diventerà potrà
+cambiarle.
 
 \subsection{Il resto di \file{tests/}}
 

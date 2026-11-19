@@ -147,6 +147,60 @@ Two cases are worth knowing:
     ones with \pulsantesec{Hide it again}.
 \end{itemize}
 
+\subsection{An empty stream: a strategy in a project before its backtest}\label{sez:run-empty}
+
+A project is made of streams, and a stream is born from a backtest: a
+strategy you have not backtested yet cannot go in a project, so it cannot
+run in \voce{Live} with the others. When you want it there anyway --- a live
+test, or to watch it trade before measuring it --- give it an \emph{empty
+stream}: \voce{Create an empty stream} in the menu of its card.
+
+\figuraSchermata{1.0}{figure/schermate/run-empty-menu.png}
+  {The menu of a strategy without a backtest. Once created, the card carries
+   the \voce{Empty stream} label, and the menu offers to remove it.}
+  {run-empty-menu}
+
+\noindent
+The strategy now has a stream in \voce{Streams}, drawn with a dashed border
+and without a curve, and you can put it in a project --- together with
+streams that have results, or with other empty streams only
+(\vediSez{project-empty}). A runner in \voce{Live} runs its code like any
+other strategy: what it needs is the code, not the backtest.
+
+\figuraSchermata{1.0}{figure/schermate/streams-empty.png}
+  {Two streams with results and two empty ones. The empty ones come last,
+   whatever the order chosen, and the line at the top counts them apart.}
+  {streams-empty}
+
+What an empty stream cannot have, by definition, is numbers:
+\begin{itemize}
+  \item \textbf{No metrics.} Its page explains what it is instead of showing
+        empty panels; in a project, the metrics are those of the streams with
+        results.
+  \item \textbf{No Marketplace.} An empty stream cannot be published, nor can
+        a project that contains one (\vediSez{sell}).
+\end{itemize}
+
+\noindent
+\textbf{It fills itself.} Run its backtest as usual: its results replace the
+empty stream, and from then on it is a stream like the others, in
+\voce{Streams} and in every project that contains it. To take it away without
+a backtest, choose \voce{Remove the empty stream} in the same menu, or on its
+page: the strategy is not touched, and the projects that use it keep it,
+without a stream --- the confirmation names them.
+
+\figuraSchermata{0.86}{figure/schermate/stream-empty.png}
+  {The page of an empty stream: what it is, what it can be used for, and the
+   projects that contain it.}
+  {stream-empty}
+
+\begin{nota}{When the menu says no}
+\voce{Create an empty stream} is greyed out for a strategy that does not say
+where its backtest results go (\cod{output\_path\_pattern} in its
+descriptor): without that, it cannot have a stream, not even an empty one. A
+strategy that already has results does not offer it at all.
+\end{nota}
+
 \section{The page of a result}\label{sez:stream-detail}
 
 Clicking on a stream opens its page.
@@ -155,6 +209,63 @@ Clicking on a stream opens its page.
   {The page of a stream. Under its name the period and the benchmark; then
    the robustness verdict, the metrics and the curve, with SPY next to it.}
   {stream}
+
+\subsection{How the positions were sized}\label{sez:stream-sizing}
+
+A strategy that proposes the same trade on two assets that move together ---
+long the euro and long the pound, both against the dollar --- is exposed
+twice to what is largely the same risk. The sizing measures the correlations
+between the assets, and they decide two things: how much risk the whole book
+takes, and how that risk is split between the positions.
+
+How it is split depends on the strategy, not on the assets. Its signals on
+different assets can be:
+
+\begin{itemize}
+  \item \textbf{the same idea, repeated} --- the same rule on assets that
+    move together, a trend followed on every currency. Two signals that
+    agree confirm the idea; they do not add a second one. Two that disagree
+    are a disagreement, not a hedge. The positions keep the proportions of
+    conviction and volatility;
+  \item \textbf{independent information} --- different models or data for
+    each asset. Two correlated positions share their risk and are reduced,
+    the more the closer they move; two opposite ones become a position on
+    the difference, which risks little and gets more room.
+\end{itemize}
+
+\noindent
+Next to the other labels at the top of the page, a backtest made with the
+default sizing says where the strategy stands between the two.
+
+\figuraSchermata{0.66}{figure/schermate/stream-sizing.png}
+  {How the last backtest sized the positions: the signal overlap, estimated
+   from the strategy's history, and a warning that the cap per position, not
+   the sizing, decided most of the sizes.}
+  {stream-sizing}
+
+\begin{description}[leftmargin = 1.4em, style = nextline, itemsep = 4pt]
+  \item[\voce{Signal overlap 0.27 · estimated}] \num{1} means the same idea
+    repeated; close to \num{0.1}, independent information. The author of a
+    strategy can declare it; otherwise the backtest estimates it from the
+    strategy's own history, period by period and only from the past. It
+    starts from \num{1}, the safe side, because treating as independent two
+    signals that are the same idea would lever their disagreements; it moves
+    down only when the history proves it. The live runner uses the last value
+    until the next backtest. The tooltip says how many days of history it
+    rests on.
+  \item[\voce{Cap 5\% sets 82\% of sizes}] Shown only when it happens: the
+    cap per position stopped most of the positions, so they all took the same
+    size and the correlations could change nothing. The cap is meant as a
+    safety limit. Raise \voce{Max weight per position} in Config
+    (\vediSez{config}) --- or ask the author to raise it for this strategy
+    alone --- and run the backtest again.
+\end{description}
+
+\begin{nota}{No label on an older backtest}
+The labels come from the backtest. A result made before this version, or
+with another way of sizing (\vediSez{config}), shows neither: run its backtest
+again.
+\end{nota}
 
 \subsection{Robustness: the panel to read first}
 
