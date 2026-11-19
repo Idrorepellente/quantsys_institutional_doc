@@ -64,7 +64,8 @@ in the tooltip.
 \voce{TEST} & A simulated world with synthetic data and accelerated time.
   It needs no account and no credentials. It shows whether the machinery
   works --- retraining, composition, orders --- without waiting months. It
-  is always simulated. \\
+  is always simulated, but it runs the same engine as a real runner: the
+  project's streams with their parameters and data, as in the backtest. \\
 \voce{MetaTrader 5} & Runs on the account the MT5 terminal installed on the
   computer is logged into: Lyra needs no credentials. At start-up it checks
   that MT5 is there; with real orders, also that the account is
@@ -203,6 +204,16 @@ its targets: a share bought by hand on that account, if it is in the
 strategy's universe, can be sold at the next cycle. That is why the account
 must be dedicated to Lyra --- one per runner, no manual trading.
 \end{attenzione}
+
+\begin{nota}{Currency pairs with the dollar first, and crosses}
+An order on a currency pair is a number of units of the first currency. The
+runner sizes it in dollars, and converts with the price of the second
+currency in dollars: on EURUSD a unit is worth the price, on USDJPY a
+dollar, on EURGBP the price times GBPUSD. Before, every pair was treated like
+EURUSD, and USDJPY received about one hundred-and-fiftieth of the exposure.
+If the rate it needs is not available, the order does not go out and the
+journal says why.
+\end{nota}
 
 \begin{nota}{First reduce, then increase}
 In every cycle the runner first sends the orders that reduce positions,

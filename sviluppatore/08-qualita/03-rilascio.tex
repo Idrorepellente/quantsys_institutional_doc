@@ -18,6 +18,54 @@ copiato dove electron-builder lo cerca; electron-builder produce
 l'installatore per il sistema corrente (\file{.exe}, \file{.dmg},
 \file{AppImage}).
 
+\subsection{La firma}
+
+Una build non firmata non va a nessuno: Windows la ferma con SmartScreen,
+macOS non la apre, e \pkg{electron-updater} su macOS aggiorna solo app
+firmate. \file{build/RILASCIO.md} ha i passi; in breve:
+
+\begin{itemize}
+  \item \textbf{Windows} --- un certificato (\cod{WIN\_CSC\_LINK} o
+        \cod{CSC\_LINK} con la password, oppure impronta o nome del soggetto
+        nel negozio dei certificati), o un comando di firma
+        (\file{dashboard/electron/firma-windows.js}, per Azure Artifact
+        Signing: circa \num{10} dollari al mese per un'organizzazione
+        europea). Dal 2024 un certificato EV non dà più la fiducia immediata
+        di SmartScreen.
+  \item \textbf{macOS} --- un \emph{Developer ID Application}, il runtime
+        rafforzato con \file{entitlements.mac.plist} e la notarizzazione
+        dopo la firma (\file{dashboard/electron/notarizza.js}: chiave API di
+        App Store Connect, Apple ID con password specifica, o un profilo del
+        portachiavi). Il bersaglio \cod{zip}, accanto al \cod{dmg}, serve
+        agli aggiornamenti.
+  \item Il backend PyInstaller si firma con \file{build/firma.py}, che subito
+        dopo controlla la firma. Con l'opzione \cod{--require-signing} la build
+        si ferma se una firma manca, e \file{build/release.py} non pubblica una
+        build non firmata senza \cod{--allow-unsigned}.
+\end{itemize}
+
+\subsection{La prova dell'app installata}
+
+\file{build/prova\_app\_installata.py}, dopo ogni build del backend:
+
+\begin{codiceInterno}{console}{Su una build vera}{build/prova\_app\_installata.py}
+pyinstaller build/lyra-backend.spec
+python build/prova_app_installata.py dist/lyra-backend
+\end{codiceInterno}
+
+\noindent
+Uno spazio di lavoro nuovo, un impostore sulla \num{5000} che risponde
+\cod{403} a tutto come AirPlay, e \num{24} controlli: porta libera e
+identità del server, gettone e \cod{Host}, il backtest di una strategia
+scritta dall'utente fino ai risultati con l'eseguibile come interprete, gli
+script del sistema trovati nel pacchetto, gli artefatti solo dallo spazio di
+lavoro, una strategia del marketplace che fa il backtest dal lanciatore di
+Lyra sotto la guardia, e un modulo del marketplace che non riesce a leggere
+il \mbox{\file{.env}} nemmeno nell'eseguibile. Le librerie dei grafici (Plotly,
+lightweight-charts, CodeMirror, il generatore di QR) sono in
+\file{dashboard/static/vendor/}, con la versione nel percorso: l'app non
+chiede nulla alla rete per disegnare.
+
 \subsection{Dove finiscono i dati dell'utente}
 
 Non dentro l'applicazione. Il bundle è di sola lettura e ogni aggiornamento

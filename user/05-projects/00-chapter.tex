@@ -169,6 +169,45 @@ again, or to the Ensemble builder with the same configuration, computed
 again.
 \end{pratica}
 
+\section{The weights are decided with the past only}\label{sez:project-weights}
+
+A weighting method is re-estimated at fixed dates --- every 63 trading days
+unless the method says otherwise, from the first day with a year of common
+history --- and on each of those dates it sees only the days before. Until
+the first date the weights are equal. A method estimated once on the whole
+period would know the future of the very returns it is weighting, and its
+project would look better than it can ever be in practice.
+
+\figuraSchermata{0.92}{figure/schermate/project-weights.png}
+  {The weights of a project. \voce{Now}: the weights in force today, decided
+   at the last re-estimation; \voce{Average}: their mean over the period;
+   below, the calendar of the walk-forward.}
+  {project-weights}
+
+\begin{itemize}
+  \item \voce{Now} --- the weights decided at the last re-estimation, with
+    the data available then: the ones a runner uses today, to the decimal.
+  \item \voce{Average} --- their mean over the period: how the capital was
+    really shared while the results above were made.
+  \item The note under the table says how often the weights were
+    re-estimated and from when, and in how many re-estimations the method
+    gave no valid weights, so that equal weights were used instead.
+\end{itemize}
+
+\noindent
+The overlays pass the same test. Before applying one, Lyra computes it again
+on shorter histories and checks that its decisions up to each cut do not
+change: an overlay that looks ahead is not applied, and the page says so in
+red under the weights --- \enquote{Overlay \ldots{} not applied: \ldots}.
+
+\begin{nota}{Kelly and Black-Litterman fall}
+Estimated on the whole period, these two methods gained about 0.13 of Sharpe
+over the same method re-estimated with the past only --- what they knew of the
+period they were judged on. The methods that look only at risk lose almost
+nothing. Run again the projects you saved: their numbers are now the ones
+the method can really reach.
+\end{nota}
+
 \section{When strategies overlap}\label{sez:project-overlap}
 
 A project weighs its strategies by looking at their curves. Two strategies

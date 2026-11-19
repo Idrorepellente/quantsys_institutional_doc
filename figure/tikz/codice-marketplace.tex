@@ -1,0 +1,39 @@
+% ===========================================================================
+%  figure/tikz/codice-marketplace.tex
+%  I tre strati che fanno rispettare la regola del codice del marketplace.
+% ===========================================================================
+\begin{tikzpicture}[x = 1mm, y = 1mm]
+
+  \node[persona, minimum width = 34mm] at (0,0) (vend) {chi vende};
+  \node[sito, minimum width = 34mm] at (46,0) (sito) {il sito};
+  \node[persona, minimum width = 34mm] at (92,0) (comp) {chi compra};
+
+  \node[motore, minimum width = 34mm, text width = 32mm] at (0,-22) (a1)
+    {analisi\\alla pubblicazione};
+  \node[motore, minimum width = 34mm, text width = 32mm] at (92,-22) (a2)
+    {analisi\\prima di installare};
+  \node[persistenza, minimum width = 34mm, text width = 32mm] at (92,-44) (prov)
+    {registro della\\provenienza};
+  \node[motore, minimum width = 34mm, text width = 32mm] at (92,-66) (ver)
+    {verifica a ogni\\caricamento};
+  \node[motore, minimum width = 34mm, text width = 32mm] at (92,-88) (gua)
+    {guardia, finché\\il codice gira};
+
+  \draw[flusso] (vend) -- (a1);
+  \draw[flusso] (a1.north east) -- (sito.south west) node[etichetta, pos = 0.5, above left] {passa};
+  \draw[flusso] (sito) -- (comp);
+  \draw[flusso] (comp) -- (a2);
+  \draw[flusso] (a2) -- (prov) node[etichetta, pos = 0.5, right] {passa: si scrive};
+  \draw[flusso] (prov) -- (ver);
+  \draw[flusso] (ver) -- (gua) node[etichetta, pos = 0.5, right] {è ancora quello};
+
+  \node[nota, anchor = north west, text width = 80mm] at (-17,-40)
+    {Il sito non è un controllo su cui contare: il segreto con cui l'app gli
+     parla è nell'app distribuita. Per questo l'analisi che conta è quella
+     sul computer di chi compra, prima di scrivere un solo file.};
+  \node[nota, anchor = north west, text width = 80mm] at (-17,-72)
+    {La guardia vede le operazioni dell'interprete (PEP~578): file, rete,
+     processi, ctypes, pickle. Vale quando un frame del codice comprato è
+     sullo stack del filo, anche sotto Python o Lyra.};
+
+\end{tikzpicture}

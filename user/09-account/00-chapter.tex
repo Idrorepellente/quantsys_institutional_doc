@@ -70,6 +70,8 @@ one page. \pulsante{Sign out} is at the top right of the page.
   \item[\voce{Marketplace earnings}] The payout account that receives what
     you sell. Selling for a price needs one, and linking it needs two-step
     verification first.
+  \item[\voce{Automatic publishing}] Off unless you turn it on
+    (\vediSez{auto-publish}).
   \item[\voce{Security}] The password, the email address and two-step
     verification. They are not stored by the application: they live on the
     site, and the application only passes them on.
@@ -80,6 +82,38 @@ one page. \pulsante{Sign out} is at the top right of the page.
   \item[\voce{Send us feedback}] A report or a suggestion for the Lyra
     team.
 \end{description}
+
+\subsection{Automatic publishing}\label{sez:auto-publish}
+
+Lyra can upload your best work to the marketplace by itself --- only if you
+ask it to. With the switch on, whenever one of your strategies, approaches
+or projects reaches an out-of-sample walk-forward Sharpe above 2.0, Lyra
+uploads it under your account, code and results, \textbf{free and not
+public}: only the Lyra administrators see it. Nothing gets a price, nothing
+appears in the storefront, nothing is shown to other users.
+
+\figuraSchermata{0.56}{figure/schermate/profile-autopublish.png}
+  {Automatic publishing in the profile, switched on. Until you turn it on
+   the line reads \enquote{Off: nothing is uploaded.}}
+  {profile-autopublish}
+
+\begin{itemize}
+  \item The choice is for the account you are signed in with, on this
+    computer. It is off for everyone who has not turned it on --- including
+    after an update.
+  \item You can turn it off at any time, from the same switch. What was
+    already uploaded is listed under the switch, and can be removed from the
+    marketplace.
+  \item What you bought in the marketplace is never uploaded: it is someone
+    else's work.
+\end{itemize}
+
+\begin{nota}{How Lyra recognises this installation}
+With a random number, made the first time Lyra starts and kept with your
+data. It says nothing about your computer: before, it was derived from the
+computer's hardware, network card included. It counts towards the limit of
+installations of a purchase; deleting it makes Lyra a new installation.
+\end{nota}
 
 \section{Speed: how pages open, hardware acceleration}\label{sez:speed}
 

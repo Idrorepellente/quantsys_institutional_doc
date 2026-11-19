@@ -33,6 +33,34 @@ lavoro. \simbolo{CODE\_ROOT} --- dove sta il codice --- e
 per questo, e vanno tenute distinte anche quando coincidono, come in sviluppo.
 \end{perche}
 
+\subsection{Codice e spazio di lavoro nell'app installata}\label{sez:artefatti-spazio}
+
+Da sorgente le due radici coincidono e \cod{import strategies.mia.strategy}
+trova la strategia scritta in Studio accanto a \file{strategies/base.py}.
+Nell'app installata no: Python cercherebbe \pkgStrategie{} dove sta il
+pacchetto, cioè nel codice, e una strategia scritta in Studio non si
+importerebbe, una modificata girerebbe com'era nel pacchetto, una eliminata
+tornerebbe. \file{core/artefatti.py} mette un cercatore in testa a
+\cod{sys.meta\_path} (\cod{attiva()}, chiamato all'avvio e dall'interprete):
+
+\begin{itemize}
+  \item i \textbf{pacchetti del sistema} (\pkgCore, \pkgDati, \pkgReport,
+        \pkgStrategie{} stesso, \ldots) vengono sempre dal codice;
+  \item dentro i pacchetti degli artefatti i \textbf{moduli del sistema}
+        (\cod{strategies.base}, \cod{regime.logics.\_base}) vengono dal
+        codice, gli \textbf{artefatti} dallo spazio di lavoro e solo da lì.
+\end{itemize}
+
+\noindent
+Un backtest parte con \cod{[sys.executable, "-u", script]}, e
+nell'app installata \cod{sys.executable} è l'eseguibile del server:
+\file{scripts/run\_dashboard.py} riconosce \cod{-u script.py},
+\cod{-m modulo} e \cod{-c codice} e si comporta da interprete invece di
+avviare un secondo server. \cod{trova\_script} cerca gli script degli
+artefatti solo nello spazio di lavoro, quelli del sistema
+(\file{scripts/download\_*.py}) nel codice. \file{build/prova\_app\_installata.py}
+lo prova su una build vera (\vediSez{rilascio}).
+
 \subsection{Che cosa c'è sotto \file{data/}}
 
 \begin{center}
@@ -103,3 +131,20 @@ sotto \file{regime/markets/}. Se si aggiunge un mercato che guarda una serie
 nuova, questo script è il modo di procurarsela --- e finché non lo si lancia,
 quel mercato non modula niente e lo dice solo in un avviso nel registro.
 \end{attenzione}
+
+\subsection{I dividendi: tutta la barra, non solo la chiusura}\label{sez:dividendi}
+
+Yahoo dà la chiusura rettificata per i dividendi (\cod{adj\_close}) e
+apertura, massimo e minimo grezzi. Il motore compra all'apertura e valuta
+alla chiusura: con la sola chiusura rettificata ogni entrata e ogni uscita
+aveva un salto finto, pari ai dividendi fra la data e oggi.
+\cod{data/loader.rettifica\_dividendi} ricava il fattore dal rapporto fra i
+rendimenti rettificati e quelli grezzi, giorno per giorno ($q_t =
+f_t/f_{t-1}$, con $f_T = 1$), e lo applica a \cod{open}, \cod{high},
+\cod{low}, \cod{close} e \cod{vwap}. Un rapporto sotto \num{1} non è un
+dividendo ma un cambio di base fra due pezzi del deposito, e si ignora. Il
+live usa la stessa funzione (\file{live/contesto/fonti.py}). Su un titolo
+sintetico al \num{2}\,\% di dividendo l'anno, dentro e fuori ogni mese per
+dieci anni, lo Sharpe passa da \num{0.45} a \num{0.97} e il giorno
+peggiore da $-18\,\%$ a $-3\,\%$ (\file{tests/prova\_dividendi.py}).
+

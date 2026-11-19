@@ -94,6 +94,45 @@ author's results.
 The categories are read from the artifact's own code, not declared by the
 author: for a project they are those of all its strategies and approaches.
 
+\subsection{What bought code can do on your computer}\label{sez:bought-code}
+
+An artifact is code written by someone else, and it runs on the computer
+where your broker credentials, your account and your own strategies are. So
+the marketplace allows code that \textbf{computes on the data Lyra gives it},
+and nothing else: no files, no network, no programs, no looking inside
+Python, no changes to the rest of the system. Three checks make sure of it.
+
+\begin{enumerate}
+  \item \textbf{Before installing}, Lyra reads the code on \emph{your}
+        computer --- whatever the site did before --- and installs nothing if
+        it does not pass. The page says why, file by file: \enquote{Not
+        installed: this artifact's code does things that marketplace code may
+        not do\ldots{} strategy.py:12 --- 'open' is not available in
+        marketplace code}.
+  \item \textbf{Every time it is loaded}, if one of its files has changed
+        since it was installed, the file is checked again. A change of yours
+        that stays within the rules is kept; one that does not stops that file
+        from running.
+  \item \textbf{While it runs}, a guard stops anything it tries outside the
+        rules, even through a function of Python or of Lyra: reading your
+        files and keys, writing to disk, the network, starting programs. The
+        backtest says which artifact tried what: \enquote{Lyra blocked
+        strategy \ldots{} from the marketplace: it tried to use the
+        network}.
+\end{enumerate}
+
+\noindent
+The backtest of a bought artifact starts from Lyra's own launcher and without
+your keys in its environment. In a runner, a bought strategy reads the
+portfolio but cannot change it, and works on a copy of the data the orders
+are computed from.
+
+\begin{nota}{Bought is not yours to sell}
+What you installed from the marketplace is someone else's work: it does not
+appear among the things you can publish, a project that contains it cannot
+be published, and automatic publishing leaves it alone.
+\end{nota}
+
 \subsection{If a purchase does not show up}
 
 There is a command for exactly this, on the artifact's page, that explains
@@ -145,6 +184,24 @@ cannot be made of empty streams: in «Live test», «live\_test\_rules» and
   {Publishing a project made of empty streams: the checks name them before
    the attempt, and the attempt is refused with the same reason.}
   {sell-empty}
+
+\begin{attenzione}{The code must only compute}
+Buyers check the code before installing it (\vediSez{bought-code}), and the
+page that publishes runs the same check first: the \voce{Code check} row
+reads \enquote{Passed: computation only} with the libraries the code uses,
+or lists the lines to fix, with file and line. Until it passes,
+\pulsante{Publish} is refused --- an artifact nobody could install is not
+worth putting in the storefront. What marketplace code may use: the standard
+library for computation, numpy, pandas, scipy, scikit-learn, statsmodels and
+lightgbm, and the parts of Lyra meant for artifacts (types, indicators,
+universe, market data, auxiliary data by category, metrics). The
+developer's guide has the full list.
+\end{attenzione}
+
+\figuraSchermata{0.5}{figure/schermate/sell-code-check.png}
+  {A strategy that reads a file of its own: the code check names the line,
+   before you try to publish.}
+  {sell-code-check}
 
 \section{If an artifact does not perform as declared}\label{sez:dispute}
 

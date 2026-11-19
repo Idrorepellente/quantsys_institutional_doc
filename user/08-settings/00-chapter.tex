@@ -43,6 +43,16 @@ benchmark (SPY) first, because no backtest starts without it: a 15-minute
 strategy on currencies needs SPY at 15 minutes too.
 \end{nota}
 
+\begin{nota}{Dividends: the whole bar is adjusted, not only the close}
+Stock prices are adjusted for dividends: the day a dividend is paid the
+price drops, and without the adjustment that drop would look like a loss.
+Lyra applies the adjustment to open, high, low and close alike --- the
+backtest buys at the open and values at the close, and adjusting only the
+close made every entry and every exit jump. On a stock paying 2\,\% a year,
+traded in and out every month, the old way turned a Sharpe of 0.97 into
+0.45. The live prices are adjusted the same way.
+\end{nota}
+
 \subsection{Uploading your own file}
 
 The \voce{Your data} panel accepts CSV, Parquet and XLSX files dragged onto

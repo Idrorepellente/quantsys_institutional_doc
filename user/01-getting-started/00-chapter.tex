@@ -32,6 +32,23 @@ the same order: one chapter per area of the application.
    goes back is the most frequent part of the work.}
   {user-flow}
 
+\section{Opening Lyra}\label{sez:opening}
+
+Lyra opens in its own window. Behind the window there is a small server on
+your computer, and only the window can talk to it: at every start Lyra makes
+a new key, gives it to the window and refuses everything else --- a web page
+you are visiting, another program, someone on your network. If port 5000 is
+taken (on a Mac it usually is, by AirPlay Receiver), Lyra picks another one
+by itself.
+
+\begin{nota}{Starting Lyra from a terminal or Docker}
+\file{avvia.sh}, \file{avvia.bat} and Docker print the address to open,
+with the key in it:
+\cod{http://localhost:5000/\_\_lyra/entra?t=\ldots}. Open that one, not
+\cod{http://localhost:5000}: without the key the page says \enquote{Open
+Lyra from its window}. The key changes at every start.
+\end{nota}
+
 \section{The menu}\label{sez:menu}
 
 The bar on the left is always there. It widens when you hover over it with

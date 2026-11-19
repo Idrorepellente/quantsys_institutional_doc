@@ -1,0 +1,185 @@
+% ===========================================================================
+%  sviluppatore/07-marketplace/06-codice.tex
+% ===========================================================================
+\section{Il codice che arriva da un altro}\label{sez:codice-marketplace}
+
+Un acquisto installa codice Python scritto da un altro, sul computer dove
+stanno le credenziali del broker, il token del sito e le strategie della
+persona. La regola, in una riga: \textbf{il codice del marketplace fa conti
+sui dati che il sistema gli passa}. Niente file, rete, programmi,
+introspezione dell'interprete, codice costruito a runtime, modifiche al
+sistema. La fanno rispettare tre strati indipendenti, perché nessuno basta da
+solo.
+
+\figuraTikz{codice-marketplace}
+  {I tre strati. L'analisi gira due volte, alla pubblicazione e
+   sul computer di chi compra; la verifica a ogni caricamento; la guardia
+   per tutto il tempo in cui il codice gira.}
+  {codice-marketplace}
+
+\subsection{Primo strato: l'analisi statica}
+
+\file{core/analisi\_codice.py} gira alla pubblicazione (rotta, pagina
+\voce{Sell}, pubblicazione automatica: chi vende vede subito cosa non va) e,
+soprattutto, \textbf{all'installazione sul computer di chi compra}, prima di
+scrivere un solo file. Chi compra non dipende dal fatto che il sito abbia
+controllato: il segreto con cui l'app parla al sito è nell'app distribuita, e
+chiunque potrebbe pubblicare scavalcandola.
+
+\begin{description}[leftmargin = 0pt, style = nextline, itemsep = 6pt]
+\item[Gli import]
+  Una lista di moduli \emph{ammessi}, non di vietati: la libreria standard di
+  calcolo (\pkg{math}, \pkg{statistics}, \pkg{datetime}, \pkg{collections},
+  \pkg{json}, \pkg{re}, \pkg{logging} senza \pkg{handlers} e \pkg{config},
+  \ldots), \pkg{numpy}, \pkg{pandas}, \pkg{scipy}, \pkg{sklearn},
+  \pkg{statsmodels}, \pkg{lightgbm} meno i sottomoduli che fanno I/O o
+  eseguono codice (\cod{SOTTOMODULI\_VIETATI}), e delle parti di Lyra solo
+  l'\term{SDK}: \cod{core.types}, \cod{core.indicators}, \cod{core.portfolio},
+  \cod{core.volume\_profile}, \cod{core.exit\_policy}, \cod{strategies.base},
+  \cod{strategies.descriptor}, \cod{approaches.descriptor},
+  \cod{data.universe}, quattro funzioni di \cod{data.loader} (senza
+  \cod{cache\_dir=}), \cod{data\_series} e \cod{custom\_series} di
+  \cod{core.node\_data}, \cod{features.feature\_engine},
+  \cod{features.panel\_features}, \cod{reporting.metrics}, tre funzioni di
+  \cod{regime.logics.\_base}. Gli import relativi solo dentro la cartella
+  dell'artefatto; mai un altro artefatto, mai sé stesso per nome.
+\item[Le catene risolte]
+  \cod{pd.core.config\_init.os.system} passa per nomi innocui e arriva a
+  \pkg{os}. Ogni catena che parte da un modulo importato si segue sugli
+  oggetti \emph{veri} (l'analisi importa le librerie ammesse): ogni modulo
+  raggiunto deve essere ammesso, l'oggetto finale non deve venire da un modulo
+  vietato (\cod{oggetto\_permesso}).
+\item[I nomi]
+  Builtin pericolosi (\cod{eval}, \cod{exec}, \cod{open}, \cod{globals},
+  \ldots); dunder fuori da un elenco di protocolli; attributi che fanno I/O o
+  portano all'interprete (\cod{read\_*}, \cod{to\_csv}, \cod{tb\_frame},
+  \cod{f\_globals}, \cod{as\_strided}); \cod{getattr} con un nome calcolato
+  (al suo posto \cod{core.types.by\_name}, che fa gli stessi controlli al
+  momento della chiamata); stringhe di formato che attraversano attributi
+  riservati (\cod{"\{0.\_\_globals\_\_\}"}); nomi di metodi passati come
+  stringa (\cod{df.agg("to\_csv")}); assegnazioni e metodi che cambiano oggetti
+  condivisi di Lyra (\cod{UNIVERSE.clear()}, \cod{np.mean = \ldots}).
+\end{description}
+
+\noindent
+È volutamente severa: un falso allarme si risolve riscrivendo una riga, un via
+libera sbagliato no. Ogni rifiuto dice file, riga e cosa fare invece.
+\file{tests/campioni\_marketplace.py} raccoglie le vie di fuga note (\num{89})
+e gli esempi di calcolo che devono passare; undici artefatti di calcolo della
+libreria passano.
+
+\begin{attenzione}{Le parole generiche si controllano solo sui moduli}
+\cod{load}, \cod{config}, \cod{style}, \cod{options} sono pericolosi come
+attributi di un modulo (\cod{np.load}, \cod{logging.config},
+\cod{pd.options}) e parole qualunque come attributi propri
+(\cod{self.config}, \cod{self.style}). Per questo stanno in
+\cod{ATTRIBUTI\_DI\_MODULO} e non in \cod{ATTRIBUTI\_VIETATI}: chi aggiunge un
+nome deve scegliere l'elenco giusto, o l'analisi rifiuterà mezza libreria.
+\end{attenzione}
+
+\subsection{Secondo strato: provenienza e verifica al caricamento}
+
+L'installatore (\file{dashboard/marketplace\_install.py}) è l'unico punto
+d'ingresso: pagina dell'artefatto, client del marketplace
+(\rotta{POST}{/api/market/install/<id>}, che prima scriveva i file in una
+cartella il cui nome veniva dalla richiesta), installazione per
+l'amministratore. Oltre ad analizzare:
+
+\begin{itemize}
+  \item accetta nomi e percorsi \textbf{solo nelle forme previste}:
+        identificatori, \file{<cartella>/<artefatto>/<file>.py} o
+        \file{<cartella>/<artefatto>.py}; mai un modulo del sistema
+        (\file{strategies/registry.py}, \file{weights/\_\_init\_\_.py}) né un
+        \file{\_\_init\_\_.py} del pacchetto --- lo scrive Lyra, vuoto. Prima
+        un progetto poteva scrivere \file{reporting/<qualsiasi>.py}, e da
+        sorgente sovrascrivere il codice di Lyra;
+  \item scrive il \textbf{proprio} \file{run\_backtest.py}
+        (\cod{provenienza.lanciatore}): quello del pacchetto girerebbe come
+        programma principale del backtest. Chi lancia il backtest lo riscrive
+        se è stato cambiato, e non avvia mai un file del venditore come
+        script; i registri fissano \cod{backtest\_script} e
+        \cod{output\_path\_pattern} alla cartella dell'artefatto;
+  \item in un progetto lascia \textbf{intatti} i componenti che la persona ha
+        già, senza mescolarvi file del venditore;
+  \item compila subito i \file{.pyc} (dopo, scritti dal codice del
+        marketplace, la guardia li vieterebbe: un \file{.pyc} scritto da lui
+        girerebbe al posto del sorgente controllato);
+  \item annota ogni file in \file{data/marketplace/installati.json}
+        (\file{core/provenienza.py}): impronta, artefatto, versione, versione
+        delle regole.
+\end{itemize}
+
+\noindent
+Ogni volta che uno di quei file sta per essere eseguito --- evento
+\cod{exec} dell'audit hook, qualunque sia la strada dell'import ---
+\cod{provenienza.verifica} confronta l'impronta: se il file o le regole sono
+cambiati lo si ricontrolla; una modifica che resta nelle regole aggiorna il
+registro, una che ne esce non gira (\cod{ImportError} con il motivo).
+
+\subsection{Terzo strato: la guardia}
+
+\file{core/guardia.py} è un audit hook (\simbolo{PEP~578}). Quando nel filo
+che chiede un'operazione sensibile c'è un frame del codice del marketplace ---
+riconosciuto dal \cod{\_\_file\_\_} dei globali del frame, anche sotto
+funzioni di Python, di una libreria o di Lyra che lui ha chiamato --- valgono
+le sue regole:
+
+\begin{center}
+\begin{tabular}{@{}L{36mm}L{102mm}@{}}
+\toprule
+\textbf{Che cosa} & \textbf{Regola} \\
+\midrule
+\rigaTenue
+Rete & mai, nemmeno la risoluzione dei nomi \\
+Processi, ambiente & mai \\
+\rigaTenue
+Disco & scritture e modifiche mai; letture solo dentro l'app, lo spazio di
+  lavoro, Python e le cartelle di sistema, e mai \file{.env}, token,
+  credenziali del broker, stato del live, runner, log \\
+Interprete & mai pickle, \cod{gc.get\_objects}, codice o funzioni costruiti a
+  runtime, \cod{settrace} \\
+\rigaTenue
+ctypes, frame, marshal & mai \emph{chiesti da lui}: threadpoolctl dentro
+  scikit-learn li usa per sé, e funziona \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+Ogni blocco alza \cod{PermissionError} con il nome dell'artefatto e finisce in
+\cod{ultimi\_blocchi()}, visibile in \rotta{GET}{/api/marketplace/diagnostica}.
+L'hook si accende solo se nello spazio di lavoro c'è codice del marketplace
+(gli hook non si tolgono, e senza nulla da sorvegliare non serve), e si
+installa prima di qualunque artefatto: dall'avvio dell'app, dai pacchetti
+degli artefatti, dal lanciatore, da \cod{run\_walkforward} e
+\cod{run\_approach}. Su un carico pandas pesante il costo è nel rumore della
+misura.
+
+\begin{nota}{Il resto del confine}
+\begin{itemize}
+  \item Il backtest di un artefatto del marketplace parte con un ambiente
+        senza chiavi, token e password (\cod{guardia.ambiente\_sottoprocesso});
+        i segreti della sessione (\cod{LYRA\_TOKEN}, \cod{FLASK\_SECRET\_KEY})
+        non arrivano a nessun sottoprocesso.
+  \item I motori gli passano il portafoglio in sola lettura e gli indicatori
+        in copia (\vediSez{live}).
+  \item Metriche e indicatori arrivano come testo: se il testo è quello di
+        un file del marketplace si compila con il suo percorso e la guardia
+        li riconosce.
+  \item Ciò che è stato comprato non si ripubblica: fuori dall'elenco di
+        \voce{Sell}, rifiutato dalla rotta (anche dentro un progetto) e dalla
+        pubblicazione automatica.
+  \item \voce{Studio › Import\ldots}, codice portato dentro a mano: la stessa
+        analisi produce un avviso, non un blocco. È una scelta di chi importa.
+\end{itemize}
+\end{nota}
+
+\begin{attenzione}{Che cosa resta fuori}
+Uno strato dentro il processo non ferma un bug di memoria nativo di
+\pkg{numpy} o \pkg{pandas} sfruttato apposta: per questo l'analisi vieta le
+primitive di memoria grezza e il processo del backtest non ha segreti
+nell'ambiente. Le letture di \cod{os.environ} non passano per l'audit hook:
+le blocca solo l'analisi statica. Chi aggiunge una funzione all'SDK deve
+chiedersi se prende un percorso, un indirizzo o un oggetto con dentro il
+broker: se sì, non va nell'SDK.
+\end{attenzione}

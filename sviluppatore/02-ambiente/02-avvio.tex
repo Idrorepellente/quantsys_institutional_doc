@@ -14,43 +14,70 @@ sottocartella: gli import sono assoluti rispetto a quella.
 \midrule
 \rigaTenue
 \file{python scripts/run\_dashboard.py}
-  & \num{5000} & L'interfaccia completa. È questo che si usa nel
-                 \num{99}\,\% dei casi. \\
+  & \num{5000}\textsuperscript{*} & L'interfaccia completa. È questo che si
+                 usa nel \num{99}\,\% dei casi. \\
 \file{python run\_api.py}
   & \num{8000} & Solo l'API FastAPI del motore. Nessuna pagina, solo JSON. \\
 \rigaTenue
 \file{python desktop\_app.py}
-  & \num{5000} & La stessa dashboard, in una finestra nativa invece che in una
-                 scheda del browser. Richiede \pkg{pywebview}. \\
+  & \num{5000}\textsuperscript{*} & La stessa dashboard, in una finestra
+                 nativa invece che in una scheda del browser. Richiede
+                 \pkg{pywebview}. \\
 \file{npm run dev} (in \file{sito/})
   & \num{3000} & Il sito. Indipendente dai tre precedenti. \\
 \bottomrule
 \end{tabular}
+
+\smallskip
+{\footnotesize \textsuperscript{*}\,Se libera; altrimenti \num{47821}--\num{47823}, poi
+una porta scelta dal sistema.}
 \end{center}
 
 \subsection{La dashboard}
 
 \begin{codiceInterno}{console}{Avvio normale}{}
 python scripts/run_dashboard.py
-# http://127.0.0.1:5000
+# Listening on 127.0.0.1:5000
+# Open: http://127.0.0.1:5000/__lyra/entra?t=Zq3...   <- il gettone di questo avvio
 \end{codiceInterno}
 
 \noindent
-Host e porta si cambiano con le variabili d'ambiente \cod{FLASK\_HOST} e
-\cod{FLASK\_PORT}, oppure nei campi corrispondenti della configurazione. Il
-default è \cod{127.0.0.1}, cioè raggiungibile solo dalla macchina stessa, e
-questo non è un dettaglio di comodità.
+Si entra dall'indirizzo stampato, non da \cod{http://127.0.0.1:5000}: il
+server risponde solo a chi presenta il \term{gettone} di questo avvio
+(\vediSez{accesso-locale}). La pagina \percorsoHTTP{/\_\_lyra/entra} mette il
+gettone in un cookie e porta alla dashboard; senza, ogni pagina dice
+\enquote{Open Lyra from its window} e ogni API risponde \cod{401}.
+
+\begin{description}[leftmargin = 1.4em, style = nextline, itemsep = 4pt]
+  \item[\cod{FLASK\_HOST}, \cod{FLASK\_PORT}] Host e porta \emph{preferita}.
+    Se la porta è occupata --- su macOS la \num{5000} è di AirPlay Receiver,
+    che risponde \cod{403} a tutto --- il server prova \num{47821},
+    \num{47822}, \num{47823}, poi una porta libera qualsiasi
+    (\cod{dashboard/accesso\_locale.crea\_server}).
+  \item[\cod{LYRA\_TOKEN}] Il gettone, se lo si vuole fisso (almeno
+    \num{16} caratteri). Senza, uno nuovo a ogni avvio. Il server lo toglie
+    dall'ambiente appena letto: i sottoprocessi non lo ereditano.
+  \item[\cod{LYRA\_RUNTIME\_FILE}] Dove scrivere \cod{\{port, pid, url\}}
+    appena il server ascolta. Lo legge Electron, che non indovina più la
+    porta.
+  \item[\cod{LYRA\_ALLOWED\_HOSTS}] Gli \cod{Host} ammessi oltre a
+    \cod{localhost}, \cod{127.0.0.1} e \cod{[::1]} sulla porta del server
+    (serve con Docker).
+  \item[\cod{FLASK\_DEBUG}] In debug la porta è quella della configurazione
+    e il gettone resta nell'ambiente, perché il processo figlio del
+    ricaricatore lo deve ritrovare.
+\end{description}
 
 \begin{attenzione}{La dashboard non va esposta in rete}
-Quasi nessuna rotta della dashboard richiede un login, ed è una scelta
-deliberata: l'applicazione gira sul computer di chi la usa, e chiedere un
-account per entrare in casa propria non avrebbe senso. Il prezzo è che chi
-raggiunge la porta \num{5000} può fare tutto: lanciare backtest, leggere le
-credenziali del broker, scrivere file. Mettere \cod{FLASK\_HOST=0.0.0.0} su
-una macchina raggiungibile da fuori significa consegnarla. Le uniche aree
-protette sono quelle che toccano il sito --- marketplace, profilo,
-abbonamento, amministrazione --- e il \vediSez{permessi} spiega
-esattamente quali e perché.
+Il gettone e il controllo dell'\cod{Host} fermano le pagine web che il
+browser visita e gli altri programmi del computer: è questo che chiude il
+DNS rebinding, con cui una pagina qualsiasi poteva far girare Python sulla
+macchina. Non rendono la dashboard adatta alla rete: chi ha il gettone può
+tutto --- lanciare backtest, leggere le credenziali del broker, scrivere
+file --- e su HTTP il gettone viaggia in chiaro. \cod{FLASK\_HOST=0.0.0.0} su
+una macchina raggiungibile da fuori resta un modo di consegnarla. Le aree che
+toccano il sito --- marketplace, profilo, abbonamento, amministrazione ---
+chiedono in più l'accesso dell'account (\vediSez{permessi}).
 \end{attenzione}
 
 \subsection{L'API del motore}

@@ -3,6 +3,48 @@
 % ===========================================================================
 \section{Chi può fare che cosa}\label{sez:permessi}
 
+\subsection{Prima di tutto: chi parla con il server}\label{sez:accesso-locale}
+
+La dashboard esegue Python per mestiere --- Studio, i backtest, l'agente ---
+quindi la prima domanda non è \emph{quale account}, ma \emph{quale
+processo} sta chiamando. Una pagina web aperta nel browser può far risolvere
+un suo nome a \cod{127.0.0.1} (DNS rebinding) e parlare con il server come
+se fosse la dashboard. Per questo, prima di ogni altra guardia,
+\file{dashboard/accesso\_locale.py} ne inserisce una in testa a
+\cod{before\_request} (\cod{proteggi}):
+
+\begin{enumerate}
+  \item \textbf{l'\cod{Host}} deve essere \cod{localhost}, \cod{127.0.0.1}
+        o \cod{[::1]} sulla porta del server (o uno di
+        \cod{LYRA\_ALLOWED\_HOSTS}): altrimenti \cod{403};
+  \item i file statici e quattro percorsi (\cod{ESENTI}:
+        \percorsoHTTP{/\_\_lyra/ping}, \percorsoHTTP{/\_\_lyra/entra},
+        il ritorno dell'accesso con Google, la favicon) passano;
+  \item tutto il resto vuole il \textbf{gettone} di questo avvio, nel cookie
+        \cod{lyra\_t} (HttpOnly, SameSite=Strict) o nell'intestazione
+        \cod{X-Lyra-Token}, confrontato con \cod{hmac.compare\_digest}:
+        altrimenti \cod{401}, in HTML per una pagina e in JSON per un'API.
+\end{enumerate}
+
+\noindent
+\percorsoHTTP{/\_\_lyra/ping?n=} risponde con l'HMAC-SHA256 del numero con il
+gettone: è così che Electron (e \file{desktop\_app.py}) riconoscono il
+proprio server fra quelli che rispondono su una porta. \percorsoHTTP{/\_\_lyra/entra?t=\&next=}
+imposta il cookie e reindirizza, ma solo a un percorso relativo. Electron
+mette il cookie nella sessione prima di aprire la finestra, e un
+\cod{window.open} della stessa origine apre una finestra dell'app con lo
+stesso cookie.
+
+\begin{nota}{Il token del sito non esce per chi non ha fatto l'accesso}
+\cod{app\_api.token()}, il token che dice al sito \emph{chi sei}, dentro una
+richiesta della dashboard senza \cod{uid} in sessione restituisce
+\cod{None}. Prima una rotta nuova che parlava con il sito nasceva aperta
+finché qualcuno non la aggiungeva all'elenco \cod{\_SERVE\_ACCOUNT}
+qui sotto; ora, dimenticandola, non agisce a nome di nessuno.
+\end{nota}
+
+\subsection{La guardia dell'account}
+
 Cercando un decoratore \cod{@login\_required} sulle rotte della dashboard non
 se ne trova quasi nessuno. Non è una dimenticanza: il controllo è uno solo,
 globale, e sta in \file{dashboard/auth.py}.

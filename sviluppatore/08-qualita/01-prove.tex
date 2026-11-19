@@ -15,9 +15,9 @@ quello è il posto giusto dove cercare prima di modificare l'area che copre.
 \textbf{Suite} & \textbf{Righe} & \textbf{Che contratto sorveglia} \\
 \midrule
 \rigaTenue
-\file{prova\_normalizzazione\_stream.py} & \num{691}
-  & Backtest e live devono produrre lo \emph{stesso libro}
-    (\vediSez{live}). \\
+\file{prova\_normalizzazione\_stream.py} & \num{719}
+  & Backtest e live devono produrre lo \emph{stesso libro}, e gli stessi
+    pesi barra per barra (\vediSez{live}, \vediSez{ensemble}). \\
 \file{prova\_beta\_accesso.py} & \num{617}
   & La beta: account creati dal sistema, prima password, iscrizioni chiuse,
     limite e lista d'attesa, \textbf{contro il sito vero}. \\
@@ -42,6 +42,34 @@ quello è il posto giusto dove cercare prima di modificare l'area che copre.
 \file{prova\_dati\_ausiliari.py} & \num{278}
   & Le categorie di dati che un artefatto legge, e come il marketplace le
     mostra (\vediSez{dati-ausiliari}). \\
+\rigaTenue
+\file{prova\_codice\_}\allowbreak\mbox{\file{marketplace.py}} & \num{763}
+  & Il codice che arriva dal marketplace: analisi, installazione, verifica
+    al caricamento, guardia, motori, backtest vero sotto la guardia,
+    pubblicazione (\vediSez{codice-marketplace}). \\
+\file{prova\_avvio\_sicuro.py} & \num{536}
+  & Porta libera, gettone, \cod{Host}, identità del server, ingresso dal
+    browser, il token del sito solo con l'accesso (\vediSez{accesso-locale}). \\
+\rigaTenue
+\file{prova\_pesi\_causali.py} & \num{445}
+  & I pesi decisi con il solo passato, gli overlay che guardano avanti
+    scartati, il live sullo stesso calendario (\vediSez{ensemble}). \\
+\file{prova\_dividendi.py} & \num{353}
+  & La rettifica dei dividendi su tutta la barra, in backtest e dal vivo
+    (\vediSez{dividendi}). \\
+\rigaTenue
+\file{prova\_firma.py} & \num{293}
+  & La configurazione della firma e i controlli della build
+    (\vediSez{rilascio}). \\
+\file{prova\_unita\_fx.py} & \num{248}
+  & Le unità delle coppie forex negli ordini, nel broker su carta e nello
+    specchio (\vediSez{live-valute}). \\
+\rigaTenue
+\file{prova\_autopubblica\_consenso.py} & \num{237}
+  & La pubblicazione automatica solo con il consenso; l'id a caso
+    dell'installazione (\vediSez{pubblicare}). \\
+\file{prova\_broker\_test.py} & \num{187}
+  & Il broker TEST sul motore del backtest. \\
 \bottomrule
 \end{tabular}
 \end{center}

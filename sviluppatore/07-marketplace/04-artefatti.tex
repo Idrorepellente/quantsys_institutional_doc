@@ -33,8 +33,17 @@ cartella.
 
 \subsection{La pubblicazione automatica}
 
-\file{dashboard/autopubblica.py} gira in un thread dall'avvio e pubblica da
-sé gli artefatti che superano una soglia.
+\file{dashboard/autopubblica.py} pubblica da sé gli artefatti che superano
+una soglia --- \textbf{solo per chi l'ha accesa}. È spenta finché la persona
+non la accende per il proprio account (Profile › \voce{Automatic
+publishing}, rotta \rotta{GET/POST}{/api/account/autopubblica}): caricare il
+codice di qualcuno sul sito, anche gratis e nascosto, è una scelta sua. Il
+consenso sta nel file di tracciamento sotto la sua identità, con la data e la
+versione del testo che ha letto (\cod{VERSIONE\_CONSENSO}: se il testo cambia
+nella sostanza, va alzata, e il consenso dato su quello vecchio smette di
+valere). Senza consenso \cod{attiva(base, ident)} è falso e nulla parte:
+nessun thread dopo un backtest, nessuna scansione d'avvio, nessuna chiamata
+al sito. \cod{LYRA\_AUTOPUBBLICA=0} la spegne anche per chi ha acconsentito.
 
 \begin{codiceInterno}{python}{Che cosa fa}{dashboard/autopubblica.py}
 COSA FA
@@ -85,7 +94,18 @@ verificare che cosa il modulo abbia deciso e perché.
 \subsection{L'identità di chi pubblica}
 
 Il marketplace ammette due identità diverse per lo stesso artefatto: il conto
-dell'utente e la macchina. «Già caricata» ha senso solo rispetto a una delle
-due, ed è la ragione per cui il pannello di amministrazione conta gli
-artefatti \emph{per conto e per macchina}
+dell'utente e l'installazione. «Già caricata» ha senso solo rispetto a una
+delle due, ed è la ragione per cui il pannello di amministrazione conta gli
+artefatti \emph{per conto e per installazione}
 (\rotta{GET}{/api/admin/artefatti}), non solo in totale.
+
+L'installazione si riconosce da un \textbf{numero a caso}
+(\file{core/installazione.py}): \num{32} cifre esadecimali generate una
+volta e salvate in \file{data/installazione.json}. Prima era un digest
+dell'hardware --- nome della macchina, architettura, sistema e indirizzo MAC
+---: stabile, ma un identificativo del dispositivo collegato a un account è
+un dato personale. Lo stesso numero vale per il limite di installazioni degli
+acquisti (\cod{marketplace\_client.impronta\_macchina}, nome mantenuto per
+chi la chiama); la colonna \cod{macchina} di \cod{app\_auto\_publish} lo
+contiene. Gli artefatti installati \emph{dal} marketplace non entrano mai
+nella pipeline (\cod{strategie\_nel\_sistema} li salta).

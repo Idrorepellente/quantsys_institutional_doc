@@ -91,31 +91,51 @@ Adattiva al regime & \textbf{rolling} & \cod{regime\_ml}, \cod{regime\_style} \\
 \end{center}
 
 \noindent
-Il campo \cod{kind} del \cod{META} governa il dispatch, e non è
-documentazione: è la condizione di un \cod{if}.
+Nessuna di queste modalità vede il futuro, e non per disciplina di chi le ha
+scritte: \textbf{il tempo lo tiene il motore} (\file{reporting/pesi\_causali.py}).
+\cod{pesi\_nel\_tempo} ribilancia ogni \cod{rebalance\_days} giorni (il
+\cod{rebalance\_freq\_days} del progetto, \num{63} se non detto) a partire dalla
+riga \cod{min\_history\_days} (\num{252}); prima, pesi uguali. Alla riga $i$ la
+modalità riceve \emph{solo} le righe $[0, i)$ --- fino al giorno prima ---, e
+solo le ultime \cod{window\_days} se le dichiara; il motore le passa una
+\cod{VistaPesi}: gli scalari del motore copiati, le serie che conosce
+(regime di trend, stress, risk-off) tagliate prima della data, niente
+percorsi, niente metodi, in sola lettura. I pesi restituiti valgono dalla
+riga $i$ fino al ribilanciamento successivo.
 
-\begin{codiceInterno}{python}{Il dispatch, senza una catena di if}{reporting/ensemble.py:491}
-        spec = next((m for m in self.WEIGHTING_MODE_REGISTRY
-                     if m["key"] == self.weighting_mode), None)
-        if spec is None:
-            raise ValueError(f"Unknown weighting_mode: {self.weighting_mode}")
-        weight_fn = _WEIGHTING_COMPUTERS[self.weighting_mode]
-        if spec["kind"] == "static":
-            weights = weight_fn(self, stream_pnls)
-        else:  # rolling: pesi time-varying; per la UI esponi la MEDIA come scalare
-            weights_over_time = weight_fn(self, stream_pnls)
-            mean_w = weights_over_time.mean(axis=0)
-            weights = {name: float(mean_w[name]) for name in stream_pnls}
+\begin{codiceInterno}{python}{Il calendario dei pesi}{reporting/pesi\_causali.py}
+    primo = min(max(minimo, 1), len(indice))
+    for i in range(primo, len(indice), ogni):
+        data = indice[i]
+        passato = {c: tabella[c].iloc[:i] for c in nomi}
+        w, esito = pesi_alla_data(eng, fn, meta, passato, data)
+        W[i, :] = [w[c] for c in nomi]
+        fine = min(i + ogni, len(indice))
+        W[i:fine, :] = W[i, :]
 \end{codiceInterno}
 
-\begin{attenzione}{Il modello documenta un valore che non esiste}
-\file{weights/WEIGHT\_MODE\_TEMPLATE.md} dice che \cod{kind} vale
-\cod{"static"} o \cod{"dynamic"}. Nel codice il confronto è con
-\cod{"static"}, e \emph{tutto il resto} finisce nel ramo rolling. I
-quattordici plugin installati usano \cod{static} (dieci) e \cod{rolling}
-(quattro); \cod{dynamic} non lo usa nessuno. Un plugin scritto seguendo il
-modello funzionerebbe per caso. Il modello è da correggere, il codice no.
-\end{attenzione}
+\noindent
+Il campo \cod{kind} del \cod{META} non decide più niente: prima i modi
+\enquote{static} stimavano un solo vettore sull'intero periodo --- cioè
+conoscevano i rendimenti che stavano pesando --- e la causalità dei
+\enquote{rolling} dipendeva da chi li aveva scritti. Misurato su un progetto
+di prova: Kelly e Black-Litterman guadagnavano circa \num{0.13} di Sharpe
+rispetto alla stessa modalità ristimata con il solo passato, le modalità di
+solo rischio quasi niente. \cod{EnsembleResult} porta i pesi di oggi
+(\cod{weights}, l'ultima riga), la loro media (\cod{weights\_mean}) e il
+calendario (\cod{weights\_info}: ogni quanto, da quando, quante ricadute sui
+pesi uguali); la pagina del progetto li mostra tutti e tre.
+
+\begin{nota}{Il live usa la stessa tabella}
+\cod{LiveStreamEnsemble.weights} (\file{live/ensemble\_live.py}) conserva
+tutta la storia degli stream --- seminata con quella del backtest --- e
+ricalcola alle stesse righe: dopo $M$ barre registrate usa i pesi
+dell'ultimo ribilanciamento $i \le M$, calcolati con le righe $[0, i)$,
+cioè la riga $M$ della tabella del backtest. Prima contava le barre arrivate
+dopo l'ultimo calcolo, e le date dei ribilanciamenti dipendevano da quando
+il runner era partito. \file{tests/prova\_normalizzazione\_stream.py} lo
+verifica barra per barra: scarto zero.
+\end{nota}
 
 \subsection{Fra pesatura e overlay: la correzione di sovrapposizione}\label{sez:sovrapposizione}
 
@@ -181,6 +201,17 @@ si moltiplicano fra loro.
                 total_mult = total_mult * m
             ensemble_pnl = base_pnl * total_mult
 \end{codiceInterno}
+
+\noindent
+Un overlay restituisce un moltiplicatore per giorno, e quello del giorno $t$
+deve dipendere solo da ciò che si sapeva alla chiusura di $t-1$. Chiamarlo
+giorno per giorno costerebbe un calcolo per ogni giorno della storia: il
+motore lo chiama una volta su tutto e lo \emph{rifà} su tre tagli della
+storia (\num{45}, \num{70} e \num{90}\,\%), con il dato dell'ultimo giorno
+del taglio stravolto e le serie esterne fermate al giorno prima
+(\cod{overlay\_causale}). Se fino al taglio i moltiplicatori non sono
+identici, l'overlay usa dati che al momento della decisione non c'erano: non
+si applica, e il risultato lo dice (\cod{overlays\_rejected}).
 
 \begin{nota}{L'indipendenza dall'ordine è una proprietà costruita}
 Se ogni overlay calcolasse il proprio moltiplicatore dal PnL già modificato

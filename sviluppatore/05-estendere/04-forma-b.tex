@@ -139,7 +139,8 @@ aggiornata la sua fonte, \vediSez{nuova-fonte}):
 \subsection{Che cosa si può importare}
 
 Il codice di un artefatto di forma~B passa da un validatore \simbolo{AST}
-quando arriva dall'editor. Le radici ammesse e quelle vietate:
+quando arriva dall'editor (\file{adapters/weight\_mode\_validator.py}, sopra
+\file{adapters/ast\_validator.py}). Le radici ammesse e quelle vietate:
 
 \begin{center}
 \begin{tabular}{@{}L{30mm}L{108mm}@{}}
@@ -150,15 +151,24 @@ quando arriva dall'editor. Le radici ammesse e quelle vietate:
 Ammessi ovunque & \pkg{numpy}, \pkg{pandas}, \pkg{math}, \pkg{statistics},
   \pkg{logging}, \pkg{typing} \\
 Ammessi in \pkgPesi & più \pkg{scipy}, \pkg{sklearn}, \pkg{lightgbm},
-  \cod{from ..metrics import ...} \\
+  \cod{reporting.metrics} \\
 \rigaTenue
 Ammessi in \pkgOverlay & più \pkg{approaches}, \pkg{core}, \pkg{reporting} \\
 \textbf{Vietati} & \pkg{os}, \pkg{sys}, \pkg{subprocess}, \pkg{socket},
   \pkg{requests}, \cod{open}, \cod{eval}, \cod{exec}, \cod{\_\_import\_\_},
-  \pkg{importlib} \\
+  \pkg{importlib}; in una modalità di pesatura anche ogni lettura o scrittura
+  di file e rete che passa dalle librerie ammesse (\cod{pd.read\_*},
+  \cod{df.to\_csv}, \cod{np.load}, \cod{pandas.io}, \cod{df.eval}, un
+  \cod{getattr} usato come valore) \\
 \bottomrule
 \end{tabular}
 \end{center}
+
+\noindent
+Il divieto di I/O dentro le librerie è ciò che rende vera la regola del
+tempo: \cod{pd.read\_parquet} su \file{output/} leggerebbe gli stream interi,
+futuro compreso. Il codice che arriva dal \emph{marketplace} ha regole più
+strette e uguali per tutte le famiglie (\vediSez{codice-marketplace}).
 
 \begin{perche}{Perché un validatore e non la fiducia}
 Un artefatto del marketplace è codice di qualcun altro che gira sulla
@@ -172,17 +182,28 @@ marketplace mostra sempre.
 
 \subsection{Le regole dei pesi}
 
-Oltre al contratto di firma, una modalità di pesatura deve rispettare quattro
-condizioni, che il motore \emph{non} verifica:
+Il contratto completo è in \file{weights/WEIGHT\_MODE\_TEMPLATE.md}; il punto
+è uno: \cod{compute(eng, stream\_pnls)} restituisce \textbf{un dizionario per
+una data}, e il tempo lo tiene il motore (\vediSez{ensemble}). La modalità
+riceve i soli giorni prima della decisione, e una \cod{VistaPesi} del motore
+in sola lettura. Nel \cod{META} può chiedere:
 
 \begin{itemize}
-  \item pesi \textbf{solo lunghi};
-  \item limitati all'intervallo \cod{[eng.min\_weight, eng.max\_weight]};
-  \item normalizzati a somma \num{1};
-  \item \cod{\{\}} se non calcolabili --- l'ensemble ha un ripiego, ma solo
-        se glielo si dice restituendo il vuoto. Restituire pesi sbagliati non
-        attiva nessun ripiego.
+  \item \cod{rebalance\_days} --- ogni quanto (predefinito: il
+        \cod{rebalance\_freq\_days} del progetto);
+  \item \cod{min\_history\_days} --- la storia che serve prima della prima
+        stima (predefinito \num{252}; prima, pesi uguali);
+  \item \cod{window\_days} --- una finestra mobile (assente: tutta la storia).
 \end{itemize}
+
+\noindent
+Al posto di un numero si può nominare un parametro del progetto
+(\cod{"window\_days": "estimation\_window\_days"}). I pesi devono essere
+\textbf{solo lunghi}, nell'intervallo \cod{[eng.min\_weight, eng.max\_weight]},
+a somma \num{1}; \cod{\{\}} se non calcolabili. Il motore normalizza ciò che
+può e, se il risultato non è valido, usa pesi uguali per quel periodo e lo
+conta (\cod{weights\_info["fallbacks"]}). Una tabella nel tempo (le vecchie
+modalità \enquote{rolling}) funziona ancora: se ne prende l'ultima riga.
 
 \subsection{Le regole degli overlay}
 

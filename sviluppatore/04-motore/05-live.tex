@@ -139,6 +139,59 @@ conto solleva \simbolo{BrokerUnavailable} (una \simbolo{ConnectionError}):
 il runner lo riprova invece di fermarsi. Anche un fill parziale
 entra nel libro della strategia (\simbolo{LivePortfolioMirror.record\_fill}).
 
+\subsubsection{Il broker TEST gira con il motore del backtest}
+
+Il broker di prova non ha più un percorso suo. Prima
+\cod{demo=(broker == "test")} portava a un motore con un solo allocatore e i
+default di libreria, non agli stream come nel backtest: TEST provava una
+macchina che nessun runner vero usava. Ora \cod{SimulazioneTest}
+(\file{dashboard/live\_test.py}) costruisce il motore con
+\cod{live.runner.build\_engine\_from\_config}, come ogni runner: stessi
+stream, parametri, dati extra e semina dal backtest
+(\file{tests/prova\_broker\_test.py}).
+
+\subsubsection{Le unità delle coppie forex}\label{sez:live-valute}
+
+Il motore dimensiona in dollari: \emph{peso} $\times$ \emph{equity} /
+\emph{valore di un'unità}. Un ordine su una coppia è un numero di unità
+della valuta \emph{base}, e un'unità vale il prezzo per il cambio in dollari
+della valuta di \emph{quotazione} (\file{live/valute.py},
+\cod{Cambi.valore\_unita}):
+
+\begin{center}
+\begin{tabular}{@{}L{24mm}L{60mm}L{54mm}@{}}
+\toprule
+\textbf{Coppia} & \textbf{Un'unità vale, in dollari} & \textbf{Prima} \\
+\midrule
+\rigaTenue
+EURUSD & il prezzo & giusto \\
+USDJPY & $\text{prezzo} \times \text{JPYUSD} = 1$ & il prezzo: circa
+  $1/150$ dell'esposizione \\
+\rigaTenue
+EURGBP & $\text{prezzo} \times \text{GBPUSD}$ & il prezzo: un quarto in più \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+Il cambio si legge dai prezzi del ciclo (la coppia contro il dollaro, diretta
+o inversa) o dal deposito; senza, l'ordine non parte e il registro lo dice.
+Lo stesso fattore converte esposizioni e PnL nello specchio del portafoglio
+(\cod{sync(..., cambi=)}) e tiene i saldi per valuta nel broker su carta
+(\file{tests/prova\_unita\_fx.py}).
+
+\subsubsection{Una strategia del marketplace vede copie}
+
+Il motore passa a \cod{generate\_signals} gli stessi oggetti da cui calcola
+gli ordini: lo specchio del portafoglio e gli indicatori. A una strategia il
+cui codice viene dal marketplace (\cod{guardia.da\_marketplace}) passa invece
+una \emph{vista} del portafoglio in sola lettura --- attributi pubblici in
+copia, metodi di sola lettura, nessun privato, l'oggetto vero chiuso in una
+chiusura --- e una \emph{copia} degli indicatori
+(\file{core/vista\_marketplace.py}). Lo stesso nel backtest, dove la copia
+degli indicatori si fa una volta per backtest: chi compra verifica risultati
+che la strategia non ha potuto ritoccare (\vediSez{codice-marketplace}).
+
 \begin{center}
 \begin{tabular}{@{}L{30mm}L{108mm}@{}}
 \toprule
@@ -893,7 +946,9 @@ Ogni runner gira in un thread suo, con un proprio event loop
 che non è il principale non ne ha uno. Fermato il runner, gli ordini di Lyra
 ancora aperti si cancellano (con ordini reali, sul conto verificato), il
 collegamento al broker si chiude --- altrimenti IBKR terrebbe occupato il
-client ID --- e il loop con lui.
+client ID --- e il loop con lui. Il ciclo singolo di
+\cod{/api/live/run\_cycle} fa lo stesso: apre il proprio loop e alla fine lo
+chiude, con il collegamento.
 
 \begin{itemize}
   \item \textbf{Un avvio solo.} \simbolo{start} tiene un lucchetto dai
