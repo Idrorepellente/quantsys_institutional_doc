@@ -100,6 +100,25 @@ Il prefisso \cod{\_} davanti al nome della cartella è l'interruttore:
 Rinominare la cartella è l'unico gesto necessario --- non c'è nessun elenco da
 aggiornare da nessuna parte. Delle \num{29} cartelle sotto \pkgStrategie,
 \num{20} cominciano con il trattino basso e restano fuori.
+
+Lo stesso gesto si fa dall'applicazione: in \voce{Run backtest} il menu di
+ogni scheda nasconde (rinomina) o elimina, e la sezione
+\voce{Obsolete strategies} elenca le cartelle col trattino, con
+\pulsante{Show again}. Il codice è in \file{dashboard/strategie\_obsolete.py}
+(le rotte in \file{dashboard/ui\_ext\_obsolete.py}), e fa tre cose che una
+rinomina a mano non fa:
+\begin{itemize}
+  \item rifiuta se l'artefatto serve a un runner del Live, anche dentro il
+        progetto del runner, o a un backtest in corso;
+  \item annota la cartella in \file{.seed\_esclusi.json}, nella radice dello
+        spazio di lavoro: l'app installata, che a ogni avvio ricopia dal
+        pacchetto i file di libreria mancanti, non ricrea così ciò che
+        l'utente ha tolto;
+  \item eliminando, toglie anche i file dei risultati, riconosciuti dal nome
+        (\file{dashboard/stream\_cleanup.py}): un file il cui nome intero è
+        quello di un artefatto esistente resta suo, quindi eliminare
+        \file{pead} non tocca \file{wf\_pead\_ml.json}.
+\end{itemize}
 \end{pratica}
 
 \subsection{L'interfaccia, e il resto}

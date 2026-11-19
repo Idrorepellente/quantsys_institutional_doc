@@ -15,7 +15,8 @@ losses over time. The \voce{Streams} page shows them all, one card each.
 
 The \voce{Run backtest} tab, next to \voce{Streams}, lists everything that
 can be run: the installed strategies and approaches, each with its own
-description and a button.
+description and a button. What you no longer use can be put aside or deleted
+from the card itself (\vediSez{run-hide}).
 
 \figuraSchermata{1.0}{figure/schermate/run.png}
   {What can be run. \pulsante{Run All} queues them all, one after the
@@ -37,6 +38,75 @@ Backtests run in a queue, not in parallel, even if you press several
 buttons. It is not a limit to work around: two calculations at the same time
 would fight over the same files and produce mixed-up results.
 \end{attenzione}
+
+\subsection{Hiding a strategy, or deleting it}\label{sez:run-hide}
+
+A strategy or an approach you no longer use does not have to stay in this
+list. Click its card, anywhere but on its button, or the \voce{$\cdots$} in
+its corner: a small menu offers two ways out.
+
+\figuraSchermata{1.0}{figure/schermate/run-menu.png}
+  {The menu of a card. \voce{Hide} puts the strategy aside and keeps
+   everything; \voce{Delete} removes it for good.}
+  {run-menu}
+
+\voce{Hide} is the one to reach for first. The card moves to
+\voce{Obsolete strategies}, at the bottom of the page, and the strategy is no
+longer offered here or in \voce{Live}. Nothing is lost: its code and its
+backtest results stay where they are, and the message that confirms it has an
+\pulsantesec{Undo}. If the strategy is part of a project, the message says so:
+show it again before running that project in \voce{Live}.
+
+\voce{Delete} removes the strategy together with its backtest results, so its
+stream leaves \voce{Streams} as well. Before anything happens, a confirmation
+lists what will go: the folder of the strategy, each results file and the
+projects that contain it.
+
+\figuraSchermata{0.62}{figure/schermate/run-delete.png}
+  {The confirmation of \voce{Delete}. The focus starts on
+   \pulsantesec{Cancel}: pressing Enter out of habit deletes nothing.}
+  {run-delete}
+
+\begin{attenzione}{When the page says no}
+A strategy that a runner in \voce{Live} is using, on its own or inside the
+runner's project, can be neither hidden nor deleted: the runner could not
+start again without it. The same holds while one of its backtests is running.
+The message names the runner: stop it, or make it run something else, and try
+again.
+\end{attenzione}
+
+\subsection{Obsolete strategies}\label{sez:run-obsolete}
+
+The section at the bottom of the page lists only the strategies and
+approaches you have hidden. It stays closed until you open it, the number next
+to its title tells you how many there are, and the page remembers whether you
+left it open.
+
+\figuraSchermata{1.0}{figure/schermate/run-obsolete.png}
+  {Obsolete strategies. For each one its type, its folder, its description
+   and how many results files it still has; \pulsantesec{Show again} puts it
+   back in the list above, the bin deletes it.}
+  {run-obsolete}
+
+\begin{nota}{What \enquote{obsolete} means on disk}
+A hidden strategy is a folder whose name starts with an underscore:
+\file{strategies/\_momentum} instead of \file{strategies/momentum}. It is the
+rule the system has always followed, so renaming the folder by hand does the
+same thing, and a folder renamed by hand shows up here too.
+\end{nota}
+
+Two cases are worth knowing:
+\begin{itemize}
+  \item \pulsantesec{Show again} is greyed out when a visible strategy with the
+    same name already exists: there would be two folders with one name.
+    Delete one of the two first; deleting the hidden copy leaves the results
+    to the visible one, which uses them.
+  \item A strategy written long ago may no longer load, because of an import
+    that has since disappeared, for instance. Shown again, it goes back to its
+    folder but not to the list, and a message gives the error: correct it in
+    \voce{Studio}, where it now appears, or put it back among the obsolete
+    ones with \pulsantesec{Hide it again}.
+\end{itemize}
 
 \section{The page of a result}\label{sez:stream-detail}
 

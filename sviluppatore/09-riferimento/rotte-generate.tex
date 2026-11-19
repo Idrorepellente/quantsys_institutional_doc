@@ -371,6 +371,18 @@
 \bottomrule
 \end{longtable}
 
+\subsection{ui\_ext\_esporta.py --- estensione v2, esportazione}
+\begin{longtable}{@{}L{17mm}L{74mm}L{45mm}@{}}
+\toprule
+\textbf{Metodi} & \textbf{Percorso} & \textbf{Funzione} \\
+\midrule\endfirsthead
+\toprule
+\textbf{Metodi} & \textbf{Percorso} & \textbf{Funzione} \\
+\midrule\endhead
+{\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak export/\allowbreak results} & {\ttfamily\scriptsize esporta\_\allowbreak{}risultati} \\
+\bottomrule
+\end{longtable}
+
 \subsection{ui\_ext\_f.py --- estensione v2}
 \begin{longtable}{@{}L{17mm}L{74mm}L{45mm}@{}}
 \toprule
@@ -384,7 +396,7 @@
 \bottomrule
 \end{longtable}
 
-\subsection{ui\_ext\_esporta.py}
+\subsection{ui\_ext\_obsolete.py --- estensione v2, strategie obsolete}
 \begin{longtable}{@{}L{17mm}L{74mm}L{45mm}@{}}
 \toprule
 \textbf{Metodi} & \textbf{Percorso} & \textbf{Funzione} \\
@@ -392,10 +404,14 @@
 \toprule
 \textbf{Metodi} & \textbf{Percorso} & \textbf{Funzione} \\
 \midrule\endhead
-{\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak export/\allowbreak results} & {\ttfamily\scriptsize esporta\_\allowbreak{}risultati} \\
+{\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak strategies/\allowbreak <kind>/\allowbreak <name>/\allowbreak delete} & {\ttfamily\scriptsize api\_\allowbreak{}strategy\_\allowbreak{}delete} \\
+\rigaTenue {\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak strategies/\allowbreak <kind>/\allowbreak <name>/\allowbreak hide} & {\ttfamily\scriptsize api\_\allowbreak{}strategy\_\allowbreak{}hide} \\
+{\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak strategies/\allowbreak <kind>/\allowbreak <name>/\allowbreak show} & {\ttfamily\scriptsize api\_\allowbreak{}strategy\_\allowbreak{}show} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak strategies/\allowbreak <kind>/\allowbreak <name>/\allowbreak usage} & {\ttfamily\scriptsize api\_\allowbreak{}strategy\_\allowbreak{}usage} \\
+{\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak api/\allowbreak strategies/\allowbreak obsolete} & {\ttfamily\scriptsize api\_\allowbreak{}strategies\_\allowbreak{}obsolete} \\
 \bottomrule
 \end{longtable}
 
 \begin{nota}{Quanti sono}
-Questa tabella elenca \num{261} percorsi distinti, da \num{282} decoratori \cod{@route} su \num{12} moduli. Se i numeri non coincidono con quelli del progetto che si ha davanti, la tabella è vecchia: si rigenera con \file{strumenti/genera-rotte.py}.
+Questa tabella elenca \num{266} percorsi distinti, da \num{287} decoratori \cod{@route} su \num{13} moduli. Se i numeri non coincidono con quelli del progetto che si ha davanti, la tabella è vecchia: si rigenera con \file{strumenti/genera-rotte.py}.
 \end{nota}
