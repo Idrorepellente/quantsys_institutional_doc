@@ -35,7 +35,7 @@ ORDINE = ["app.py", "studio.py", "community.py", "marketplace_routes.py",
           "agent.py", "genetic.py", "auth.py",
           # i moduli ui_ext_* in ordine alfabetico, come li carica create_app()
           "ui_ext_a.py", "ui_ext_b.py", "ui_ext_barre_live.py", "ui_ext_e.py",
-          "ui_ext_esporta.py", "ui_ext_f.py", "ui_ext_obsolete.py"]
+          "ui_ext_esporta.py", "ui_ext_f.py", "ui_ext_import.py", "ui_ext_obsolete.py"]
 
 TITOLI = {
     "app.py": "app.py --- il nucleo",
@@ -48,6 +48,7 @@ TITOLI = {
     "ui_ext_a.py": "ui\\_ext\\_a.py --- estensione v2",
     "ui_ext_b.py": "ui\\_ext\\_b.py --- estensione v2",
     "ui_ext_barre_live.py": "ui\\_ext\\_barre\\_live.py --- estensione v2, barre del live",
+    "ui_ext_import.py": "ui\\_ext\\_import.py --- estensione v2, Import di Studio",
     "ui_ext_e.py": "ui\\_ext\\_e.py --- estensione v2",
     "ui_ext_f.py": "ui\\_ext\\_f.py --- estensione v2",
     "ui_ext_esporta.py": "ui\\_ext\\_esporta.py --- estensione v2, esportazione",

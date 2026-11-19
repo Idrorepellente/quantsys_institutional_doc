@@ -408,6 +408,21 @@
 \bottomrule
 \end{longtable}
 
+\subsection{ui\_ext\_import.py --- estensione v2, Import di Studio}
+\begin{longtable}{@{}L{17mm}L{74mm}L{45mm}@{}}
+\toprule
+\textbf{Metodi} & \textbf{Percorso} & \textbf{Funzione} \\
+\midrule\endfirsthead
+\toprule
+\textbf{Metodi} & \textbf{Percorso} & \textbf{Funzione} \\
+\midrule\endhead
+{\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak studio/\allowbreak api/\allowbreak import/\allowbreak <categoria>} & {\ttfamily\scriptsize api\_\allowbreak{}studio\_\allowbreak{}import} \\
+\rigaTenue {\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak studio/\allowbreak api/\allowbreak import/\allowbreak <categoria>/\allowbreak cancel} & {\ttfamily\scriptsize api\_\allowbreak{}studio\_\allowbreak{}import\_\allowbreak{}cancel} \\
+{\scriptsize\sffamily POST} & {\ttfamily\scriptsize /\allowbreak studio/\allowbreak api/\allowbreak import/\allowbreak <categoria>/\allowbreak confirm} & {\ttfamily\scriptsize api\_\allowbreak{}studio\_\allowbreak{}import\_\allowbreak{}confirm} \\
+\rigaTenue {\scriptsize\sffamily GET} & {\ttfamily\scriptsize /\allowbreak studio/\allowbreak api/\allowbreak import/\allowbreak formats} & {\ttfamily\scriptsize api\_\allowbreak{}studio\_\allowbreak{}import\_\allowbreak{}formats} \\
+\bottomrule
+\end{longtable}
+
 \subsection{ui\_ext\_obsolete.py --- estensione v2, strategie obsolete}
 \begin{longtable}{@{}L{17mm}L{74mm}L{45mm}@{}}
 \toprule
@@ -425,5 +440,5 @@
 \end{longtable}
 
 \begin{nota}{Quanti sono}
-Questa tabella elenca \num{267} percorsi distinti, da \num{288} decoratori \cod{@route} su \num{14} moduli. Se i numeri non coincidono con quelli del progetto che si ha davanti, la tabella è vecchia: si rigenera con \file{strumenti/genera-rotte.py}.
+Questa tabella elenca \num{271} percorsi distinti, da \num{292} decoratori \cod{@route} su \num{15} moduli. Se i numeri non coincidono con quelli del progetto che si ha davanti, la tabella è vecchia: si rigenera con \file{strumenti/genera-rotte.py}.
 \end{nota}

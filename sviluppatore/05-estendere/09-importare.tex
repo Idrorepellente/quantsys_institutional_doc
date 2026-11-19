@@ -1,0 +1,132 @@
+% ===========================================================================
+%  sviluppatore/05-estendere/09-importare.tex
+% ===========================================================================
+\section{Importare un artefatto scritto altrove}\label{sez:importare}
+
+Un artefatto scritto fuori dall'app non va copiato a mano nella cartella
+giusta: in Studio ogni categoria ha \voce{Import\ldots}, che accetta un file
+\file{.py}, una cartella o uno \file{.zip} e ci cerca dentro la forma della
+categoria. La logica è in \file{dashboard/studio\_import.py}, le rotte in
+\file{dashboard/ui\_ext\_import.py}, la finestra in coda a
+\file{static/js/studio.js}.
+
+\begin{center}
+\begin{tabular}{@{}L{24mm}L{30mm}L{84mm}@{}}
+\toprule
+\textbf{Categoria} & \textbf{Si sceglie} & \textbf{Che cosa diventa un artefatto} \\
+\midrule
+\rigaTenue
+strategia, approccio & cartella, zip, .py
+  & ogni cartella che contiene \file{strategy.py} / \file{approach.py}, con
+    tutti i file e le sottocartelle (di due annidate vale la più esterna);
+    un \file{.py} che assegna \cod{DESCRIPTOR} / \cod{APPROACH\_DESCRIPTOR},
+    attorno al quale si crea la cartella \\
+overlay, weight mode & cartella, zip, .py
+  & la cartella con \file{overlay.py} / \file{weight\_mode.py}; un \file{.py}
+    con \cod{META} (dizionario di letterali con \cod{key}) e \cod{def compute},
+    che diventa la cartella con il nome della chiave \\
+\rigaTenue
+metrica & solo .py
+  & ogni file è una metrica, con il nome del file ridotto alle regole
+    (\cod{Live VS backtest.py} \textrightarrow{} \cod{live\_vs\_backtest});
+    una cartella o uno zip si rifiutano con il perché \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Due tempi}
+
+\simbolo{analizza} legge la scelta senza eseguire niente. Ogni \file{.py} si
+analizza con \cod{ast}: la sintassi (un errore ferma l'artefatto, con file e
+riga), il descrittore o il \cod{META}, i campi che si leggono senza eseguire
+--- \cod{name}, \cod{label}, \cod{description}, \cod{backtest\_script},
+anche quando sono f-string di costanti del modulo
+(\cod{f"strategies/\{NOME\}/run\_backtest.py"}). Gli artefatti buoni si
+mettono da parte in \file{.studio\_import/<gettone>/} con un
+\file{manifest.json}; la risposta è una scheda per artefatto, con stato
+(\cod{new}, \cod{exists}, \cod{blocked}), errori, avvisi e note.
+\simbolo{installa} sposta al loro posto quelli confermati, con
+\cod{os.replace}: la cartella di lavoro sta sotto la radice dell'app, sullo
+stesso disco, e lo spostamento è atomico.
+
+\begin{description}
+  \item[Il nome] è quello della cartella, perché il registro usa quello
+    (\vediSez{due-forme}). Per strategie e approcci deve rispettare la
+    regola dell'editor, \cod{\^{}[a-z][a-z0-9\_]\{0,49\}\$}: una cartella
+    \file{My-Strategy} si ferma, perché rinominarla romperebbe il codice che
+    costruisce percorsi dal proprio nome (\cod{backtest\_script}). Un nome
+    diverso da quello del descrittore è un avviso. Con i file in cima alla
+    scelta (uno zip senza cartella, più \file{.py} insieme) vale il nome dello
+    zip, o quello del descrittore se lo zip ha un nome qualsiasi.
+  \item[I file aggiunti] \file{\_\_init\_\_.py} se manca, e il
+    \file{run\_backtest.py} che scrive l'editor quando il descrittore lo
+    dichiara e non c'è.
+  \item[Ciò che c'è già] un artefatto con lo stesso nome si sostituisce solo
+    se scelto; il precedente va in
+    \file{.studio\_import/sostituiti/<categoria>/<nome>-<ora>/} (le ultime
+    cinque versioni). Una strategia e un approccio con lo stesso nome
+    avrebbero gli stessi risultati: si ferma. Un'obsoleta con lo stesso nome
+    (\file{\_nome}) e risultati rimasti sono note.
+  \item[Chi lo usa] non si sostituisce ciò che un runner del Live usa o che
+    un backtest sta leggendo: la stessa regola di «nascondi» ed «elimina»
+    (\simbolo{strategie\_obsolete.uso}).
+  \item[Dopo] i moduli dell'artefatto escono da \cod{sys.modules}, il
+    registro della categoria lo ricarica (\simbolo{reload\_registry} per
+    overlay e weight mode) e la risposta dice se lo carica, o il perché
+    (\cod{ModuleNotFoundError: No module named 'sklearn'}). Il
+    ripopolamento dell'app installata non lo tocca più
+    (\simbolo{core.workspace.escludi}): un artefatto importato è dell'utente.
+  \item[Una metrica] si prova come con \voce{Validate}
+    (\simbolo{prova\_della\_metrica}): sullo stream con più dati, se l'app lo
+    dà, altrimenti su un'equity finta. Un errore è un avviso, perché può
+    dipendere dai dati (la metrica del confronto con il live si ferma se
+    \cod{START} è dopo i dati della prova).
+\end{description}
+
+\subsection{Uno zip}
+
+Si legge in memoria con dei limiti: \num{5000} file, \num{200} MB
+decompressi, \num{100} MB per file, \num{120} MB di richiesta. Un percorso
+assoluto, con \cod{..} o una lettera di unità, e un collegamento simbolico
+fermano tutto lo zip. \file{\_\_pycache\_\_}, \file{.pyc}, \file{\_\_MACOSX},
+\file{.git}, \file{.DS\_Store} e simili restano fuori, e il browser non li
+manda nemmeno. Il resto entra com'è: un modello in \file{.pkl} o un
+\file{README.md} sono parte dell'artefatto.
+
+\begin{attenzione}{Il codice importato non è filtrato}
+Il validatore che rifiuta file, rete e comandi vale per il codice che genera
+l'agente e per i blocchi. Un artefatto importato è codice dell'utente, come
+quello scritto nell'editor di Studio, che controlla solo la sintassi: la
+porta dei dati di una strategia deve poter scaricare. Lo dice anche la guida
+utente: si importa solo codice di cui ci si fida.
+\end{attenzione}
+
+\subsection{Le rotte}
+
+\begin{center}
+\begin{tabular}{@{}L{70mm}L{68mm}@{}}
+\toprule
+\textbf{Rotta} & \textbf{Che cosa fa} \\
+\midrule
+\rigaTenue
+\cod{GET /studio/api/import/formats} & che cosa accetta ogni categoria e come
+  lo spiega la finestra (\simbolo{formati}) \\
+\cod{POST /studio/api/import/<categoria>} & multipart: \cod{kind}
+  (\cod{py}, \cod{folder}, \cod{zip}), \cod{files}, \cod{paths} (i percorsi
+  relativi di una cartella, nello stesso ordine), \cod{source}. Risponde con
+  le schede e il gettone; con \cod{ok: false} se dentro non c'è niente della
+  categoria \\
+\rigaTenue
+\cod{POST \ldots/<categoria>/confirm} & \cod{\{token, items: [\{id, replace\}]\}}:
+  gli esiti, uno per artefatto \\
+\cod{POST \ldots/<categoria>/cancel} & \cod{\{token\}}: la scelta messa da
+  parte si butta (le altre si buttano dopo sei ore) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+Con l'import, \file{studio\_browser.py} tratta overlay e weight mode come
+forma «mista», cartella o file singolo: le barre «Overlays in the system» e
+«Weight modes in the system» erano vuote, perché elencavano solo i file
+singoli mentre gli store scrivono la cartella da tempo.

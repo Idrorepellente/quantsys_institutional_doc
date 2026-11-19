@@ -151,3 +151,76 @@ switch on.
 Before writing, the system checks the code: it must not read or write files,
 must not open connections and must not run commands. If it contains any of
 these, the installation is refused and the reason is shown.
+
+\section{Bringing in an artifact from outside}\label{sez:studio-import}
+
+An artifact written somewhere else --- in another editor, received as a
+\file{.zip}, downloaded --- does not have to be copied by hand into the right
+folder. Each family has \pulsante{Import\ldots} in its bar, next to
+\pulsantesec{Delete}. The window shows the shape that family expects and
+what you can choose.
+
+\figuraSchermata{0.8}{figure/schermate/studio-import-dialog.png}
+  {Importing a strategy: a folder, a .zip or .py files, chosen with the
+   buttons or dropped on the dashed area.}
+  {studio-import-dialog}
+
+\begin{center}
+\begin{tabular}{@{}L{28mm}L{36mm}L{74mm}@{}}
+\toprule
+\textbf{Family} & \textbf{You can choose} & \textbf{What the import looks for} \\
+\midrule
+\rigaTenue
+\voce{Strategies} & a folder, a .zip, .py files
+  & every folder with \file{strategy.py}, taken with all its files and
+    subfolders; or a \file{.py} that declares the strategy, around which the
+    folder is made \\
+\voce{Approaches} & a folder, a .zip, .py files
+  & the same, with \file{approach.py} \\
+\rigaTenue
+\voce{Weight mode}, \voce{Overlay} & a folder, a .zip, .py files
+  & the folder with \file{weight\_mode.py} or \file{overlay.py} (and its
+    \file{data\_port.py}), or a single \file{.py} with \cod{META} and
+    \cod{compute()} \\
+\voce{Metrics} & .py files only
+  & each file is a metric, named after the file: a metric is never a folder \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+Nothing is written yet when you choose. The window lists what it found, and
+for each one whether it is new, already in the system, or cannot be imported
+--- with the reason: a syntax error with its file and line, a
+\file{strategy.py} that declares no strategy, a name the system cannot use.
+If the choice also holds artifacts of another family, it says so, with a link
+to the right section.
+
+\figuraSchermata{0.8}{figure/schermate/studio-import-preview.png}
+  {What a .zip holds: four strategies, all new, and a metric to import from
+   \voce{Metrics}.}
+  {studio-import-preview}
+
+\noindent
+Untick what you do not want, then \pulsante{Import}. Something with the same
+name as an artifact already in the system is unticked: ticking it replaces
+the old one, which is kept as a copy in the \file{.studio\_import/sostituiti}
+folder of the application. A strategy that a live runner uses, or whose
+backtest is running, is not replaced. At the end the window says, for each
+artifact, whether the system loads it --- strategies are in
+\voce{Run backtest} at once --- or why not yet, for example a package that is
+not installed; then it is in the system anyway, and you open it in Studio to
+fix it.
+
+\figuraSchermata{0.7}{figure/schermate/studio-import-result.png}
+  {The four strategies imported: the system loads them, and they are already
+   in \voce{Run backtest}.}
+  {studio-import-result}
+
+\begin{attenzione}{Import only code you trust}
+An imported artifact is code like the one you write in the editor: it is
+checked for its shape, not limited like the code the agent generates. As soon
+as it is imported the system loads it, and from then on it runs with your
+data and your accounts.
+\end{attenzione}
+

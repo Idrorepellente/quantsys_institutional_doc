@@ -43,7 +43,7 @@ allineano, e il risultato è un ensemble che perde silenziosamente le
 osservazioni di uno stream. Per questo gli approcci installati chiudono tutti
 allo stesso modo:
 
-\begin{codiceInterno}{python}{La chiusura obbligata di build}{approaches/momentum\_ema\_approach/approach.py:74}
+\begin{codiceInterno}{python}{La chiusura obbligata di build}{approaches/\_momentum\_ema\_approach/approach.py:74}
     # Assicuriamo che l'indice sia tz-naive come richiesto
     pnl.index = pd.to_datetime(pnl.index).tz_localize(None)
     return pnl
@@ -75,7 +75,7 @@ APPROACH_STREAM_CATEGORIES = ("ml", "d1", "intraday", "ml_overlay")
 \noindent
 Un esempio completo:
 
-\begin{codiceInterno}{python}{Un descrittore di approccio}{approaches/momentum\_ema\_approach/approach.py:79}
+\begin{codiceInterno}{python}{Un descrittore di approccio}{approaches/\_momentum\_ema\_approach/approach.py:79}
 APPROACH_DESCRIPTOR = ApproachDescriptor(
     name=NAME,
     label="EMA Momentum Approach",

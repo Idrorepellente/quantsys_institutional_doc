@@ -75,9 +75,9 @@ canonico --- non quello dichiarato dentro il file.
 \textbf{Cartella} & \textbf{Installati} & \textbf{Forma del contratto} \\
 \midrule
 \rigaTenue
-\pkgStrategie & \num{9} attive, \num{20} spente
+\pkgStrategie & \num{29}, tutte spente
   & \cod{DESCRIPTOR} in \file{strategy.py} \\
-\pkgApprocci  & \num{3} attivi, \num{4} dormienti
+\pkgApprocci  & \num{7}, tutti spenti
   & \cod{APPROACH\_DESCRIPTOR} in \file{approach.py} \\
 \rigaTenue
 \pkgPesi      & \num{14}
@@ -98,8 +98,10 @@ canonico --- non quello dichiarato dentro il file.
 Il prefisso \cod{\_} davanti al nome della cartella è l'interruttore:
 \file{strategies/\_value/} non viene caricata, \file{strategies/value/} sì.
 Rinominare la cartella è l'unico gesto necessario --- non c'è nessun elenco da
-aggiornare da nessuna parte. Delle \num{29} cartelle sotto \pkgStrategie,
-\num{20} cominciano con il trattino basso e restano fuori.
+aggiornare da nessuna parte. Le \num{29} cartelle di libreria sotto
+\pkgStrategie{} cominciano tutte con il trattino basso, e così i \num{7}
+approcci: \voce{Run backtest} mostra solo ciò che l'utente crea o importa, e
+la libreria aspetta fra le obsolete.
 
 Lo stesso gesto si fa dall'applicazione: in \voce{Run backtest} il menu di
 ogni scheda nasconde (rinomina) o elimina, e la sezione
@@ -113,7 +115,11 @@ rinomina a mano non fa:
   \item annota la cartella in \file{.seed\_esclusi.json}, nella radice dello
         spazio di lavoro: l'app installata, che a ogni avvio ricopia dal
         pacchetto i file di libreria mancanti, non ricrea così ciò che
-        l'utente ha tolto;
+        l'utente ha tolto. Il ripopolamento sa anche che \file{x} e
+        \file{\_x} sono la stessa strategia (\cod{\_gemelle} in
+        \file{core/workspace.py}): un aggiornamento che porta \file{\_x}
+        non la mette accanto alla \file{x} che l'utente ha già, né la
+        rimette se l'utente l'ha eliminata;
   \item eliminando, toglie anche i file dei risultati, riconosciuti dal nome
         (\file{dashboard/stream\_cleanup.py}): un file il cui nome intero è
         quello di un artefatto esistente resta suo, quindi eliminare

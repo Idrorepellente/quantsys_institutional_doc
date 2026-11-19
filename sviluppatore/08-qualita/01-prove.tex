@@ -85,6 +85,27 @@ risultato di quella suite viene ignorato, cioè la suite ha smesso di
 esistere pur continuando a girare.
 \end{attenzione}
 
+\subsection{Le strategie di libreria nelle prove}
+
+Chi usa l'app nasconde le strategie che non usa (\voce{Run backtest}
+\textrightarrow{} \voce{Hide}: la cartella prende il trattino basso,
+\file{strategies/\_momentum}), e i registri le saltano. Le prove che hanno
+bisogno di una strategia di libreria non devono dipendere da quella scelta:
+\file{tests/\_libreria.py} dà la radice su cui girare.
+
+\begin{codiceInterno}{python}{Una prova che usa momentum e quality\_lv}{tests/prova\_live\_fedele.py}
+from _libreria import radice  # noqa: E402
+RADICE = radice(strategie=["momentum", "quality_lv", "macro_regime"])
+\end{codiceInterno}
+
+\noindent
+\simbolo{radice} restituisce il repository stesso se ciò che serve è
+visibile; altrimenti una copia del codice e dei dati (una per processo, in
+una cartella temporanea che si cancella all'uscita) con quelle cartelle senza
+trattino, e la mette in testa a \cod{sys.path}. Una prova che si fa da sé la
+copia dell'app (\file{prova\_strategie\_obsolete.py}) usa
+\simbolo{rendi\_visibili} sulla sua copia. Il repository non si tocca mai.
+
 \subsection{Il resto di \file{tests/}}
 
 Oltre alle cinque suite ci sono: prove end-to-end (\file{e2e\_hedging.py},
