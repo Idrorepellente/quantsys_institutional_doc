@@ -29,25 +29,58 @@ calendario, dopo il periodo di riscaldamento, fa sei cose nello stesso ordine.
         storia registrata.
 \end{enumerate}
 
-\subsection{Prima di tutto: i trigger intra-barra}
+\subsection{Dopo l'esecuzione: i trigger intra-barra}\label{sez:barra-trigger}
 
-C'è un passo che precede la decisione, e non compare nella figura perché non
-è parte del ciclo decisionale: il controllo degli \emph{stop} e dei
-\emph{take profit} sulle posizioni già aperte.
+C'è un passo che non compare nella figura perché non è parte del ciclo
+decisionale: il controllo degli \emph{stop} e dei \emph{take profit} sulle
+posizioni aperte. Viene dopo l'esecuzione all'apertura della barra e prima
+della valutazione alla chiusura.
 
-\begin{codiceInterno}{python}{Il controllo che viene prima di tutto}{backtest/engine.py:745}
+\begin{codiceInterno}{python}{Il controllo, dopo l'esecuzione}{backtest/engine.py:1064}
             # ---- INTRA-BAR TRIGGER CHECK ----
-            # PRIMA della decision/execution phase, controlla se i SL/TP delle
-            # posizioni aperte sono stati toccati nella bar t (high/low).
-            trigger_hits = exit_tracker.check_bar(t, data)
+            # DOPO l'esecuzione all'apertura di t, controlla se i SL/TP delle
+            # posizioni ancora aperte sono stati toccati nella bar t
+            # (high/low). Se SI:
+            # [...]
+            # Le posizioni aperte (o girate) a quest'apertura si sorvegliano
+            # dalla barra dopo, come prima e come dal vivo.
+            _sospesi = {k: exit_tracker.triggers.pop(k)
+                        for k in list(_trigger_nuovi) if k in exit_tracker.triggers}
+            try:
+                trigger_hits = exit_tracker.check_bar(t, data)
+            finally:
+                exit_tracker.triggers.update(_sospesi)
 \end{codiceInterno}
 
 \noindent
-Se un livello è stato toccato, la posizione si chiude subito e il simbolo
-finisce in una lista nera fino al prossimo ribilanciamento vero. La filosofia
-dichiarata nel codice è che «ribilanciare è quando rivaluti la tesi»: uno
-stop toccato non aspetta il prossimo ribilanciamento, ma nemmeno autorizza a
-riaprire la stessa posizione nella stessa barra.
+Per ogni barra $t$ l'ordine è quindi: decisione sulla chiusura di $t-1$,
+esecuzione all'apertura di $t$, controllo degli stop sul massimo e sul minimo
+di $t$ per le posizioni che erano già aperte, valutazione alla chiusura di
+$t$. Se un livello è stato toccato, la posizione si chiude a quel prezzo e il
+simbolo finisce in una lista nera fino al prossimo ribilanciamento vero. La
+filosofia dichiarata nel codice è che «ribilanciare è quando rivaluti la
+tesi»: uno stop toccato non aspetta il prossimo ribilanciamento, ma nemmeno
+autorizza a riaprire la stessa posizione nella stessa barra.
+
+\begin{attenzione}{Prima il controllo veniva per primo}
+Fino alla versione di novembre 2026 il controllo precedeva la decisione. La
+strategia, decidendo sulla chiusura di $t-1$, trovava già nel portafoglio le
+uscite avvenute \emph{durante} $t$ --- vedeva il futuro --- e una posizione
+che la decisione chiudeva all'apertura usciva invece al prezzo dello stop
+toccato più tardi nella stessa barra. Dal vivo l'ordine è per forza quello di
+adesso: si esegue all'apertura, poi la barra scorre e la sentinella sorveglia
+(\vediSez{live-stream}). I risultati delle strategie con stop e take profit
+cambiano di poco; le altre non cambiano.
+\end{attenzione}
+
+\noindent
+Lo stop ATR (\file{core/exit\_policy.py}) si calcola sull'ATR dell'ultima
+barra \emph{chiusa prima} dell'ingresso, e resta fermo per tutta la vita della
+posizione. Si leggeva l'ATR esattamente all'istante d'ingresso: in backtest
+l'etichetta della barra di esecuzione, il cui ATR contiene già il suo massimo
+e il suo minimo; dal vivo l'istante dell'ordine (10:15:05), che fra le barre
+non c'è --- la ricerca falliva e la posizione restava senza stop né take
+profit, in silenzio.
 
 \begin{attenzione}{La lista nera non blocca le chiusure}
 Un simbolo in lista nera non può essere \emph{aperto}, ma un target a zero

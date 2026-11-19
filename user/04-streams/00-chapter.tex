@@ -39,6 +39,45 @@ buttons. It is not a limit to work around: two calculations at the same time
 would fight over the same files and produce mixed-up results.
 \end{attenzione}
 
+\subsection{Running on the live bars}\label{sez:run-live-bars}
+
+After a strategy has run live, you may want to check that its backtest does
+what the account did. A live runner decides on the bars its broker gives it;
+a backtest reads the files on the Data page, downloaded from a provider.
+They are not the same prices: on the 15-minute bars of the currencies,
+Yahoo's and Dukascopy's returns have a correlation between \num{0.95} and
+\num{0.97}, and in a two-day test the backtest on Yahoo's bars made \num{13}
+trades where the live had made \num{21}, only \num{9} of them the same.
+
+So when the live data hold the bars a broker gave the runner for every
+symbol of a strategy, at its timeframe, the menu of its card offers
+\voce{Run on the live bars}. The line under it says which bars: the
+timeframe, the broker and the period, in UTC.
+
+\figuraSchermata{1.0}{figure/schermate/run-live-bars-menu.png}
+  {The menu of a card after a live run: the broker's 15-minute bars of the
+   demo server, from the first to the last bar the runner received.}
+  {run-live-bars-menu}
+
+\noindent
+A confirmation says what will happen before the job starts: the backtest
+uses the broker's bars for the symbols it has, and the Data page for the
+others --- the benchmark, for instance, if the broker does not quote it. The
+files of the Data page do not change, and the result remembers which bars it
+was run on.
+
+\figuraSchermata{0.62}{figure/schermate/run-live-bars-confirm.png}
+  {The confirmation of \voce{Run on the live bars}.}
+  {run-live-bars-confirm}
+
+\begin{nota}{The live bars are kept only if you keep them}
+The bars stay after the runner stops only with \voce{Keep the data the live
+downloads} on, in \percorso{Settings \freccia Data \freccia Live data}
+(\vediSez{data-live}). Turn it on before starting the runner you want to
+check. They do not need to be merged into the Data page: the backtest reads
+them where they are.
+\end{nota}
+
 \subsection{Hiding a strategy, or deleting it}\label{sez:run-hide}
 
 A strategy or an approach you no longer use does not have to stay in this
@@ -251,6 +290,46 @@ numbers after the default ones, your charts at the bottom, just above
 \pulsantesec{New chart metric}. The pencil on one of your metrics opens it in
 Studio, and Studio has a link back to the stream.
 \end{pratica}
+
+\subsection{Comparing a live with its backtest}\label{sez:stream-live-window}
+
+The charts of a stream are daily. For a strategy that trades every few
+minutes, the few days of a live run are a handful of points: too few to lay
+next to the account's curve. A metric can draw the equity bar by bar instead
+--- \file{metrics/METRIC\_TEMPLATE.md} explains how, and has the example
+ready to copy.
+
+\begin{pratica}{Laying the backtest next to the demo account}
+\begin{enumerate}
+  \item Keep the live data on (\vediSez{data-live}) and run the strategy live
+        on a demo account for a few days.
+  \item Stop the runner. Its journal says on the first line when it
+        started: that is the start of the comparison.
+  \item In \voce{Run backtest}, open the menu of the strategy's card and
+        choose \voce{Run on the live bars} (\vediSez{run-live-bars}).
+  \item In the metric write the start time as the journal shows it
+        (\cod{START}), your distance from UTC (\cod{UTC\_OFFSET}: 1 in Italy
+        in winter) and the account's balance at that moment
+        (\cod{CAPITAL}); then choose it on the page of the stream
+        (\vediSez{stream-metrics}).
+  \item The chart is the backtest from the last bar closed when the live
+        started, rebased to the balance: lay it next to the balance curve of
+        the account's report.
+\end{enumerate}
+\end{pratica}
+
+\figuraSchermata{1.0}{figure/schermate/stream-live-window-metric.png}
+  {A 15-minute strategy after a two-day live: the backtest equity from the
+   hour the live started, rebased to the demo account's balance.}
+  {stream-live-window-metric}
+
+\noindent
+The backtest counts in UTC; the metric takes your local time and the chart
+shows it.
+Two differences remain even when everything matches: the account trades at
+the price of the minute in which the runner's cycle runs, a few seconds
+after the bar opens, and pays the broker's spread and commissions, which the
+backtest only estimates.
 
 \subsection{Arranging charts and tables}\label{sez:stream-layout}
 

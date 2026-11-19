@@ -1,0 +1,150 @@
+% ===========================================================================
+%  sviluppatore/04-motore/06-confronto.tex
+% ===========================================================================
+\section{Confrontare un live con il suo backtest}\label{sez:live-confronto}
+
+La prova che chiude il cerchio: una strategia intraday gira per qualche
+giorno su un conto demo, poi si rifà il backtest sui dati del live e si
+confrontano le due equity. Perché le curve coincidano servono le cose già
+viste --- il motore che esegue e poi sorveglia (\vediSez{barra-trigger}), lo
+stream che riceve ciò che il backtest ha (\vediSez{live-stream}) --- e due
+cose che riguardano il backtest: che arrivi alla fine dei dati, e che giri
+sulle stesse barre del live.
+
+\subsection{Il walk-forward arriva alla fine dei dati}
+
+\figuraTikz{fold-di-coda}
+  {Le finestre del walk-forward con le frazioni di default. L'ultimo fold
+   regolare si chiude al \perc{95} del periodo; il fold di coda ha la stessa
+   ampiezza e finisce alla fine dei dati, ma nell'equity OOS entra solo il
+   tratto che nessun altro copriva.}
+  {fold-di-coda}
+
+\begin{description}
+  \item[La fine vuota] \cod{end\_date} vuota vuol dire «fino agli ultimi
+    dati» e si risolve a \emph{domani}
+    (\simbolo{script\_config\_helper.\_resolve\_end\_date}): i caricatori
+    tagliano a quell'istante, e con «oggi» le barre intraday di oggi
+    restavano fuori. La fine effettiva la decide l'ultima barra comune ai
+    simboli (\simbolo{run\_walkforward.\_compute\_effective\_range}). Prima
+    era oggi meno sette giorni, «per il ritardo di yfinance»: la settimana
+    tolta escludeva sempre i dati più recenti, cioè i giorni del live.
+  \item[L'ora] Per un timeframe intraday una fine senza ora diventa
+    \cod{23:59:59} di quel giorno, e la fine di ogni fold conserva l'ora
+    (\simbolo{\_istante\_str}: la data sola se è mezzanotte, come sempre per
+    il giornaliero). Prima un fold intraday si fermava alla mezzanotte del
+    suo ultimo giorno.
+  \item[Il benchmark] accorcia la fine solo se finisce più di tre giorni
+    prima dei simboli operativi (\cod{BENCHMARK\_RITARDO\_MAX}): è un
+    download vecchio. SPY intraday chiude alle 21 UTC e i cambi alle 22, e
+    ogni sera il backtest di una strategia sui cambi perdeva l'ultimo tratto.
+  \item[Il fold di coda] Con le frazioni di default l'ultimo \perc{5} del
+    periodo non entrava in nessun test: su due mesi di barre M15 sono gli
+    ultimi tre giorni, proprio quelli di un live appena concluso.
+    \simbolo{\_fold\_di\_coda} aggiunge un fold la cui finestra di test
+    finisce alla fine dei dati; lo segna \cod{coda = True} sull'istanza
+    (\simbolo{e\_coda}), così i checkpoint vecchi restano leggibili. Non
+    conta fra i fold delle statistiche: numero, dispersione degli Sharpe,
+    idoneità (\file{validation/robustness.py}) restano quelli dei fold
+    regolari.
+  \item[Le operazioni OOS] seguono l'equity: ogni fold porta solo quelle fra
+    la fine del precedente (esclusa) e la propria. Le finestre di test si
+    sovrappongono, e quelle del tratto in comune comparivano due volte.
+    L'ordinamento dei rendimenti concatenati è stabile
+    (\cod{kind="mergesort"}), così a parità di istante «il primo fold» è
+    davvero il più vecchio.
+  \item[I checkpoint] passano alla versione \cod{"2"} e ricordano anche le
+    frazioni: un checkpoint fatto con altre finestre non si riusa.
+\end{description}
+
+\subsection{Il backtest sulle barre del live}\label{sez:barre-live}
+
+Dal vivo una strategia decide sulle barre del broker (\vediSez{live-contesto}),
+che con il salvataggio dei dati del live acceso restano in
+\file{data/live/\_contesto/<fonte>/<TF>/<SIMBOLO>.parquet} (per MT5 la fonte
+è \cod{mt5\_<server>}). Il backtest legge il deposito, scaricato da un
+provider, e anche dopo l'unione il periodo del live vi arriva dal provider
+del file: un file non mescola provenienze (\vediSez{live-dati-vivo}). Sono
+serie diverse. Sulle M15 dei cambi i rendimenti di Yahoo e di Dukascopy
+hanno correlazione fra \num{0.95} e \num{0.97}; su un live simulato di due giorni
+il backtest sulle barre Yahoo faceva \num{13} operazioni contro le \num{21}
+del live, \num{9} in comune.
+
+\begin{center}
+\begin{tabular}{@{}L{46mm}L{92mm}@{}}
+\toprule
+\textbf{Pezzo} & \textbf{Che cosa fa} \\
+\midrule
+\rigaTenue
+\file{data/barre\_live.py}
+  & \simbolo{fonti} elenca le fonti con barre salvate e i loro timeframe;
+    \simbolo{per\_strategia} dice quali hanno, al timeframe primario della
+    strategia, tutti i suoi simboli operativi (con periodo e numero di
+    barre); \simbolo{per\_simboli} dà le barre per simbolo e timeframe, e un
+    timeframe aggiuntivo che la fonte non ha lo ricava dalle sue barre del
+    primario. \\
+\file{dashboard/ui\_ext\_barre\_live.py}
+  & \cod{GET /api/data/live\_bars}: le fonti e, per strategia, le fonti
+    utilizzabili. \\
+\rigaTenue
+\file{runner.js}, \file{v2-run.js}
+  & la voce \voce{Run on the live bars} nel menu della scheda, con
+    timeframe, fonte e periodo; una conferma; poi \cod{POST
+    /api/run/strategy} con \cod{live\_bars}. \\
+\simbolo{api\_run\_strategy}
+  & controlla che la fonte esista e lancia il job con
+    \cod{QS\_BARRE\_LIVE=<fonte>} nell'ambiente. \\
+\rigaTenue
+\file{execution/run\_walkforward.py}
+  & con \cod{QS\_BARRE\_LIVE}, i simboli che la fonte ha si leggono dalle
+    sue barre (righe \cod{[BARS]} nel log) e gli altri dal deposito ---
+    benchmark compreso, se il broker non lo quota; nessuna barra per
+    nessun simbolo è un errore. Il deposito non cambia; il risultato lo
+    annota in \cod{config.bars\_source}. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+Per guardare solo la finestra del live, le metriche hanno l'equity barra per
+barra (\cod{equity\_bars}, \cod{returns\_bars}, \cod{bars\_timeframe}:
+\vediSez{nuova-metrica}): l'esempio 6 di \file{metrics/METRIC\_TEMPLATE.md}
+ribasa l'equity del backtest dall'ora d'avvio del live al capitale del conto.
+
+\subsection{La prova completa}
+
+\file{tests/prova\_live\_intraday.py} prova i pezzi uno per uno. La prova
+intera usa quattro strategie di prova (\cod{live\_test\_rules}, regole fisse
+su M15 e H1; \cod{live\_test\_model}, una regressione logistica
+riaddestrata ogni quattro ore dentro la strategia; \cod{live\_test\_dollar},
+DXY e VIX orari da Yahoo con la sua porta dei dati; \cod{live\_test\_all},
+le tre insieme), un broker MT5 finto che dà le barre Dukascopy fino a un
+orologio simulato e le quotazioni minuto per minuto lungo la barra, un
+provider Yahoo finto, la porta dei dati con Yahoo che pubblica dieci minuti
+dopo l'ora, tutto nell'ambito del live (\file{data.vivo}) e un conto
+\simbolo{PaperBroker}: \num{200} cicli M15 (due giorni) più la sentinella
+ogni minuto, poi l'unione dei dati del live e il backtest sulle barre del
+live.
+
+\begin{center}
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+\textbf{Strategia} & \textbf{Operazioni} & \textbf{Resa backtest}
+  & \textbf{Scarto stream} & \textbf{Scarto conto} \\
+\midrule
+\rigaTenue
+\cod{live\_test\_rules}  & \num{21}/\num{21} & \perc{\num{+0.044}} & \perc{0.0003} & \perc{0.013} \\
+\cod{live\_test\_model}  & \num{90}/\num{90} & \perc{\num{+0.030}} & \perc{0.0013} & \perc{0.042} \\
+\rigaTenue
+\cod{live\_test\_dollar} & \num{44}/\num{44} & \perc{\num{-0.211}} & \perc{0.0001} & \perc{0.033} \\
+\cod{live\_test\_all}    & \num{64}/\num{64} & \perc{\num{-0.098}} & \perc{0.0001} & \perc{0.043} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+Operazioni: quelle del live che il backtest ritrova, sul totale. Scarto: il
+massimo, sul periodo del live, fra l'equity del backtest e quella dello
+stream o del conto, ribasate all'inizio. Il conto esegue ai prezzi del minuto
+in cui il ciclo gira, non all'apertura della barra: è la differenza che resta
+anche su un conto vero, insieme ai costi del broker.

@@ -87,6 +87,39 @@ precede il salvataggio gira sullo stream con più dati, non su un'equity
 finta: una metrica che legge \cod{data} si prova davvero.
 \end{nota}
 
+\subsection{L'equity barra per barra}\label{sez:metrica-barre}
+
+\cod{equity}, \cod{returns} e le funzioni di portafoglio sono giornaliere
+anche per una strategia intraday: Sharpe, CAGR e drawdown si calcolano sui
+giorni. Per le domande su una finestra più corta di un giorno --- il periodo
+di un live di tre giorni, dall'ora in cui è partito --- la metrica di uno
+stream intraday riceve anche \cod{equity\_bars} e \cod{returns\_bars}, una
+riga per barra, e \cod{bars\_timeframe} (\cod{"M15"}, \cod{"H1"}\ldots).
+Le scrive \file{reporting/streams.py}: \cod{Stream.bar\_equity} si riempie per
+gli stream di tipo \cod{equity\_curve} il cui passo più corto è sotto le
+\num{20} ore, e \simbolo{\_metric\_context} la passa come \cod{ctx["bars"]}.
+Sulle pagine senza equity per barra (le strategie giornaliere, gli ensemble)
+sono \cod{equity} e \cod{returns}, con \cod{bars\_timeframe = "D1"}. Gli
+istanti sono in UTC; i grafici li mostrano nell'ora locale.
+
+\begin{codiceInterno}{python}{La finestra del live, ribasata al capitale del conto}{metrics/METRIC\_TEMPLATE.md}
+START = "2026-11-23 09:00"      # local time, as in the runner's journal
+UTC_OFFSET = 1                  # hours from UTC (Italy: 1 in winter)
+CAPITAL = 100000.0              # the account's balance at START
+
+t0 = pd.Timestamp(START) - pd.Timedelta(hours=UTC_OFFSET)       # UTC
+bar = equity_bars.index.to_series().diff().min()                # one bar
+closed = equity_bars.index[equity_bars.index + bar <= t0]       # closed at START
+eq = equity_bars[equity_bars.index >= closed[-1]]
+curve = eq / eq.iloc[0] * CAPITAL
+plot(curve, f"Backtest from {START} ({len(eq) - 1} {bars_timeframe} bars)")
+\end{codiceInterno}
+
+\noindent
+La base è l'ultima barra \emph{chiusa} all'avvio, non la prima dopo: il primo
+ciclo del live decide su quella e opera subito dopo, con il saldo
+\cod{CAPITAL}.
+
 \subsection{Grafici a più serie}
 
 Con \cod{chart\_kind: "figure"} un grafico ha più serie, punti con

@@ -35,6 +35,14 @@ The job goes into the queue and the bell tells you when it is done. Below the
 fields, a line says what is already there: how many files, how much space, up
 to when they go.
 
+\begin{nota}{Intraday bars from Yahoo Finance}
+Yahoo Finance is free and needs no key, but keeps intraday bars only for a
+while: the last \num{60} days for 5, 15 and 30 minutes, \num{730} days for
+one hour. The download takes what there is. For stocks it fetches the
+benchmark (SPY) first, because no backtest starts without it: a 15-minute
+strategy on currencies needs SPY at 15 minutes too.
+\end{nota}
+
 \subsection{Uploading your own file}
 
 The \voce{Your data} panel accepts CSV, Parquet and XLSX files dragged onto
@@ -193,7 +201,10 @@ category, its source; for the bars, first the provider the file comes from
 (it downloads the period again, and is accepted if its returns match the
 file where the two overlap), then the bars of the live, then the other
 providers --- Yahoo Finance, Dukascopy, Polygon --- brought to the level of
-the file and checked on the bars they have in common.
+the file and checked on the bars they have in common. The bars a session
+should have are counted in New York time, so the change to and from
+daylight saving time, which moves the opening of Wall Street by an hour in
+UTC, is not a gap.
 
 \figuraSchermata{1.0}{figure/schermate/data-live-merge.png}
   {The check: two files to decide, two filled automatically, three ready.

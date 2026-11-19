@@ -1,0 +1,61 @@
+% ===========================================================================
+%  figure/tikz/fold-di-coda.tex
+%  Le finestre del walk-forward con le frazioni di default (train 50 %, test
+%  15 %, passo 10 %): l'ultimo fold regolare si chiude al 95 % del periodo, e
+%  il fold di coda copre il resto. Sotto ogni test, il tratto che entra
+%  nell'equity OOS: ogni barra dal primo fold che la copre.
+% ===========================================================================
+\begin{tikzpicture}[x = 1mm, y = 1mm]
+
+  % ---------- il tratto che prima non entrava in nessun test ---------------
+  \begin{scope}[on background layer]
+    \fill[lyraAccentoTenue] ({95*1.4},-3) rectangle ({100*1.4},52);
+  \end{scope}
+  \node[notaAccento, anchor = south, align = center, text width = 30mm]
+    at ({97.5*1.4},52.5) {prima in nessun test:\\gli ultimi giorni};
+
+  % ---------- legenda ------------------------------------------------------
+  \fill[lyraPannello, draw = lyraGrigioChiaro] (0,56) rectangle (6,59);
+  \node[nota, anchor = west] at (7,57.5) {addestramento};
+  \fill[lyraCielo, draw = lyraCieloBordo] (34,56) rectangle (40,59);
+  \node[nota, anchor = west] at (41,57.5) {test};
+  \fill[lyraAccento] (56,56.8) rectangle (62,58.2);
+  \node[nota, anchor = west] at (63,57.5) {entra nell'equity OOS};
+
+  % ---------- l'asse del periodo -------------------------------------------
+  \draw[flusso] (0,0) -- ({100*1.4+8},0);
+  \node[nota, anchor = west] at ({100*1.4+9},0) {tempo};
+  \foreach \p in {0,50,65,75,85} {
+    \draw[draw = lyraInchiostro!45] ({\p*1.4},-1.5) -- ({\p*1.4},1.5);
+    \node[font = \sffamily\scriptsize, below = 1mm] at ({\p*1.4},-1.5) {\p\,\%};
+  }
+  \draw[draw = lyraInchiostro!45] ({95*1.4},-1.5) -- ({95*1.4},1.5);
+  \node[font = \sffamily\scriptsize, below = 1mm, anchor = north east]
+    at ({95*1.4+1},-1.5) {95\,\%};
+  \draw[draw = lyraInchiostro!45] ({100*1.4},-1.5) -- ({100*1.4},1.5);
+  \node[font = \sffamily\scriptsize, below = 1mm, anchor = north west]
+    at ({100*1.4-1},-1.5) {100\,\%};
+
+  % ---------- i fold regolari ----------------------------------------------
+  %  fold k: addestramento 10k..50+10k, test 50+10k..65+10k; nell'equity OOS
+  %  il primo copre 50..65, gli altri i 10 punti dopo il precedente
+  \foreach \k/\y/\da/\a in {0/43/50/65, 1/35/65/75, 2/27/75/85, 3/19/85/95} {
+    \fill[lyraPannello, draw = lyraGrigioChiaro]
+      ({10*\k*1.4},\y) rectangle ({(50+10*\k)*1.4},\y+4.5);
+    \fill[lyraCielo, draw = lyraCieloBordo]
+      ({(50+10*\k)*1.4},\y) rectangle ({(65+10*\k)*1.4},\y+4.5);
+    \fill[lyraAccento] ({\da*1.4},\y-1.6) rectangle ({\a*1.4},\y-0.5);
+    \node[font = \sffamily\scriptsize, anchor = east]
+      at ({10*\k*1.4-1.5},\y+2.25) {fold \k};
+  }
+
+  % ---------- il fold di coda ----------------------------------------------
+  \fill[lyraPannello, draw = lyraGrigioChiaro, dashed]
+    ({35*1.4},8) rectangle ({85*1.4},12.5);
+  \fill[lyraCielo, draw = lyraAccentoScuro, dashed, line width = 0.9pt]
+    ({85*1.4},8) rectangle ({100*1.4},12.5);
+  \fill[lyraAccento] ({95*1.4},6.4) rectangle ({100*1.4},7.5);
+  \node[font = \sffamily\scriptsize\bfseries, text = lyraAccentoScuro, anchor = east]
+    at ({35*1.4-1.5},10.25) {fold di coda};
+
+\end{tikzpicture}

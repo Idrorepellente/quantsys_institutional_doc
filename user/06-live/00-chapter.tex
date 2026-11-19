@@ -139,7 +139,8 @@ ones it would hold had it never stopped.
 
 \begin{itemize}
   \item \textbf{Stops and take-profits} are checked every minute on the
-        broker's prices, not only at the cycles.
+        broker's prices, not only at the cycles. A position opened at a bar
+        is watched from the next one, as in the backtest.
   \item \textbf{The regime} is worked out live on its drivers, which the
         runner keeps up to date.
   \item \textbf{Small adjustments} --- a position that would change by less
@@ -259,7 +260,12 @@ and the mode in which it happened:
   \item warnings, for example a symbol the broker does not trade, or data
         that are too old;
   \item the kill-switch events (\vediSez{kill-switch});
-  \item maintenance: retraining and data updates;
+  \item maintenance: retraining and data updates. A strategy that retrains
+        its own model, inside its code, is said to do so once; then each
+        refit appears when it happens, written by the strategy itself
+        (\enquote{model refit at 2026-11-17 08:00 UTC on 5344 bars\ldots});
+  \item what the strategies report while they run: a refit, a datum that is
+        missing, a filter that stopped them trading;
   \item the data and the regime: which symbols the broker has, where each
         series came from, which are short and why, each strategy rebuilt,
         the regime of each market.

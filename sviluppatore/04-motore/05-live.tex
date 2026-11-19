@@ -268,6 +268,23 @@ all'indietro finché servono righe. I \cod{kind} sono \cod{mode},
 \cod{maintenance}.
 
 \noindent
+Anche la strategia può scrivere nel registro: tiene una lista
+\cod{runner\_events} e vi aggiunge un testo, una coppia \cod{(kind, testo)} o
+un dizionario \cod{\{"text", "kind", "time"\}} (\cod{kind} fra \cod{info},
+\cod{maintenance} e \cod{warning}). Lo stream la svuota dopo ogni barra
+(\simbolo{StreamStrategia.\_eventi\_strategia}): al più \num{20} righe per
+barra. Le voci prodotte rigiocando la storia sono il passato: alla prima
+costruzione diventano una riga sola (quante sono e l'ultima), alle
+ricostruzioni restano solo quelle con \cod{time} dopo l'ultima barra già
+vista. Così un modello che si riaddestra da sé scrive ogni riaddestramento
+vero, con l'ora della barra. Il runner, per un componente senza pipeline di
+addestramento (\simbolo{is\_ml\_component}: niente \file{pipeline.py},
+\file{run\_ml\_pipeline.py} o \file{ml/}), alla scadenza scrive una volta che
+il riaddestramento avviene dentro il suo codice e non lancia nulla: prima
+lanciava il suo backtest come se fosse la pipeline, che falliva cercando i
+file di un modello che non esiste.
+
+\noindent
 Nella stessa cartella stanno lo stato del motore (\file{live\_state.json}),
 la storia della normalizzazione (\file{ensemble.json}), lo stato del
 \simbolo{RiskManager} (\file{risk.json}) e il legame con il conto
@@ -397,6 +414,14 @@ ignora (le barre le dà il feed). Una strategia che gira come stream
 (\vediSez{live-stream}) li riceve alla ricostruzione: un'impronta nuova dei
 dati extra fa ricostruire lo stream con l'istanza che li ha.
 
+\noindent
+La barra della decisione che \simbolo{GestoreStream.avanza} passa a
+\simbolo{prepara} è quella su cui gli stream decidono: la più recente fra le
+loro (\simbolo{\_ultima\_barra}). Prima era l'ultima barra del benchmark,
+quando era nell'universo: SPY si ferma alla chiusura di Wall Street, e per
+tutta la notte i dati extra di una strategia sui cambi non si rinnovavano ---
+decideva su quelli della sera prima, il backtest no.
+
 \begin{attenzione}{Lo stato di una strategia deve venire dalle barre}
 \cod{pead\_classic} teneva le posizioni in \cod{self.\_active} e calcolava
 l'uscita a \cod{pos + hold\_days} con un tetto all'ultima barra. In backtest
@@ -519,7 +544,12 @@ finisce.
         valutazione, il PnL per asset class passato a
         \simbolo{RiskManager.update} come nel backtest, decisione alla
         chiusura, esecuzione al prezzo del broker. Fra un ciclo e l'altro \simbolo{sentinella} confronta i
-        prezzi del broker con stop e take profit, ogni minuto.
+        prezzi del broker con stop e take profit, ogni minuto. È l'ordine del
+        motore (\vediSez{barra-trigger}): un live che si ricostruisce
+        rigiocando la storia e uno che avanza barra per barra danno le stesse
+        operazioni. A ogni passo l'istanza riceve anche le serie degli altri
+        timeframe (le H1 di una strategia M15): prima le riceveva solo alla
+        ricostruzione, e fra l'una e l'altra decideva su un H1 fermo.
   \item \textbf{Quando si ricostruisce.} Al riavvio; quando manca più di una
         barra (le barre in mezzo seguono le regole del backtest invece di
         essere saltate); quando cambia l'impronta di parametri e dati extra
@@ -743,7 +773,8 @@ piano, una voce per file del live, e prepara le righe in
   \item[Asset e driver] le barre attese vengono dal calendario
     (\simbolo{attese}: le sedute di New York; cambi lunedì--venerdì tranne
     Natale e Capodanno; cripto ogni giorno; intraday gli orari degli ultimi
-    \num{60} giorni del file). Le fonti, in ordine: il \textbf{provider del
+    \num{60} giorni del file, contati nell'ora di New York per azioni e cambi
+    --- \simbolo{\_schema\_intraday} con \cod{fuso}). Le fonti, in ordine: il \textbf{provider del
     file}, che riscarica il periodo più \num{20} giorni di sovrapposizione
     (a lotti per il giornaliero) ed è accettato se sulla sovrapposizione i
     rendimenti coincidono; le \textbf{barre del live}; gli \textbf{altri
@@ -753,6 +784,18 @@ piano, una voce per file del live, e prepara le righe in
   \item[Serie calcolate] stress e risk-off si ricalcolano dal deposito per i
     periodi vuoti.
 \end{description}
+
+\begin{attenzione}{Gli orari in UTC cambiano due volte l'anno}
+Contati in UTC, gli orari di un file che attraversa il cambio dell'ora legale
+sono due per la stessa seduta, e quello della maggioranza dei giorni diventava
+\enquote{l'orario}. Dopo il primo novembre si aspettavano le barre
+13:30--14:15 UTC di SPY, che d'inverno non esistono (Wall Street apre alle
+14:30 UTC), e la riapertura dei cambi della domenica alle 21 invece che alle
+22: ogni seduta sembrava avere quattro barre mancanti, e la voce restava
+\emph{da decidere}. Ora lo schema si conta nell'ora del mercato
+(\cod{America/New\_York} per azioni e cambi, UTC per le cripto) e le barre
+attese si riportano in UTC giorno per giorno.
+\end{attenzione}
 
 \noindent
 Gli esiti: \emph{pronta} (solo il provider del file o il live),

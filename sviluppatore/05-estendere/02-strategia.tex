@@ -165,7 +165,10 @@ produce un \cod{TypeError} su un argomento inatteso.
 \cod{maintenance}
   & \cod{retrain\_every\_days}, \cod{retrain\_every\_bars},
     \cod{retrain\_on\_drawdown\_pct}, \cod{data\_refresh\_every\_days}. È
-    da qui che il sistema sa quando un modello va riaddestrato. \\
+    da qui che il sistema sa quando un modello va riaddestrato. Una cadenza
+    in barre diventa tempo con il timeframe e il mercato degli strumenti
+    (\num{16} barre M15 sono quattro ore sui cambi, \num{16}/\num{26} di
+    seduta sulle azioni: \simbolo{giorni\_da\_barre}). \\
 \rigaTenue
 \cod{\_module\_path}, \cod{\_folder\_path}
   & \textbf{Li scrive il registro.} Non vanno impostati a mano. \\
@@ -181,6 +184,18 @@ regime ribassista deve pesare meno --- e poi si verifica che il modulato non
 peggiori rispetto al neutro. Non si cercano i valori che massimizzano il
 risultato.
 \end{attenzione}
+
+\begin{nota}{Una strategia che si riaddestra da sé}
+Se il modello si rifà dentro \cod{generate\_signals} (ogni $N$ barre, a orari
+fissi) non c'è una pipeline da lanciare: la cadenza in \cod{maintenance} serve
+solo al piano di manutenzione, e dal vivo il runner lo dice una volta nel
+registro. I riaddestramenti veri li scrive la strategia, aggiungendo voci a
+una lista \cod{self.runner\_events} che lo stream svuota dopo ogni barra
+(\vediSez{live-registro}). Un riaddestramento a orari fissi, calcolato solo
+su barre già chiuse a quell'ora, ha un pregio in più: il modello in uso a un
+istante è lo stesso dal vivo, nel rigioco dello stream e nel backtest rifatto
+dopo, e il confronto fra i due regge (\vediSez{live-confronto}).
+\end{nota}
 
 \subsection{La procedura}
 

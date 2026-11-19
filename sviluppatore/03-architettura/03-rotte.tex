@@ -1,11 +1,11 @@
 % ===========================================================================
 %  sviluppatore/03-architettura/03-rotte.tex
 % ===========================================================================
-\section{Le \num{266} rotte, e chi le registra}\label{sez:rotte}
+\section{Le \num{267} rotte, e chi le registra}\label{sez:rotte}
 
-La dashboard Flask ha \num{287} decoratori \cod{@route} che danno
-\num{266} percorsi distinti --- la differenza sono le coppie
-«\cod{GET} in una funzione, \cod{POST} in un'altra». Sono sparsi su tredici
+La dashboard Flask ha \num{288} decoratori \cod{@route} che danno
+\num{267} percorsi distinti --- la differenza sono le coppie
+«\cod{GET} in una funzione, \cod{POST} in un'altra». Sono sparsi su quattordici
 moduli, montati in un ordine che conta.
 
 \begin{center}
@@ -28,7 +28,7 @@ moduli, montati in un ordine che conta.
 \rigaTenue
 \file{auth.py}            & \num{8}   & \cod{@app.route} dentro
                                         \simbolo{init\_auth(app)} \\
-\file{ui\_ext\_*.py} (sei) & \num{15} & Caricate automaticamente
+\file{ui\_ext\_*.py} (sette) & \num{16} & Caricate automaticamente
                                         (\vediSez{ui-ext}) \\
 \bottomrule
 \end{tabular}
