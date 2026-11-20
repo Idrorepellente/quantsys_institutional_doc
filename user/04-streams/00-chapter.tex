@@ -534,15 +534,150 @@ the choices stay for the next time.
 \section{View: seeing what it did}\label{sez:view}
 
 The \voce{View} item in the menu shows prices with the strategy's trades on
-top: where it went in, where it came out, and the indicators it was
-watching.
+top: where it went in, where it came out, and what it was looking at when it
+decided --- the lines it compared, the levels it watched, the zones it
+waited for, if its code draws them.
 
 \figuraSchermata{1.0}{figure/schermate/visual.png}
-  {The chart view. You choose the strategy and the instrument, and overlay
-   the indicators.}
+  {The chart view with a strategy that draws: two moving averages and the
+   Bollinger bands on the price, its labels and ranges, the RSI, a histogram
+   and the position in panes of their own. The cursor is on a trade: its
+   price and reason are in the legend.}
   {visual}
 
 \noindent
 It is for something the numbers do not say: \emph{whether the strategy is
 doing what you thought}. A curve that rises nicely can hide twenty sensible
 trades and a single huge lucky one.
+
+\subsection{The page}\label{sez:view-page}
+
+The chart takes the whole page. Three panels sit on top of it, and each of
+them can be reduced when you want to see what is underneath:
+
+\begin{itemize}
+  \item \textbf{The bar at the top} --- the instrument, the timeframe, the
+    type of chart, \voce{Indicators}, \voce{Replay} and the strategy whose
+    trades you are looking at.
+  \item \textbf{The drawing tools}, down the left side: lines, the ruler,
+    Fibonacci, the Volume Profile over a range and, at the bottom, the gear
+    that opens the settings.
+  \item \textbf{The indicator editor}, a panel along the bottom of the page
+    where you write an indicator in Python and see it on the chart.
+\end{itemize}
+
+\noindent
+The arrow at the start of a bar reduces it to a small tab in the same
+place: a click on the tab brings it back, without moving the mouse. The
+legend moves into the free corner, so that nothing covers it.
+
+\figuraSchermata{1.0}{figure/schermate/visual-editor.png}
+  {The indicator editor at the bottom of the page, with a preview on the
+   chart: the bands on the price and the ATR in a pane of its own, just above
+   the editor.}
+  {visual-editor}
+
+\noindent
+The editor opens from \pulsantesec{Indicator editor} at the bottom left and
+takes the lower part of the page, the whole width, as on TradingView. The
+chart gets shorter above it instead of disappearing underneath: the dates,
+the panes of the preview and the TradingView logo stay in sight. Drag the
+top edge to make it taller or shorter (or use the arrow keys when the edge
+has the focus); the button with the two arrows makes it fill the page up to
+the bar at the top, and brings it back; the arrow next to it closes it into
+the button again. A double click on its header does the same as the two
+arrows. \pulsantesec{Preview}
+(\texttt{Ctrl+Enter}) draws what the code plots without saving it;
+\pulsante{Save} (\texttt{Ctrl+S}) keeps it under the name you gave it, and
+from then on it is in \voce{Indicators} and in \voce{In the system}, where
+you open it again or delete it. \pulsantesec{Template} brings back the
+example, with the series and the functions you can use.
+
+\noindent
+The browser remembers how you left the panels, and how tall the editor was.
+
+\subsection{What the strategy drew}\label{sez:view-plots}
+
+A strategy can draw on each asset what it computes, the way an indicator does
+on TradingView: lines, histograms, levels, coloured backgrounds, arrows,
+rectangles, labels. It is a few lines in its code
+(\vediSez{studio-modes}); the backtest records them bar by bar and the View
+shows them with the trades, for the out-of-sample years. Nothing changes in
+the results: the drawings are only something to look at.
+
+\begin{itemize}
+  \item \textbf{The panes.} What belongs to the price sits on the candles;
+    the rest gets a pane of its own below them, one per name the strategy
+    chose (\enquote{RSI}, \enquote{Spread}\ldots). Drag the line between two
+    panes to change their height.
+  \item \textbf{The legends.} Each pane has its legend at the top left: the
+    name of every line with its value under the cursor, or the last one. A
+    click on a value hides that line, a second click brings it back. The eye
+    next to the strategy's name hides everything it drew.
+  \item \textbf{The notes.} If something in the drawing code was wrong --- a
+    colour that is not a colour, a style that does not exist --- the legend
+    says \voce{1 note}. A click shows what and how many times. The backtest
+    ran all the same: drawing never stops it.
+  \item \textbf{On and off.} \voce{Indicators}\freccia\voce{Strategy} and the
+    \voce{Strategy plots} group of the panel (the gear) turn off the
+    drawings, or only the lines, rectangles and labels.
+  \item \textbf{The replay.} During the replay you see only what existed at
+    the bar of the cursor: a stop the strategy removed at the exit is there
+    while the position is open, and goes with it.
+  \item \textbf{Other timeframes.} The chart opens on the strategy's
+    timeframe. On another one the drawings follow: a daily value sits on the
+    last candle of its day, a daily background colours all the candles of
+    the day.
+\end{itemize}
+
+\figuraSchermata{0.92}{figure/schermate/visual-note.png}
+  {A note from the drawing code: the strategy asked for a line style that
+   does not exist, and got a plain line.}
+  {visual-note}
+
+\subsection{The trades on the chart}\label{sez:view-trades}
+
+Each trade is an arrow: up and green to buy, down and red to sell, with the
+side and the quantity (\texttt{B 364}). Price and reason are in the legend at
+the top when the cursor is on the candle. \voce{Trade details on the chart}
+in the \voce{Positions} group of the panel writes them next to every arrow
+instead.
+
+\subsection{The colours of the candles}\label{sez:view-candles}
+
+The panel that opens from the gear at the bottom of the left toolbar starts
+with \voce{Candles}: four colours, one for each part of a candle.
+
+\begin{center}
+\begin{tabular}{@{}L{28mm}L{110mm}@{}}
+\toprule
+\textbf{Colour} & \textbf{What it paints} \\
+\midrule
+\rigaTenue
+\voce{Buy} & The body of the rising candles, those that closed above
+  their open. \\
+\voce{Weak buy} & Their wicks: the high and the low. \\
+\rigaTenue
+\voce{Sell} & The body of the falling candles. \\
+\voce{Weak sell} & Their wicks. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\figuraSchermata{1.0}{figure/schermate/visual-candles.png}
+  {Choosing the colour of the rising candles. The chart changes while you
+   choose; the small candles next to the four colours show the result in
+   miniature.}
+  {visual-candles}
+
+\noindent
+A click on a colour opens the palette: a swatch, the \voce{Opacity}, the
+hexadecimal code to type (\texttt{1e88e5} or the short \texttt{f5a} both
+work), and \pulsantesec{+} for any other colour. The arrow keys move through
+the palette, \texttt{Esc} closes it. The bar charts take the colours of
+\voce{Buy} and \voce{Sell}, the volume the same two, lighter.
+
+\noindent
+The colours are saved in the application, not in the browser: they stay the
+same after a restart and in every window. \pulsantesec{Reset} next to
+\voce{Candles} brings back the default ones.

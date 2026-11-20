@@ -1,0 +1,162 @@
+% ===========================================================================
+%  sviluppatore/06-dashboard/11-banco.tex
+% ===========================================================================
+\section{Studio › Blueprint \& code: il banco di lavoro}\label{sez:studio-banco}
+
+\file{templates/studio.html}, \file{static/css/studio.css},
+\file{static/js/studio.js}; la lavagna è \file{static/js/node\_editor.js}
+con l'ossatura in \file{templates/\_v2\_studio\_bp.html}; il codice di
+strategie e approcci è \file{templates/editor.html} in un iframe
+(\file{static/js/editor.js}, \file{static/css/editor.css}).
+
+La pagina è una superficie alta quanto la finestra, come Agent e Genetics
+(\vediSez{studio-pagine}): \cod{.studio.wb}, una griglia con la colonna del
+\emph{che cosa} a sinistra e il lavoro a destra. La classe \cod{wb} c'è solo
+nella vista \cod{authoring}: la stessa pagina, servita come
+\enquote{Dati esterni} alla pagina Data (\cod{data-view="data"}), resta un
+modulo senza il banco.
+
+\subsection{La colonna}
+
+In alto le famiglie, \cod{.wb-type} con \cod{data-tab} uguale alla chiave
+del pannello (\cod{strat}, \cod{approccio}, \cod{wm}, \cod{overlay},
+\cod{metric}) e il conto nel sistema. Sotto, per ogni famiglia, una sezione
+\cod{.inst-bar[data-inst]}: ricerca, \enquote{+}, importazione ed elenco.
+Un solo modulo di \file{studio.js} le disegna da
+\percorsoHTTP{/studio/api/installati/<categoria>} e le offre al resto della
+pagina:
+
+\begin{center}
+\begin{tabular}{@{}L{40mm}L{98mm}@{}}
+\toprule
+\textbf{Funzione} & \textbf{Che cosa fa} \\
+\midrule
+\rigaTenue
+\cod{\_\_instReload[cat]} & \cod{(nome, vista)}: ricarica l'elenco; con il
+  nome lo segna aperto nella vista (la usano i salvataggi). \\
+\cod{\_\_instApri[cat]} & \cod{(nome, vista)}: apre nella vista chiesta o in
+  quella corrente; restituisce una promessa. \\
+\rigaTenue
+\cod{\_\_instSegna[cat]} & \cod{(nome, vista)}: segna l'aperto senza
+  ricaricare (la usa l'editor nell'iframe). \\
+\cod{\_\_studioNuovo[cat]} & \cod{(nome)}: weight mode, overlay e metriche
+  ripartono dal template col nome dato. \\
+\rigaTenue
+\cod{studioActivateTab} & \cod{(chiave)}: apre una famiglia, cioè voce,
+  elenco e pannello insieme. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+\enquote{+} non crea niente finché non si preme Invio: il nome si scrive in
+una riga in cima all'elenco e si controlla lì (\cod{[a-z][a-z0-9\_]*}, nomi
+già presi). Poi dipende dalla vista: sulla lavagna si svuota la lavagna e
+le si dà il nome (\simbolo{studioNuovaLavagna}, che chiede conferma se ci
+sono blocchi non salvati); nel codice di strategie e approcci l'iframe crea
+la cartella col template e la apre; negli altri si riparte dal template.
+Eliminare passa per \simbolo{window.showConfirm} e per
+\percorsoHTTP{/studio/api/installati/<categoria>/<nome>/elimina}.
+La famiglia scelta e la colonna ridotta stanno in \cod{localStorage}
+(\cod{qs-studio-tab}, \cod{qs-studio-rail}); la colonna ridotta la rimette
+uno script in linea prima del primo disegno.
+
+\subsection{Due viste, due documenti}
+
+Strategie e approcci hanno la lavagna (\cod{.bp-pane}) e il codice
+(\cod{.code-pane}), ognuna con la sua testa \cod{.wb-head} e la sua copia
+dell'interruttore Blueprint/Code, nello stesso punto: \file{studio.js} tiene
+allineate le due copie (\cod{aria-pressed}), passa il fuoco a quella della
+vista che si apre e manda l'evento \cod{studio:modo}. A schermo intero va la
+vista intera, testa compresa, quindi i comandi restano a portata.
+
+Le due viste sono due documenti: possono tenere aperti due artefatti
+diversi. La colonna ricorda l'aperto per vista (\cod{graph}, \cod{code}) e
+segna quello della vista visibile. Un clic apre nella vista corrente; sulla
+lavagna solo ciò che ha un grafo (\cod{blueprint} nell'elenco), il resto
+passa al codice e la colonna lo dice.
+
+\begin{perche}{Non si riapre da sé nell'altra vista}
+Passare da una vista all'altra non carica l'artefatto aperto nell'altra:
+sostituirebbe senza chiedere un grafo o un file con modifiche non salvate.
+Il documento di ciascuna vista cambia solo per un gesto fatto lì.
+\end{perche}
+
+\subsection{La lavagna: Check e Save}
+
+\simbolo{wireNodeCompile} collega i due comandi. \enquote{Check} chiama
+\percorsoHTTP{/studio/api/compile} e mostra l'esito sotto la lavagna, con il
+codice generato chiuso in un \cod{details}. \enquote{Save} compila e, se il
+controllo passa e il codice ha il descrittore, installa
+(\percorsoHTTP{/studio/api/install}, \percorsoHTTP{/studio/api/approach/install})
+con il grafo accanto al codice; poi ricarica l'elenco con il nome. Ogni
+\cod{onChange} della lavagna scrive \enquote{Unsaved changes};
+\simbolo{studioLoadGraph} e \simbolo{studioNuovaLavagna} caricano con
+\cod{\_\_carica} acceso, così aprire non conta come modifica.
+
+I blocchi sono larghi 176 pixel (\cod{NODE\_W}), e le porte stanno a
+$y + 19 + 20i$ come prima: le misure in \file{studio.css} le rispettano.
+L'esempio della lavagna vuota ha le colonne a 214 pixel l'una dall'altra:
+entra tutto a 1440 pixel con la libreria aperta, e fra due colonne resta
+posto per le etichette \enquote{yes}/\enquote{no}.
+
+\subsection{Il codice di strategie e approcci, nell'iframe}
+
+\file{editor.html} con \cod{?embed=1} è l'editor a più file. In Studio
+(\cod{body.in-studio}) la sua barra è nascosta: la testa del pannello mostra
+cartella, file e stato e ha Save e Save \& test, e i due documenti si parlano
+con \cod{postMessage}, accettato solo dalla stessa origine:
+
+\begin{center}
+\begin{tabular}{@{}L{36mm}L{102mm}@{}}
+\toprule
+\textbf{Messaggio} & \textbf{Da chi, e che cosa porta} \\
+\midrule
+\rigaTenue
+\cod{editor-pronto} & Dall'iframe, finita l'apertura: i comandi mandati
+  prima aspettavano in coda. \\
+\cod{editor-stato} & Dall'iframe a ogni cambio: cartella, file, testo e tono
+  dello stato, Save e Save \& test attivi, sola lettura. \\
+\rigaTenue
+\cod{editor-comando} & Da Studio: \cod{salva}, \cod{prova}, \cod{apri}
+  (con il nome), \cod{crea} (con il nome). \\
+\cod{ricarica-elenco} & Da Studio dopo un'importazione o un'eliminazione:
+  se l'artefatto aperto non c'è più, l'editor si svuota e lo dice. \\
+\rigaTenue
+\cod{artefatti-cambiati} & Dall'iframe dopo un salvataggio o una creazione:
+  la colonna si ricarica. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Stato, esito, tastiera}
+
+Lo stato in testa prende un tono, \cod{data-tone} (\cod{ok}, \cod{err},
+\cod{busy}), che il CSS colora. Lo deduce dal testo un
+\cod{MutationObserver}, così vale per tutti i punti della pagina che lo
+scrivono; l'iframe lo dice da sé (\cod{data-tone-fisso}). L'esito dei
+controlli (\cod{.result}) si mostra quando c'è qualcosa da dire e si
+richiude con la X. Ctrl/Cmd+S preme il pulsante con \cod{data-salva} della
+vista visibile, o il Save dell'iframe; dentro un dialogo non fa niente.
+
+\paragraph{ui-system.css.} Dà a \cod{.sec}, \cod{.studio-panel},
+\cod{.inst-bar}, \cod{.bp-main} e \cod{.vsc} fondo e raggio con
+\cod{!important}: dentro \cod{.studio.wb} si tolgono con un solo
+\cod{:is(\ldots)}. Ai campi dà fondo, bordo e raggio con selettori che
+pesano sei classi: il nome nel percorso, la ricerca e i campi dei blocchi si
+riscrivono con \cod{\#qs-canvas} davanti. I contenitori di pulsanti hanno
+\cod{data-ui-group="none"}, e percorsi ed elenchi \cod{data-i18n-skip},
+perché il dizionario non \enquote{traduca} nomi di file
+(\cod{overlays} diventava \enquote{Overlays}).
+
+\subsection{Le prove}
+
+\simbolo{provaBanco} in \file{tests/e2e\_studio.js}, nei due temi: la pagina
+che sta nella finestra, famiglie e conti, ricerca, apertura e tastiera, la
+famiglia ricordata; \enquote{+} con nomi sbagliati e giusti, Ctrl+S,
+l'esito, l'eliminazione; la lavagna (esempio che entra tutto, Check, codice
+generato, Save, Clear, riapertura); il codice nell'iframe comandato dalla
+testa (percorso, Save, creazione, artefatto eliminato mentre è aperto); i
+collegamenti \cod{?open=}, \cod{?tab=metric\&output=chart},
+\cod{?import=overlay}; la colonna ridotta; 820 pixel; la vista
+\enquote{Dati esterni}. \cod{SOLO=banco} prova solo questa parte.

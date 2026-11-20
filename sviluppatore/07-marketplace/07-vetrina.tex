@@ -1,0 +1,159 @@
+% ===========================================================================
+%  sviluppatore/07-marketplace/07-vetrina.tex
+% ===========================================================================
+\section{La vetrina e la scheda dell'artefatto}\label{sez:vetrina}
+
+La vetrina ha l'impostazione di una piattaforma di trading: card con la curva
+di equity fuori campione, schede per tipo con i conteggi, una barra di
+ricerca, prezzo, ordine e vista che resta agganciata in alto, e una vista a
+tabella da ordinare per colonna. La scheda di un artefatto ha i riquadri dei
+numeri, il grafico dell'equity con la scala a destra e il mirino, i
+rendimenti mensili, una barra delle sezioni che segue lo scorrimento e la
+card d'acquisto agganciata a lato.
+
+\subsection{Tre file, un prefisso}
+
+\begin{description}[leftmargin = 1.4em, style = nextline, itemsep = 4pt]
+  \item[\file{static/js/mkt\_card.js}] Disegna la card e la riga della
+    tabella: curva in SVG, etichette dei tipi, prezzo, i tre numeri, data,
+    statistiche. Lo usano la vetrina e l'anteprima di \voce{Sell yours},
+    che così mostra all'autore la card esatta che vedrà chi compra. Si
+    carica nel browser (\cod{window.MktCard}) e in \pkg{node}
+    (\cod{require}), dove la prova lo esegue.
+  \item[\file{static/css/mkt.css}] I pezzi comuni: etichette, avatar,
+    curve, pulsanti, la barra, le schede, la griglia, la card, la tabella.
+  \item[\file{static/css/marketplace\_item.css}] La scheda.
+\end{description}
+
+\noindent
+Il prefisso delle classi è \cod{mkt-}, non \cod{mk-}: \cod{.mk-tabs},
+\cod{.mk-card} e \cod{.mk-btn} sono della pagina Regime, e
+\file{ui-system.css} le definisce con \cod{!important}. Lo stesso foglio,
+caricato \emph{dopo} quello della pagina, dà a ogni campo di testo, select e
+pulsante sfondo, bordo, raggio e \cod{box-shadow: none !important}: la
+ricerca e il select dell'ordine hanno regole per id (\cod{\#mktQ},
+\cod{\#mktSort}), e il segmento del prezzo marca la scelta con
+\cod{outline} invece che con un'ombra.
+
+\subsection{I dati della vetrina}
+
+La query della vetrina legge anche \cod{a.details->'equity'}, la curva
+scritta alla pubblicazione. È una query nuova: finché il sito non ha
+l'elenco aggiornato (\file{build/appQueries.json} copiato in
+\file{src/lib/appQueries.json} e ridistribuito) la rifiuta, e
+\simbolo{web\_db.marketplace\_list} ripiega sulla precedente --- la vetrina
+resta piena, con le card senza curva. Il rifiuto si ricorda per mezz'ora, per
+non pagare a ogni apertura una richiesta che verrà respinta; passata la
+mezz'ora si riprova.
+
+La query è \emph{fissa}: filtri e ordini si applicano in Python
+(\simbolo{\_filtra\_vetrina}), perché una query composta con i filtri sarebbe
+diversa a ogni combinazione e il sito le rifiuterebbe tutte. L'API
+\percorsoHTTP{/api/marketplace/items} chiede tutti i tipi insieme, conta per
+tipo (le schede \enquote{Strategies 7, Projects 1\ldots} seguono ricerca e
+prezzo, come i filtri di una piattaforma di trading) e solo dopo tiene il tipo
+scelto. Le curve escono alleggerite a \num{64} punti, con il primo e l'ultimo
+(\simbolo{\_curva\_card}).
+
+\begin{attenzione}{Le metriche sono stringhe all'italiana}
+Nel database Sharpe, CAGR e drawdown sono scritti come li ha scritti la
+pubblicazione: \cod{"1,52"}, \cod{"16,6\%"}, \cod{"-9,8\%"}. Python
+(\simbolo{web\_db.numero\_metrica}) e JavaScript (\simbolo{MktCard.num}) li
+leggono con la stessa regola: il punto è separatore delle migliaia solo
+quando non può essere altro, e così la virgola. La prova li confronta caso per
+caso. In pagina i numeri escono all'inglese: punto decimale, virgola delle
+migliaia, il meno tipografico (U+2212).
+\end{attenzione}
+
+\subsection{La scheda}
+
+\simbolo{community.\_presentazione} prepara i campi che il modello mostra:
+tipo, autore con iniziali e tinta, data, prezzo e periodo, i cinque riquadri
+(Sharpe, CAGR, drawdown massimo, rendimento totale dalla curva, mesi
+positivi dai rendimenti mensili). Il modello non ha filtri propri, e si
+disegna anche fuori dall'app.
+
+La copertura (\simbolo{web\_db.artifact\_coverage}) si legge \emph{prima}
+delle categorie: le categorie verificate alla pubblicazione stanno lì. Prima
+si leggeva dopo, e per chi non aveva l'artefatto installato \voce{Works on}
+restava sempre vuoto.
+
+I due grafici sono \cod{canvas} disegnati da
+\file{static/js/marketplace\_item.js}: \simbolo{disegnaEq} (griglia, scala in
+percentuale a destra, linea dello zero tratteggiata, area, l'ultimo valore
+in un'etichetta sulla scala, mirino con rendimento dall'inizio, drawdown e
+punto del periodo) e \simbolo{disegnaMo}. Le tacche della scala coperte da
+un'etichetta non si scrivono. Un \cod{ResizeObserver} li ridisegna quando
+cambia la larghezza, un \cod{MutationObserver} quando cambia il tema.
+
+\subsection{Il segno «Verified»}
+
+Accanto all'autore, su card, riga e scheda, quando il suo conto incassi è
+verificato dal fornitore dei pagamenti: \cod{"SellerAccount".status =
+'verified'} con \cod{"payoutsEnabled"}. \simbolo{web\_db.autori\_verificati}
+legge solo gli id degli autori di artefatti pubblici, senza parametri.
+
+\begin{attenzione}{Non dalla scheda dell'artefatto}
+Prima il segno si leggeva da \cod{details.verified}: \cod{details} lo scrive
+l'autore alla pubblicazione, e chiunque poteva darselo da solo. Ora lo calcola
+il server e la scheda non conta; la prova lo verifica con un
+\cod{verified} finto messo proprio lì.
+\end{attenzione}
+
+\noindent
+È una lettura \emph{facoltativa}: se il sito non conosce ancora la query, o
+fallisce, nessuno ha il segno e il resto della pagina non ne risente. Per
+questo non deve lasciare tracce nello stato degli errori, che la vetrina
+mostra in alto: \simbolo{app\_api.istantanea} lo fotografa prima,
+\simbolo{app\_api.ripristina} lo rimette com'era dopo, senza cancellare
+l'errore di una query vera venuta prima. Il risultato vale cinque minuti, un
+rifiuto mezz'ora.
+
+\subsection{Indietro, avanti e la posizione}
+
+I filtri stanno nell'indirizzo (\cod{pushState} per una scelta,
+\cod{replaceState} per il resto), la colonna su cui è ordinata la tabella
+nello stato della voce di storia, la vista in \cod{localStorage}. Tornando
+con Indietro dalla scheda di un artefatto la vetrina si ridisegna da capo, e
+il browser cercherebbe la vecchia posizione prima che le card ci siano: la
+pagina mette \cod{history.scrollRestoration} a \cod{manual}, salva la
+posizione all'uscita (\cod{pagehide}, in \cod{sessionStorage} per indirizzo) e
+la ritrova dopo il primo disegno, solo se la navigazione è
+\cod{back\_forward}.
+
+La finestra dell'app non ha la barra del browser e il menu è spento: Indietro
+e Avanti li aggiunge la shell. Il preload ascolta \texttt{Alt+}$\leftarrow$ e
+\texttt{Alt+}$\rightarrow$ (\texttt{Cmd+[} e \texttt{Cmd+]} su macOS) e i
+tasti Indietro e Avanti, \emph{dopo} la pagina: se la pagina ha già usato il
+tasto (\cod{defaultPrevented}, come fa un editor) non si naviga, e su macOS
+\texttt{Cmd+[} dentro un campo di testo resta al campo. Il main riceve
+\cod{storia:vai} e chiama \simbolo{vaiNellaStoria}, che usa
+\cod{webContents.navigationHistory} quando ha \cod{canGoBack} (le versioni
+nuove di Electron, dove i metodi di \cod{webContents} sono deprecati) e i
+metodi di \cod{webContents} altrimenti: l'Electron 31 dell'app ha solo
+questi. I tasti laterali del
+mouse arrivano come \cod{app-command} su Windows e Linux, come pulsanti 3 e 4
+nel preload su macOS; lo scorrimento a tre dita come \cod{swipe}.
+
+\subsection{Le prove}
+
+\file{tests/prova\_vetrina.py} (senza browser): i numeri uguali in Python e
+JavaScript, il ripiego della query e la sua memoria, filtri e ordini,
+l'API con conteggi e curve, la scheda (\voce{Works on}, prezzi, riquadri,
+sezioni, gli id che gli script usano), card e riga eseguite con \pkg{node},
+il segno \enquote{Verified} con il rifiuto che non lascia avvisi.
+
+\file{tests/e2e\_vetrina.js} avvia da sé l'app con una vetrina finta
+(\file{tests/vetrina\_finta.py}: sedici artefatti inventati, niente sito né
+database) e la prova in Chrome nei due temi: filtri, ricerca con
+\texttt{/}, ordini, tabella, Indietro dentro la vetrina e dalla scheda
+(stessa scelta, stesso ordine, stessa altezza, con la cache delle pagine
+spenta come nell'app), barra delle sezioni, mirino, acquisto senza sito,
+video, nessuna richiesta fuori dall'app. \file{tests/e2e\_electron\_avvio.js}
+prova Indietro e Avanti nella finestra vera.
+
+\begin{codiceInterno}{console}{Le prove della vetrina}{}
+python tests/prova_vetrina.py
+PLAYWRIGHT_DIR=... CHROME_BIN=/usr/bin/google-chrome node tests/e2e_vetrina.js
+ELECTRON_BIN=... PLAYWRIGHT_DIR=... xvfb-run -a node tests/e2e_electron_avvio.js
+\end{codiceInterno}

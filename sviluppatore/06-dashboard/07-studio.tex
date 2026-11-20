@@ -1,0 +1,187 @@
+% ===========================================================================
+%  sviluppatore/06-dashboard/07-studio.tex
+% ===========================================================================
+\section{Chat con l'agente, Genetics e colori della View}\label{sez:studio-pagine}
+
+Tre pagine rifatte con gli stessi criteri: una superficie unica alta quanto
+la finestra, classi con un prefisso nuovo, gli id di sempre dove altri script
+li cercano, e sul server solo ciò che serviva a mostrare di più (la curva
+della fitness, i metadati completi, le preferenze dei colori).
+
+\subsection{Tre regole comuni}
+
+\begin{description}[leftmargin = 1.4em, style = nextline, itemsep = 4pt]
+  \item[Prefissi nuovi] \file{ui-system.css} si carica \emph{dopo} il foglio
+    della pagina e dà fondo, raggio e bordo con \cod{!important} alle classi
+    di prima (\cod{.ag-side}, \cod{.ag-main}, \cod{.ag-chat},
+    \cod{.ag-composer}, \cod{.gn-card}, \cod{.gn-form}, \cod{.gn-right},
+    \cod{.gn-seg}, \cod{.gn-tbl}\ldots). Le pagine nuove usano
+    \cod{ag-layout}/\cod{ag-rail}/\cod{ag-conv} e il prefisso \cod{gx-};
+    restano \cod{gn-} solo le classi che scrive \file{genetic\_verdetto.js}.
+    I contenitori con pulsanti portano \cod{data-ui-group="none"}: altrimenti
+    \file{ui-system.js} li classifica come serie e ne cambia il raggio, o
+    marca la scelta di una tavolozza con il fondo pieno.
+  \item[Alte quanto la finestra] Lo schema di \file{home.css}: il canvas con
+    \cod{data-tab} della pagina prende \cod{calc(100vh - var(--qs-tb-h))}, il
+    contenuto è una colonna flessibile con \cod{min-height: 0}, e scorrono le
+    aree interne. Genetics lo fa sopra i \num{1100} pixel; sotto, le colonne
+    si impilano e scorre la pagina, con il pulsante di avvio fermo in fondo.
+  \item[Niente \cod{data-i18n} sui testi nuovi] Il dizionario di
+    \file{i18n.js} sostituisce il testo di un elemento con la voce della sua
+    chiave: una frase nuova con una chiave vecchia tornerebbe quella di
+    prima. I dati dell'utente (nomi di chat e strategie, espressioni) stanno
+    in elementi \cod{data-user} o dentro \cod{code}/\cod{pre}, che il
+    traduttore salta.
+\end{description}
+
+\subsection{La chat con l'agente}
+
+\file{templates/agent.html}, \file{static/js/agent.js},
+\file{static/css/agent.css} e \file{static/js/ag\_md.js}, il Markdown delle
+risposte. \file{ag\_md.js} prima \emph{sfugge} tutto il testo e poi costruisce
+la struttura (titoli, elenchi annidati con le caselle, citazioni, tabelle,
+codice); i collegamenti passano solo se sono \cod{http} o \cod{https}. Un
+blocco di codice con \cod{file:percorso} mostra il nome del file, uno con la
+lingua la evidenzia (Python e JSON, classi \cod{tk-*}). I messaggi
+dell'utente usano la forma semplice: righe e codice, nient'altro. Si carica
+nel browser (\cod{window.AgMd}) e in \pkg{node}, dove la prova lo esegue; lo
+usa anche Genetics per la regola in anteprima.
+
+Le risposte portano in coda due commenti HTML che la pagina legge e il
+Markdown non mostra: \cod{<!--meta:\{\ldots\}-->} (durata, file scritti con
+righe aggiunte e tolte, operazioni con l'esito, tentativi corretti) diventa
+il registro e l'elenco dei file; \cod{<!--interfacce:[\ldots]-->} porta i
+riquadri, per esempio il confronto fra stream come grafico e tabella.
+
+\simbolo{agent.\_auto\_title} chiede al modello un titolo breve dopo il
+primo messaggio. Un modello piccolo a volte risponde alla domanda invece di
+intitolarla: oltre otto parole o sessanta caratteri la risposta non è un
+titolo, e si usa l'inizio della domanda, tagliato fra due parole. Toglie
+anche \enquote{Title:}, il Markdown e il punto finale. Eliminare una chat
+passa per \simbolo{window.showConfirm}: in Electron le finestre di dialogo
+native lasciano la pagina senza fuoco.
+
+\subsection{Genetics}
+
+\file{templates/genetic.html}, \file{static/js/genetic.js} (la pagina),
+\file{static/js/genetic\_verdetto.js} (il minimo di $n$ e il verdetto del
+filtro), \file{static/css/genetic.css}. I due script si parlano con eventi su
+\cod{document}, così ognuno resta leggibile da solo:
+
+\begin{center}
+\begin{tabular}{@{}L{34mm}L{104mm}@{}}
+\toprule
+\textbf{Evento} & \textbf{Quando, e chi ascolta} \\
+\midrule
+\rigaTenue
+\cod{qs-gn-config} & La configurazione è arrivata e i campi hanno i valori
+  veri (predefiniti o dell'ultimo avvio): il verdetto ricalcola i limiti. \\
+\cod{qs-gn-ambito} & Le caselle delle categorie sono state ricostruite. \\
+\rigaTenue
+\cod{qs-gn-job} & Ogni lettura del lavoro; il dettaglio è il lavoro: il
+  verdetto si ridisegna. \\
+\cod{qs-gn-installata} & Una strategia respinta è stata installata a mano:
+  la pagina aggiorna l'elenco e mostra i collegamenti. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+I controlli segmentati (universo, timeframe) sono radio; il valore vero sta
+nei campi nascosti \cod{\#gnScopeMode} e \cod{\#gnTf}, perché il verdetto
+legge il primo e ne ascolta il \cod{change}. \simbolo{window.gnQuotaNonValida}
+dice alla pagina se il filtro permette di partire: il motivo per cui il
+pulsante è spento si scrive sopra il pulsante.
+
+\begin{description}[leftmargin = 1.4em, style = nextline, itemsep = 4pt]
+  \item[Il minimo degli asset] Uno per categoria e comunque due
+    (\simbolo{minimoDi} in \file{genetic\_verdetto.js}): il server alza a 2
+    qualunque valore più basso. Con l'ambito \enquote{un simbolo} il minimo è
+    1 da entrambe le parti: prima il server chiedeva comunque due asset
+    promossi su uno provato, e quell'ambito non partiva mai.
+  \item[Il nome] \cod{\_NAME\_RE} accetta da 3 a 40 caratteri, come dice il
+    messaggio; la pagina usa la stessa espressione e segnala anche i nomi già
+    presi fra le strategie del sistema.
+  \item[Il lavoro] Oltre ai campi di prima, \cod{history}: una voce per
+    generazione, \cod{\{g, tr, va\}}, più \cod{ag} e \cod{ap} (varianti usate
+    e proposte) dove l'agente è intervenuto --- il motore chiama
+    \cod{progress} due volte in quelle generazioni, e la seconda annota la
+    voce già scritta. Poi \cod{timeframe}, \cod{pop}, \cod{mutation\_model},
+    \cod{installata} dopo un'installazione a mano, e \cod{promotion} anche
+    per le promosse.
+  \item[I metadati] \file{gp\_meta.json} salva lo storico corto di tutte le
+    generazioni (prima: quello lungo del motore, con espressione e regola di
+    ciascuna, solo le ultime 60). Un'installazione a mano scrive gli stessi
+    campi di una promossa --- metriche, curva, mutazioni, mattoni,
+    divisione --- che prima mancavano. \percorsoHTTP{/genetic/api/strategies}
+    legge le due forme dello storico e aggiunge \cod{approved} e
+    \cod{regola}.
+  \item[L'ultimo avvio] \percorsoHTTP{/genetic/api/run} scrive le impostazioni
+    in \file{genetic\_last\_run.json} (senza il nome);
+    \percorsoHTTP{/genetic/api/config} le restituisce in \cod{last}, e la
+    pagina tiene solo ciò che esiste ancora.
+  \item[I mattoni] \cod{BUILTIN[k]["family"]} in \file{genetic/primitives.py}
+    li raggruppa nella pagina; il motore e l'esportazione leggono solo
+    \cod{label} e \cod{lines}.
+\end{description}
+
+\noindent
+Il grafico della fitness è un SVG scritto a mano e ridisegnato a ogni lettura
+e a ogni cambio di larghezza (\cod{ResizeObserver}). $-999$ è la fitness delle
+regole che non operano: resta fuori scala, e il mirino la chiama
+\enquote{inactive}. La tabella delle strategie ha \cod{table-layout: fixed},
+perché il dettaglio aperto sotto una riga non la allarghi, e una
+\emph{container query} toglie la data sotto i \num{760} pixel e il drawdown
+sotto i \num{620}. \enquote{Run backtest} apre \percorsoHTTP{/run?focus=<nome>}:
+\simbolo{evidenziaRichiesta} in \file{runner.js} porta la scheda a vista e la
+accende per un momento.
+
+\subsection{I colori delle candele nella View}
+
+\percorsoHTTP{/api/visual/prefs}: \cod{GET} i colori salvati, \cod{POST
+\{candles\}} li sostituisce, \cod{null} torna ai predefiniti.
+\simbolo{\_colori\_candele} tiene solo \cod{\{c: "\#rrggbb", a: 0..100\}}; un
+valore diverso torna al predefinito di quel ruolo invece di arrivare al
+grafico. Il file è \file{visual\_view\_prefs.json}, accanto a
+\file{projects.json}, e il \cod{POST} riscrive solo la voce \cod{candles}.
+
+\begin{perche}{Sul server e non nel browser}
+Il \cod{localStorage} vale per origine, e l'origine cambia con la porta del
+server locale (5000, poi 47821--47823): i colori scelti oggi sparirebbero al
+prossimo avvio su un'altra porta.
+\end{perche}
+
+\noindent
+Il modello riceve i colori dalla funzione globale \simbolo{colori\_candele}
+(\cod{data-candles} su \cod{\#visual-root}): il grafico nasce già con i
+colori giusti. In \file{visual.js} \simbolo{candleColorOpts} li traduce nelle
+opzioni di Lightweight Charts --- corpo e bordo delle candele in salita da
+\voce{Buy}, stoppini da \voce{Weak buy}, lo stesso in discesa ---,
+\simbolo{barColorOpts} dà alle barre OHLC i due colori dei corpi e
+\simbolo{volumeColor} gli stessi al volume, al 45\,\%.
+\simbolo{ccApplica} ridisegna in un \cod{requestAnimationFrame},
+\simbolo{ccSalva} salva \num{350} millisecondi dopo l'ultima modifica.
+
+\subsection{Le prove}
+
+\file{tests/studio\_finto.py} prepara una copia dell'app con cinque ETF
+sintetici (duemila barre giornaliere, abbastanza per evoluzioni vere in pochi
+secondi), sei chat datate rispetto a oggi e un Ollama finto in un thread: tre
+modelli, titoli brevi, varianti valide per le mutazioni guidate, una risposta
+fissa per la chat. \file{tests/prova\_studio.py} la usa senza browser:
+\file{ag\_md.js} in \pkg{node} (anche l'HTML che non deve passare), il
+titolo automatico, l'API dei colori, i controlli di Genetics (nome, minimo,
+un simbolo), lavori veri con la curva, l'agente, l'installazione a mano, una
+promozione forzata, i metadati vecchi, un lavoro fermato, e gli id che gli
+script cercano. \file{tests/e2e\_studio.js} avvia la stessa copia e prova le
+tre pagine in Chrome nei due temi.
+
+\begin{codiceInterno}{console}{Le prove delle tre pagine}{}
+python tests/prova_studio.py
+PLAYWRIGHT_DIR=... CHROME_BIN=/usr/bin/google-chrome node tests/e2e_studio.js
+python tests/studio_finto.py --porta 5075 --sessione /tmp/sessione.txt
+\end{codiceInterno}
+
+\noindent
+L'ultima riga lascia l'app finta accesa per lavorare sull'aspetto delle
+pagine; l'indirizzo con il gettone si stampa all'avvio.

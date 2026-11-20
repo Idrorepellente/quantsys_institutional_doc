@@ -37,19 +37,114 @@ strategies happens entirely on your own computer, and asking for an account
 to do it would make no sense. Buying, selling and granting a licence require
 the system to know who is who.
 
+\section{Browsing the storefront}\label{sez:storefront}
+
+Every card starts with what the artifact did out of sample: its
+\textbf{equity curve}, green if it ended above where it started, red if
+below. The dashed line is the starting level. Building blocks that have no
+backtest of their own --- overlays, weight modes, metrics, indicators,
+regime rules --- show the icon of their type instead.
+
+Under the curve come the name, the author and the version, the author's
+summary, and three numbers measured out of sample: \textbf{Sharpe},
+\textbf{CAGR} and \textbf{max drawdown}. A blue badge after the author's
+name marks a \textbf{verified seller}: the payment provider has checked their
+identity and pays them. The author cannot set it; it comes from the payment
+account. At the bottom, how long ago it was
+published, likes, downloads and rating. A line in the warning colour says
+when the artifact needs auxiliary data (\vediSez{aux-data}).
+
+\figuraSchermata{1.0}{figure/schermate/marketplace-storefront.png}
+  {The storefront. The bar stays in view while you scroll; the type tabs say
+   how many artifacts of each type match the search and the price.}
+  {mkt-storefront}
+
+\noindent
+The bar above the storefront stays in view while you scroll:
+
+\begin{itemize}
+  \item \textbf{Search} --- by name, author or description; the list
+        narrows while you type. Press \texttt{/} anywhere on the page to
+        jump to it.
+  \item \textbf{Price} --- \voce{All}, \voce{Free} or \voce{Paid}.
+  \item \textbf{Sort by} --- \voce{Newest}, \voce{Highest Sharpe},
+        \voce{Most liked}, \voce{Most downloaded}, \voce{Top rated},
+        \voce{Lowest price}. Artifacts without a backtest go to the end of
+        \voce{Highest Sharpe}.
+  \item \textbf{View} --- cards or a table. The choice is remembered.
+  \item \textbf{Types} --- the tabs below, each with how many artifacts it
+        holds for the current search and price.
+\end{itemize}
+
+\noindent
+The storefront remembers your choices. \textbf{Back}
+(\vediSez{menu}) returns to the previous selection, and from an artifact's
+page it brings you back to the storefront as you left it: same filters, same
+sort, same view, same position on the page.
+
+The \textbf{table} shows the same artifacts in columns: a small equity
+curve, Sharpe, CAGR, max drawdown, price, likes, downloads, rating and date.
+Click a heading to sort by it --- best values first, click again to
+reverse --- and click a row to open the artifact. It is the quickest way to
+compare many strategies on the same numbers. On a phone the storefront
+always shows cards.
+
+\figuraSchermata{1.0}{figure/schermate/marketplace-table.png}
+  {The table view, sorted by Sharpe. A dash means the artifact has no such
+   number (it has no backtest of its own).}
+  {mkt-table}
+
+\section{The artifact page}\label{sez:artifact-page}
+
+At the top, the type and the asset categories it was tested on, the name
+and version, the author's summary, and a line with the author ---
+\voce{Verified seller} when the payment provider has checked their identity
+--- the date of publication, rating, likes and downloads. On the right, and at the top on a
+narrow window, the \textbf{purchase card}: the price, whether it is paid once
+or per month or year, and the button --- \pulsante{Buy for \eur{49}},
+\pulsante{Get for free}, or \pulsante{Install into the system} once it is
+yours.
+
+A bar lists the sections and follows you as you scroll: \voce{Performance},
+\voce{Overview}, \voce{Instruments}, \voce{Data} (only when the artifact
+needs auxiliary data), \voce{Content} and \voce{Comments}.
+
+\begin{itemize}
+  \item \textbf{Performance} --- five numbers: Sharpe ratio, CAGR, max
+        drawdown, total return over the whole out-of-sample period, and the
+        share of positive months. Below them the equity curve: the scale on
+        the right is the change from the start, and the label on the scale
+        is the last value. Move the pointer over the curve: the crosshair
+        shows the return from the start and the drawdown at that point.
+        Under it the monthly returns; a bar shows its value under the
+        pointer.
+  \item \textbf{Overview} --- the author's description, the steps of how it
+        works and, if there is one, the presentation video.
+  \item \textbf{Instruments} --- the asset categories it works on and, for
+        each, the instruments it actually traded out of sample, with result,
+        yield, contribution and the period covered.
+  \item \textbf{Content} --- the files you get; the code itself after
+        purchase.
+\end{itemize}
+
+\figuraSchermata{1.0}{figure/schermate/marketplace-artifact.png}
+  {The page of a strategy, with the pointer on the equity curve: return from
+   the start and drawdown at that point.}
+  {mkt-artifact}
+
 \section{Buying}\label{sez:buy}
 
 \begin{pratica}{From the storefront to the system}
 \begin{enumerate}
-  \item Open the artifact's page: description, metrics declared by the
-        seller, comments, sometimes a video.
-  \item \pulsante{Buy} --- if it is free, access is immediate; if it is paid,
-        the payment flow opens.
+  \item Open the artifact's page (\vediSez{artifact-page}): out-of-sample
+        results, description, instruments, data it needs, comments.
+  \item \pulsante{Buy for \ldots} --- \pulsante{Get for free} when it is free,
+        and access is immediate; if it is paid, the payment flow opens.
   \item Once the payment is done you go back to the application. If access
         does not show as active yet, \textbf{it is not an error}: the
         confirmation arrives a moment later. The page says so and asks you to
         wait.
-  \item \pulsante{Install} --- the artifact is written to the system, and
+  \item \pulsante{Install into the system} --- the artifact is written to the system, and
         from then on it appears in the lists like all the others.
 \end{enumerate}
 \end{pratica}
@@ -181,8 +276,9 @@ cannot be made of empty streams: in «Live test», «live\_test\_rules» and
 \end{attenzione}
 
 \figuraSchermata{0.62}{figure/schermate/marketplace-empty.png}
-  {Publishing a project made of empty streams: the checks name them before
-   the attempt, and the attempt is refused with the same reason.}
+  {A project made of streams without backtest results: the checks name them
+   before you try to publish, and the attempt is refused with the same
+   reason.}
   {sell-empty}
 
 \begin{attenzione}{The code must only compute}

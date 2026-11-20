@@ -1,0 +1,231 @@
+% ===========================================================================
+%  sviluppatore/06-dashboard/09-disegni.tex
+% ===========================================================================
+\section{I disegni delle strategie}\label{sez:disegni}
+
+La View mostra le operazioni di una strategia su ogni asset. Perché le abbia
+fatte lo dicono i disegni: nel codice della strategia
+\cod{chart(symbol)} restituisce una superficie su cui tracciare serie,
+livelli, riempimenti, sfondi, linee, rettangoli, etichette e verticali, con
+le firme di TradingView. Il backtest li registra barra per barra, il
+walk-forward ne salva il tratto fuori campione accanto ai trade, la View li
+disegna con le operazioni, nel riquadro del prezzo o in riquadri propri. La
+guida per chi scrive strategie è in
+\file{strategies/GUIDE\_STRATEGIE\_CUSTOM.md}
+(\enquote{Drawing on the chart}); qui c'è il percorso dei dati.
+
+\begin{center}
+\begin{tabular}{@{}L{52mm}L{86mm}@{}}
+\toprule
+\textbf{File} & \textbf{Che cosa} \\
+\midrule
+\rigaTenue
+\file{core/chart.py} & L'API delle strategie, il registro, l'unione dei fold,
+  il file. \\
+\file{backtest/engine.py} & \cod{BacktestConfig.grafici},
+  \cod{grafici\_da}; \simbolo{run} apre e chiude il registro. \\
+\rigaTenue
+\file{validation/walk\_forward.py} & La finestra di ogni fold,
+  \simbolo{grafici\_oos}. \\
+\file{execution/run\_walkforward.py} & Scrive
+  \file{wf\_<nome>\_oos\_charts.zip}. \\
+\rigaTenue
+\file{dashboard/visual\_debug.py} & \simbolo{strategy\_charts}: i disegni
+  portati sulle candele del timeframe scelto. \\
+\file{dashboard/static/js/visual\_plots.js} & Il disegno nella pagina. \\
+\rigaTenue
+\file{dashboard/static/js/visual.js} & Riquadri, legende, marker, replay
+  della View su Lightweight Charts 5. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Il registro}
+
+\simbolo{chart} legge un \cod{ContextVar}: fuori da un backtest che registra
+restituisce \simbolo{NULLA}, una superficie che accetta ogni chiamata e non fa
+nulla. Il live, le prove rapide e la validazione eseguono quindi lo stesso
+codice senza disegnare e senza pagarne il costo, una lettura di variabile.
+Dentro, il \simbolo{Registro} dell'esecuzione tiene per ogni coppia
+(strategia, asset) una \simbolo{Chart}. Tre regole fanno sì che i disegni non
+cambino mai i risultati:
+
+\begin{itemize}
+  \item \textbf{nessuna eccezione}. Un argomento sbagliato, un colore che non
+    è un colore, un metodo che non esiste (\simbolo{\_\_getattr\_\_}), un
+    limite superato diventano una \emph{nota}, con l'asset e il numero di
+    volte. Un'eccezione dentro \simbolo{generate\_signals} toglierebbe i
+    segnali di quella barra;
+  \item \textbf{ciò che la strategia sapeva}. Un punto appartiene alla barra in
+    cui è disegnato; \cod{plot} di una Series aggiunge solo i punti fra
+    l'ultimo già registrato e la barra corrente, per cui chiamarla a ogni
+    barra non duplica e non riscrive il passato;
+  \item \textbf{solo se chiesti}. \cod{BacktestConfig.grafici} è falso per
+    difetto: lo accende il walk-forward, non il motore che il live usa per
+    rigiocare la storia.
+\end{itemize}
+
+\noindent
+Il motore chiama \simbolo{barra} con il tempo di decisione a ogni passo
+(prima di saltare il riscaldamento, così i tempi \enquote{barre fa} contano
+anche quelle) e \simbolo{per\_strategia} prima di ogni
+\simbolo{generate\_signals}. Fuori dalla finestra \cod{da}/\cod{a} del
+registro \simbolo{chart} torna \simbolo{NULLA}. I tempi sono secondi Unix in
+UTC, come le candele della View: \cod{None} è la barra corrente, una data è
+quella data, un intero non positivo sono barre fa.
+
+I disegni (\simbolo{line}, \simbolo{box}, \simbolo{label}, \simbolo{vline})
+restituiscono un \simbolo{Drawing} con \simbolo{set} e \simbolo{delete}. Un
+disegno tolto, o caduto dalla coda quando i vivi superano \num{2000} per tipo,
+passa nella \emph{storia} con \cod{td}, la barra in cui è sparito: la View non
+lo mostra, il replay sì, finché esisteva. Uno nato e tolto nella stessa barra
+non entra nella storia. Limiti per strategia e asset: 64 serie, 8 riquadri,
+\num{2000} disegni vivi e \num{2000} tolti per tipo, 200 livelli, 32
+riempimenti, 250 colori per serie; per l'esecuzione 12 milioni di punti e
+\num{300000} disegni. Le serie sono \cod{array} di Python (\cod{q} per i
+tempi, \cod{d} per i valori, \cod{B} per l'indice del colore in una tavolozza
+per serie): nessun oggetto per punto.
+
+\subsection{Dai fold al file}
+
+Ogni fold del walk-forward è un backtest con istanze nuove delle strategie,
+che parte dal riscaldamento: il suo registro ha \cod{da} uguale all'inizio
+del suo tratto fuori campione, o al secondo dopo la fine di quello del fold
+precedente (la stessa regola dei trade, che non si sovrappongono).
+\simbolo{unisci} mette insieme i fold nell'ordine: le serie e gli sfondi in
+coda, livelli e riempimenti senza doppioni, i disegni sommati e poi limitati
+(\simbolo{\_limita\_disegni}, vivi e tolti separatamente), le note con i
+conteggi. Un fold che non è l'ultimo finisce lì con la sua strategia: le
+linee e i rettangoli ancora vivi e prolungati a destra
+(\cod{extend="right"} o \cod{"both"}) si fermano alla fine del fold
+(\simbolo{\_chiudi\_raggi}, sulla stessa retta), altrimenti uno stop rimasto
+aperto alla fine di un fold attraverserebbe tutti gli anni dopo.
+
+\simbolo{salva} scrive \file{output/strategies/wf\_<nome>\_oos\_charts.zip}:
+un JSON per asset (nome di file reso sicuro, con un hash se cambia) e
+\file{\_index.json} con il timeframe della strategia, gli asset, i loro
+riquadri e conteggi, e solo le note di tutta l'esecuzione; quelle di un asset
+stanno nel suo file. I vettori lunghi si scrivono a parte, otto cifre
+significative, \cod{null} per i vuoti. Senza disegni il file del run
+precedente si toglie. Togliere uno stream toglie anche lui
+(\file{dashboard/stream\_cleanup.py}). Nel marketplace l'SDK ammette
+\cod{from core.chart import chart} e nient'altro del modulo.
+
+\subsection{Sulle candele della View}
+
+\rotta{GET}{/api/visual/<strategia>/charts/<simbolo>?tf=} restituisce
+l'asset già portato sulle candele del timeframe scelto, con \cod{period} (la
+barra della strategia) e \cod{view\_period} (quella del grafico):
+
+\begin{itemize}
+  \item \textbf{serie}: ogni punto va sulla candela che contiene la
+    \emph{fine} della barra della strategia (\simbolo{\_aggancia}): un valore
+    si conosce alla chiusura. Su un timeframe più largo è la candela che
+    contiene la barra, su uno più fine l'ultima candela dentro la barra; per
+    candela resta l'ultimo punto. Un punto fuori dalle candele non diventa un
+    tempo nuovo della scala, che allargherebbe le barre;
+  \item \textbf{sfondi}: su un timeframe più fine ogni candela prende il
+    colore della barra che la contiene (\simbolo{\_sfondo\_sulle\_candele}),
+    un giorno colorato colora tutte le sue candele a quattro ore;
+  \item \textbf{disegni}: restano ai loro tempi e accanto a ciascuno arriva
+    il tempo della candela su cui cade --- \cod{s1}/\cod{s2} per le linee,
+    \cod{sl} (inizio della barra, \simbolo{\_aggancia\_inizio}: dopo un buco
+    la candela seguente) e \cod{sr} per i rettangoli, \cod{sx} per etichette
+    e verticali, \cod{sc}/\cod{sd} per nascita e fine nel replay. \cod{None}
+    vuol dire fuori dalle candele: la pagina prolunga la scala.
+\end{itemize}
+
+\noindent
+\rotta{GET}{/api/visual/<strategia>/symbols} aggiunge \cod{charts} a ogni
+simbolo (anche a quelli disegnati senza operazioni), \cod{charts\_timeframe}
+e \cod{charts\_notes}. I marker delle operazioni portano ora anche
+\cod{side}, \cod{qty}, \cod{price}, \cod{reason}.
+
+\subsection{Nella pagina}
+
+La View è passata a Lightweight Charts 5.3.0
+(\file{static/vendor/lightweight-charts/5.3.0/}, con \file{LICENSE} e
+\file{NOTICE}). Le serie si creano con \cod{addSeries(definizione, opzioni,
+riquadro)}, i marker sono un plugin (\cod{createSeriesMarkers}) da ricreare
+quando cambia la serie principale, il logo di TradingView in basso a sinistra
+è l'attribuzione chiesta dalla licenza (\cod{layout.attributionLogo}). La
+finestra della simulazione live (\file{static/js/live\_test.js}) usa la stessa
+versione.
+
+\paragraph{Riquadri.} \simbolo{addSeriesIn}(chiave, definizione, opzioni) mette
+una serie nel riquadro della chiave (\cod{null} = il prezzo,
+\cod{"ind:atr"}, \cod{"cust:<nome>"}, \cod{"strat:<nome>"}), creandolo in
+fondo la prima volta; l'indice si chiede a una serie che ci sta
+(\cod{getPane().paneIndex()}), perché togliendo un riquadro gli altri
+scalano. Un riquadro senza serie lo toglie la libreria. Quando cambia il
+numero dei riquadri \simbolo{arrangePanes} rifà le proporzioni: quelli sotto
+il prezzo un'altezza da indicatore, il prezzo il resto e mai meno del 42\%;
+fra un cambio e l'altro restano quelle che l'utente sceglie trascinando i
+separatori. L'ATR e i \cod{pane="separate"} degli indicatori Python hanno ora
+un riquadro proprio, non più una scala schiacciata in fondo al prezzo.
+
+\paragraph{Legende.} \simbolo{legend}\cod{.set(riga)} registra una riga:
+titolo, voci (serie, nome, colore, \cod{last()}, \cod{toggle()}), l'occhio e
+le note facoltativi. Le righe del prezzo stanno sotto la riga OHLC, quelle di
+un riquadro in cima al riquadro, posizionate con \cod{getHTMLElement()} e
+seguite da un \cod{ResizeObserver}. Al passaggio del mouse i valori vengono da
+\cod{param.seriesData}, altrimenti dall'ultimo valore (al cursore, nel
+replay). Le righe sono testo: il contenitore ha \cod{data-ui-group="none"} e
+i bottoni non usano \cod{aria-pressed}, che prenderebbe lo stile dei bottoni
+selezionati di \file{ui-system.css}.
+
+\paragraph{Marker.} Sulla freccia solo lato e quantità (\cod{B 364}); prezzo e
+motivo li scrive la legenda OHLC passando sulla candela
+(\simbolo{markersByTime}), o la freccia stessa con \voce{Trade details on the
+chart}. Ogni operazione va sulla candela che la contiene: su un altro
+timeframe l'istante esatto non è una candela.
+
+\paragraph{I disegni.} \simbolo{LyraPlots}\cod{.create(o)} riceve il grafico, la
+serie principale, le candele e le funzioni per aggiungere serie e righe di
+legenda; \cod{render(dati)} costruisce tutto, \cod{clear()} lo toglie,
+\cod{cursor(t, avanti)} lo porta al cursore del replay. Ogni riquadro della
+strategia ha una serie d'appoggio invisibile: zeri su tutte le candele (senza
+dati \cod{priceToCoordinate} non risponde), un \cod{autoscaleInfoProvider}
+che porta nella scala i livelli (e i disegni, se nel riquadro non c'è nessuna
+serie visibile), i livelli come price line e la primitiva. La primitiva ha due
+viste: \cod{"bottom"} per sfondi, riempimenti e il fondo dei rettangoli,
+\cod{"normal"} per bordi e testi dei rettangoli, verticali, linee ed
+etichette. Un tempo diventa una posizione con \cod{timeToIndex}; fuori dalle
+candele (o oltre il cursore) si prolunga con \cod{view\_period}. La larghezza
+di una barra si misura fra due indici logici, perché \cod{barSpacing} nelle
+opzioni non segue lo zoom.
+
+Nel replay le serie si tagliano al cursore (la serie d'appoggio anche: i suoi
+tempi allungherebbero la scala nel futuro), i disegni esistono se
+\cod{sc} $\le$ cursore $<$ \cod{sd}, linee e rettangoli si fermano al
+cursore, etichette e verticali oltre il cursore non si disegnano. Avanti di
+una barra basta un \cod{update} per serie. \cod{info()} riassume quanto c'è,
+per lo stato della pagina, il pannello e le prove. Le note della
+registrazione arrivano senza il nome dell'asset quando è quello del grafico.
+
+\subsection{Le prove}
+
+\file{tests/grafici\_demo.py} è una strategia che usa ogni chiamata di
+\file{core/chart.py}, con una nota voluta (uno stile che non esiste) e uno stop
+di un colore che nessun altro disegno usa. \cod{studio\_finto.py --grafici} le
+fa girare il walk-forward vero su dati sintetici 2010--2025, con QQQ anche a
+quattro ore.
+
+\file{tests/prova\_grafici.py} controlla senza browser la libreria (fuori da un
+backtest, serie, stili, note, sfondi, disegni con \cod{set} e \cod{delete},
+tempi, limiti), l'unione dei fold e lo zip (anche un \cod{null} che non deve
+diventare \cod{nul}: le stringhe di numpy sono larghe quanto la più lunga), il
+motore con e senza disegni (stesse operazioni, stessa equity), il file della
+demo, l'aggancio alle candele a uno e a quattro ore, le API e i file.
+\file{tests/e2e\_grafici.js} prova in Chrome riquadri, legende, valori, nota,
+frecce, interruttori, replay (lo stop visibile mentre la posizione è aperta e
+non dopo), timeframe, tipo di grafico, confronto, ATR e indicatori Python in
+riquadri propri, la modalità senza strategia, il tema chiaro e la finestra
+della simulazione live con risposte simulate; la sezione H prova la pagina a
+tutto grafico (\vediSez{view-guscio}).
+
+\begin{codiceInterno}{console}{Le prove dei disegni}{}
+python tests/prova_grafici.py
+PLAYWRIGHT_DIR=... CHROME_BIN=/usr/bin/google-chrome node tests/e2e_grafici.js
+python tests/studio_finto.py --porta 5075 --sessione /tmp/sessione.txt --grafici
+\end{codiceInterno}

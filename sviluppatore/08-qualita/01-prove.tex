@@ -9,11 +9,15 @@ script e stampano un resoconto leggibile. La scelta ha una conseguenza utile:
 ogni suite si apre con un docstring che dice quale problema sorveglia, e
 quello è il posto giusto dove cercare prima di modificare l'area che copre.
 
+% longtable: con le prove dei disegni la tabella non sta piu' in una pagina
 \begin{center}
-\begin{tabular}{@{}L{48mm}R{14mm}L{76mm}@{}}
+\begin{longtable}{@{}L{48mm}R{14mm}L{76mm}@{}}
 \toprule
 \textbf{Suite} & \textbf{Righe} & \textbf{Che contratto sorveglia} \\
-\midrule
+\midrule\endfirsthead
+\toprule
+\textbf{Suite} & \textbf{Righe} & \textbf{Che contratto sorveglia} \\
+\midrule\endhead
 \rigaTenue
 \file{prova\_normalizzazione\_stream.py} & \num{719}
   & Backtest e live devono produrre lo \emph{stesso libro}, e gli stessi
@@ -39,9 +43,18 @@ quello è il posto giusto dove cercare prima di modificare l'area che copre.
 \file{prova\_esportazione.py} & \num{505}
   & L'esportazione in Excel e CSV: valori, formati, grafici, immagini,
     ordine dei fogli (\vediSez{esportazione}). \\
-\file{prova\_dati\_ausiliari.py} & \num{278}
+\file{prova\_dati\_ausiliari.py} & \num{285}
   & Le categorie di dati che un artefatto legge, e come il marketplace le
-    mostra (\vediSez{dati-ausiliari}). \\
+    mostra: la card disegnata da \file{mkt\_card.js}, la sezione
+    \voce{Data} della scheda (\vediSez{dati-ausiliari}). \\
+\rigaTenue
+\file{prova\_vetrina.py} & \num{458}
+  & La vetrina e la scheda: numeri uguali in Python e JavaScript, ripiego
+    della query, conteggi, curve, il segno \enquote{Verified} che l'autore
+    non si può dare (\vediSez{vetrina}). \\
+\file{e2e\_vetrina.js} & \num{188}
+  & La stessa vetrina in Chrome, nei due temi, con Indietro dalla scheda
+    (\vediSez{vetrina}). \\
 \rigaTenue
 \file{prova\_codice\_}\allowbreak\mbox{\file{marketplace.py}} & \num{763}
   & Il codice che arriva dal marketplace: analisi, installazione, verifica
@@ -70,8 +83,40 @@ quello è il posto giusto dove cercare prima di modificare l'area che copre.
     dell'installazione (\vediSez{pubblicare}). \\
 \file{prova\_broker\_test.py} & \num{187}
   & Il broker TEST sul motore del backtest. \\
+\rigaTenue
+\file{prova\_studio.py} & \num{389}
+  & Chat con l'agente, Genetics e colori della View: il Markdown delle
+    risposte senza HTML che passi, il titolo automatico, l'API dei colori,
+    lavori veri con la curva della fitness, metadati completi anche per le
+    strategie installate a mano (\vediSez{studio-pagine}). \\
+\file{e2e\_studio.js} & \num{754}
+  & Le stesse tre pagine in Chrome, nei due temi, con evoluzioni vere su
+    dati sintetici e un Ollama finto (\vediSez{studio-pagine}); il banco di
+    Blueprint \& code: colonna, lavagna, codice nell'iframe, collegamenti,
+    finestre strette (\vediSez{studio-banco}). \\
+\rigaTenue
+\file{prova\_overview.py} & \num{326}
+  & La Overview senza browser: dati di prova, id cercati dallo script, le
+    colonne direttamente nella pagina, i campi delle API che la pagina legge,
+    preferenze, regole tutte dentro \cod{\#ov-root}, il colore dei pannelli
+    solo a menu e pop-up (\vediSez{overview-pagina}). \\
+\file{e2e\_overview.js} & \num{479}
+  & La Overview in Chrome, con i dati e da utente nuovo: sezioni sul fondo
+    della pagina e allineate al titolo, portafoglio, mirino, metriche, schede,
+    tabella, finestre strette (\vediSez{overview-pagina}). \\
+\rigaTenue
+\file{prova\_grafici.py} & \num{522}
+  & I disegni delle strategie: la libreria non solleva mai e fuori da un
+    backtest non fa nulla, il motore dà le stesse operazioni con e senza
+    disegni, fold uniti, zip, aggancio alle candele, API (\vediSez{disegni}). \\
+\file{e2e\_grafici.js} & \num{653}
+  & La View su Lightweight Charts 5 con i disegni di una strategia vera:
+    riquadri, legende, interruttori, replay, timeframe, indicatori in
+    riquadri propri, la finestra della simulazione (\vediSez{disegni}); la
+    pagina a tutto grafico, con le barre sopra e l'editor agganciato in basso
+    (\vediSez{view-guscio}). \\
 \bottomrule
-\end{tabular}
+\end{longtable}
 \end{center}
 
 \subsection{Due suite girano contro il sito vero}
@@ -154,5 +199,8 @@ Oltre alle cinque suite ci sono: prove end-to-end (\file{e2e\_hedging.py},
 \file{e2e\_regime\_modulation.py}), confronti A/B fra strategie, diagnosi
 specifiche per singole strategie (\file{diagnose\_ising.py},
 \file{diagnose\_regime\_signals.py}), un server SMTP finto
-(\file{posta\_finta.py}) usato dalla prova dell'accesso, e verifiche
-numeriche di migrazione (\file{verify\_migration\_numbers.py}).
+(\file{posta\_finta.py}) usato dalla prova dell'accesso, due app finte da
+tenere accese mentre si lavora sull'aspetto delle pagine
+(\file{vetrina\_finta.py} per il marketplace, \file{studio\_finto.py} per
+agente, Genetics e View), e verifiche numeriche di migrazione
+(\file{verify\_migration\_numbers.py}).

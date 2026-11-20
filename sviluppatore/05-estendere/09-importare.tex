@@ -4,9 +4,10 @@
 \section{Importare un artefatto scritto altrove}\label{sez:importare}
 
 Un artefatto scritto fuori dall'app non va copiato a mano nella cartella
-giusta: in Studio ogni categoria ha \voce{Import\ldots}, che accetta un file
-\file{.py}, una cartella o uno \file{.zip} e ci cerca dentro la forma della
-categoria. La logica è in \file{dashboard/studio\_import.py}, le rotte in
+giusta: in Studio ogni famiglia ha il pulsante d'importazione accanto alla
+sua ricerca, nella colonna di sinistra (\vediSez{studio-banco}); accetta un
+file \file{.py}, una cartella o uno \file{.zip} e ci cerca dentro la forma
+della categoria. La logica è in \file{dashboard/studio\_import.py}, le rotte in
 \file{dashboard/ui\_ext\_import.py}, la finestra in coda a
 \file{static/js/studio.js}.
 
@@ -127,6 +128,6 @@ utente: si importa solo codice di cui ci si fida.
 
 \noindent
 Con l'import, \file{studio\_browser.py} tratta overlay e weight mode come
-forma «mista», cartella o file singolo: le barre «Overlays in the system» e
-«Weight modes in the system» erano vuote, perché elencavano solo i file
-singoli mentre gli store scrivono la cartella da tempo.
+forma «mista», cartella o file singolo: gli elenchi di overlay e weight mode
+erano vuoti, perché contavano solo i file singoli mentre gli store scrivono la
+cartella da tempo.

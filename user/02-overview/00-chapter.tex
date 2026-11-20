@@ -3,27 +3,95 @@
 % ===========================================================================
 \chapter{Overview}\label{cap:overview}
 
-It is the page that opens first. It answers a single question: how is
-everything going, right now.
+It is the page that opens first, and it answers three questions: how the
+portfolio is doing, what it is made of, and which strategies are earning
+their place in it. Everything sits directly on the page, in four areas
+separated by thin lines the way a trading platform is: the portfolio at the
+top left, its numbers on the right, the strategies below.
 
 \figuraSchermata{1.0}{figure/schermate/overview.png}
-  {The home screen. Four panels: the ensemble chart, the metrics, the list of
-   active streams, and the shortcut to Studio.}
+  {The home screen. At the top left the portfolio and its value over time;
+   on the right its key metrics and, below them, its weights; at the bottom
+   the list of every stream.}
   {overview}
 
-\section{The chart at the top left}\label{sez:overview-chart}
+\section{The portfolio}\label{sez:overview-chart}
 
-It shows the performance of the chosen \voce{Project}: the combination of
-several strategies, net of estimated costs, on the data the strategy had
-\emph{not} seen while it was being built.
+The portfolio is a saved \voce{Project}: several strategies combined, with
+the weights decided in Ensemble (\vediCap{projects}). Its name is at the top
+left. Next to it, how many streams it holds and how they are weighted.
 
-Until a project has been saved, an invitation to create one takes its place.
-It is not an error: there is simply nothing to draw yet.
+\subsection{Which project is shown}
 
-\section{Metrics OOS}\label{sez:overview-metrics}
+Press the name to choose. \voce{Automatic}, the starting choice, shows the
+project with the highest Sharpe ratio, and says which one that is right now.
+Any other choice is remembered, on this computer and the next time you open
+the page. At the bottom of the same menu, \pulsante{Open in Ensemble} opens
+the project that is on screen.
 
-Six numbers, and they are meant to be read together. \voce{OOS} stands for
-\emph{out of sample}: computed on data the strategy did not know.
+The small label after the name is the robustness check of the whole
+portfolio: \voce{Robust}, \voce{Doubtful} or \voce{Likely overfit}, with a
+score from 0 to 100. It weighs whether the Sharpe ratio is statistically
+significant and whether the results hold across periods. Rest the pointer on
+it for the reasons; press it to open the project with all the details.
+
+\subsection{The value}
+
+The large number is what \eur{1.000.000} invested at the start of the
+out-of-sample period would be worth today, net of estimated costs. Next to it,
+how much it changed over the chosen period, as a percentage and in euros.
+The buttons \voce{1M}, \voce{6M}, \voce{1Y}, \voce{3Y} and \voce{All} choose
+the period; \voce{All}, the starting one, goes back to the first day of the
+test.
+
+\subsection{The chart}
+
+Three things are drawn on it.
+
+\begin{description}[leftmargin = 1.4em, style = nextline, itemsep = 4pt]
+  \item[The portfolio] The blue line and its shading. The scale on the
+    right is the change since the start of the period; the coloured label
+    on the scale is today's.
+  \item[SPY] The grey line: the S\&P~500 over the same days, starting from
+    the same point. It answers the first question anybody will ask about a
+    strategy --- would I have done better just buying the market?
+  \item[Drawdown] The red band underneath: how far the portfolio is, day by
+    day, below its previous high. The deepest point is written on the scale.
+\end{description}
+
+\noindent
+SPY and the drawdown can be switched off and on by pressing their names in
+the legend, above the chart. The page remembers it, together with the
+period.
+
+\figuraSchermata{1.0}{figure/schermate/overview-chart.png}
+  {Reading one day. The large number, the change, SPY and the drawdown all
+   refer to the day under the pointer; the date is written on the bottom
+   scale.}
+  {overview-chart}
+
+\begin{pratica}{Reading a single day}
+Move the pointer over the chart: the large number, the change, SPY and the
+drawdown in the legend all switch to the day under the pointer, and the date
+appears on the bottom scale. Move away and they return to today. With the
+keyboard: select the chart with the \texttt{Tab} key, then the arrows move one
+day (with \texttt{Shift}, ten), \texttt{Home} and \texttt{End} jump to the
+ends, \texttt{Esc} returns to today.
+\end{pratica}
+
+Until a project has been saved, an invitation to create one takes the place
+of the chart. It is not an error: there is simply nothing to draw yet. The
+same place explains the other cases where there is no value to show --- a
+project with fewer than two streams, or made only of streams that have never
+been backtested.
+
+\section{Key metrics}\label{sez:overview-metrics}
+
+Six numbers, meant to be read together. They are computed on the whole
+out-of-sample period --- the data the strategies did not see while they were
+being built --- whatever period the chart is showing. Under each number, a
+short note puts it in context: green when it is a good sign, red when it
+deserves a look.
 
 \begin{center}
 \begin{tabular}{@{}L{32mm}L{106mm}@{}}
@@ -31,22 +99,24 @@ Six numbers, and they are meant to be read together. \voce{OOS} stands for
 \textbf{Metric} & \textbf{What it tells you} \\
 \midrule
 \rigaTenue
-\voce{Sharpe ratio} & How much it earns relative to how much it swings. It is
-  the number most used to compare two strategies, and the easiest to make
-  look good by looking at the wrong data. \\
+\voce{Sharpe ratio} & How much it earns relative to how much it swings. The
+  note, \voce{PSR}, is the probability that the true Sharpe is above zero
+  rather than a lucky draw: below \perc{95} it is not proven. \\
 \voce{CAGR net} & The compound annual return, already net of estimated
-  costs. \\
+  costs. The note is SPY's over the same years. \\
 \rigaTenue
-\voce{Max drawdown} & The largest loss from a previous peak. It is the
-  question \enquote{how much would I have had to endure before recovering}. \\
-\voce{Ann. volatility} & How much it swings in a year. \\
+\voce{Max drawdown} & The largest loss from a previous peak: \enquote{how
+  much would I have had to endure before recovering}. The note compares it
+  with the \perc{15} limit for capital. \\
+\voce{Ann. volatility} & How much it swings in a year. The note is the
+  target the system aims for. \\
 \rigaTenue
-\voce{Alpha vs SPY ann.} & How much it earns \emph{beyond} the market, once
-  the part explained by the market itself is removed. A strategy with a good
-  return and an alpha close to zero is buying the market under other
-  names. \\
-\voce{Win rate} & The percentage of days in profit. On its own it says
-  little: you can win nine times out of ten and still lose. \\
+\voce{Alpha vs SPY} & How much it earns in a year \emph{beyond} the market,
+  once the part explained by the market itself is removed. The note,
+  \voce{IR}, says how steadily it does so. A strategy with a good return and
+  an alpha close to zero is buying the market under other names. \\
+\voce{Win rate} & The share of days in profit. On its own it says little:
+  you can win nine times out of ten and still lose. \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -65,26 +135,105 @@ estimated costs. It does not say how it will behave. \vediCap{streams}
 explains which signs tell a strategy that worked from one that got lucky.
 \end{attenzione}
 
-\section{Active streams}\label{sez:overview-list}
+\subsection{Choosing the metrics}
 
-The list of all available results, sorted. The columns:
+\pulsante{Customize} opens the full list: twelve metrics, each with its
+current value and a switch to show or hide it (\vediFig{overview-metrics}).
+To change the order, drag a card to its new place; with the keyboard, select
+the small handle that appears in its corner and use the arrows.
+\pulsante{Reset order} puts them back in the standard order.
+
+\pulsante{New metric} builds one of your own without writing code: combine
+two measures (return over volatility, for instance), average a rolling
+series, or count the days on which a condition holds. The preview shows its
+value on the portfolio on screen before you save it. A saved metric is a
+file in the \percorso{metrics} folder, and it appears in the reports too.
+
+\figuraSchermata{0.55}{figure/schermate/overview-metrics.png}
+  {The metric list behind \pulsante{Customize}: the six on screen are
+   switched on.}
+  {overview-metrics}
+
+\section{Allocation, years and next steps}\label{sez:overview-tabs}
+
+Below the metrics, three tabs about the same portfolio. The page opens on
+\voce{Allocation} when there is a project, on \voce{Next steps} when there is
+not yet one, and after that on the tab you chose last.
 
 \begin{description}[leftmargin = 1.4em, style = nextline, itemsep = 4pt]
-  \item[\voce{Sharpe}] As above.
-  \item[\voce{OOS Return}] The out-of-sample return. Green above zero, red
-    below.
-  \item[\voce{Corr}] The correlation with the other streams. It is the column
-    that matters most when combining: two highly correlated strategies, put
-    together, diversify nothing --- they make the same bet twice.
-  \item[\voce{Watch}] The star adds the stream to your favourites.
+  \item[Allocation] The weight of each stream at the last rebalance, the
+    largest first. Underneath, three facts about the mix: the average
+    correlation between its streams (the lower, the more they diversify each
+    other), how often the weights are recomputed, and how far the portfolio
+    is below its last high.
+  \item[Yearly] Every calendar year: return, deepest drawdown and Sharpe.
+    The current year is marked \enquote{to date}.
+  \item[Next steps] The four steps from an idea to a running strategy: build
+    a stream in Studio, validate it with walk-forward, combine streams in a
+    project, go live. They tick themselves off as you do them, and the next
+    one carries the button that takes you there. It is the path this guide
+    follows in the next chapters.
+\end{description}
+
+\figuraSchermata{0.45}{figure/schermate/overview-side.png}
+  {The right column with the \voce{Yearly} tab open.}
+  {overview-side}
+
+\section{Streams}\label{sez:overview-list}
+
+The list of every stream with results, one per row. Click a row to open its
+page; \pulsante{New stream} leads to Studio, where streams are built.
+
+\begin{description}[leftmargin = 1.4em, style = nextline, itemsep = 4pt]
+  \item[\voce{Equity}] The out-of-sample curve, whole period: green if it
+    ends higher than it started, red otherwise.
+  \item[\voce{Sharpe}, \voce{CAGR}] As above, for the single stream.
+  \item[\voce{Max DD}] The deepest drawdown; in red beyond the \perc{15}
+    limit for capital.
+  \item[\voce{SPY corr.}] The correlation of its daily returns with SPY:
+    close to 1 means it moves with the market, close to 0 that it goes its
+    own way. The correlation between the streams of a portfolio is in the
+    \voce{Allocation} tab.
+  \item[\voce{Walk-forward}] How many walk-forward folds closed in profit,
+    one mark per fold. A dash means the stream has not been through
+    walk-forward yet.
 \end{description}
 
 \noindent
-The three menus above the list choose the period (\voce{OOS} or all of it),
-the sort order and the reference project.
+Under the name, the timeframe and the project the stream belongs to. The
+\voce{Eligible} label marks the streams that pass every out-of-sample check
+for capital: Sharpe at least 1, return above zero, drawdown within \perc{15},
+every walk-forward fold in profit. Press it to see the four checks one by
+one, and the next step: a live track record. The star marks the streams you
+want to watch.
 
-\section{Tutorials}\label{sez:overview-tutorials}
+\figuraSchermata{1.0}{figure/schermate/overview-streams.png}
+  {The list filtered to the streams with a Sharpe of at least 1: three of
+   eight.}
+  {overview-streams}
 
-At the bottom right, four steps that tick themselves off as you do them:
-build the first stream, validate it, combine it, put it into production. It
-is the path this guide follows in the next chapters.
+\subsection{Sorting, searching, filtering}
+
+Click a column title to sort by it: highest first, then lowest first, then
+back to the original order. The search box finds a stream by name. Above the
+list, two menus:
+
+\begin{description}[leftmargin = 1.4em, style = nextline, itemsep = 4pt]
+  \item[\voce{All projects}] Shows the streams of one project, with their
+    weight in it and a strip with the project's numbers, or those that are
+    in no project yet. The \texttt{×} on the strip returns to all of them.
+  \item[\voce{Filters}] A minimum Sharpe, a minimum return, only the
+    streams eligible for capital, only the ones you watch. The button counts
+    the active filters; \voce{Clear filters} removes them all.
+\end{description}
+
+\noindent
+Sorting, filters and stars are remembered on this computer.
+
+\section{On a smaller screen}
+
+On a wide window the Overview fits the screen: the page does not scroll,
+only the lists do. Below about \num{1100} pixels the four areas stack one
+under the other and the page scrolls; the list of streams scrolls with it,
+and its column names stay in view at the top. On a phone the list keeps the
+essential columns.

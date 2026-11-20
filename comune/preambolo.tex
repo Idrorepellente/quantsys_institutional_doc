@@ -68,6 +68,11 @@
 \renewcommand{\ttdefault}{lmtt}
 
 \usepackage{microtype}
+% Nel monospazio «--» resta due trattini: e' cosi' che si scrivono le
+% variabili CSS (--ui-shell-inset) e le opzioni dei comandi (--porta). Con la
+% legatura del T1 diventava un trattino medio, e chi copiava il nome dalla
+% guida lo copiava sbagliato.
+\DisableLigatures[-]{encoding = T1, family = tt*}
 
 % --- composizione del paragrafo ---------------------------------------------
 %  Un documento pieno di nomi di file e di simboli in monospazio ha molte

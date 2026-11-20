@@ -1,0 +1,219 @@
+% ===========================================================================
+%  sviluppatore/06-dashboard/08-overview.tex
+% ===========================================================================
+\section{La Overview}\label{sez:overview-pagina}
+
+La pagina che si apre per prima. \file{templates/home.html},
+\file{static/js/home.js}, \file{static/css/home.css}; la rotta è
+\simbolo{index} in \file{dashboard/app.py}. Mostra il valore fuori campione di
+un progetto con SPY e il drawdown, le metriche scelte, i pesi, gli anni, i
+passi della guida e la tabella di tutti gli stream. I numeri arrivano tutti
+dalle API che usa anche il resto dell'interfaccia: la pagina non calcola
+niente che il server non sappia già, salvo la finestra del periodo e
+qualche somma per la tabella dei pesi.
+
+\subsection{Le sezioni sulla pagina}
+
+Nessun pannello contiene le sezioni: le due colonne sono figlie dirette di
+\cod{\#ov-root}, che è la griglia, e né la griglia né le colonne né le sezioni
+hanno un fondo proprio. Le separano solo bordi da un pixel: \cod{border-left}
+sulla colonna di destra, \cod{border-top} sulla seconda sezione di ogni
+colonna. Due colonne, e ciascuna si divide per conto suo:
+
+\begin{center}
+\begin{tabular}{@{}L{34mm}L{104mm}@{}}
+\toprule
+\textbf{Sezione} & \textbf{Che cosa} \\
+\midrule
+\rigaTenue
+\cod{.ovx-port} & Il progetto: nome e menu, giudizio di robustezza, periodo,
+  valore e variazione, legenda, grafico. Prende \num{1,32} parti
+  dell'altezza della colonna. \\
+\cod{.ovx-streams} & La tabella degli stream, che scorre da sola. Una parte. \\
+\rigaTenue
+\cod{.ovx-side} & Le metriche: alta quanto serve. \\
+\cod{.ovx-more} & Le tre schede (pesi, anni, passi): il resto della colonna,
+  e scorre. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Le linee arrivano ai bordi della pagina, il testo resta allineato al titolo.
+\cod{\#ov-root} esce dal margine del canvas con un margine negativo
+(\cod{--ovx-gut}: 36 pixel, 20 fino a \num{1024}, gli stessi di
+\file{quantsys-modern.css}) e ogni sezione lo rimette come spazio interno con
+due variabili, \cod{--ovx-pl} a sinistra e \cod{--ovx-pr} a destra; verso la
+linea fra le colonne lo spazio è \cod{--ovx-in}, 24 pixel. Così le righe della
+tabella e la loro evidenziazione vanno da bordo a bordo, mentre il nome dello
+stream sta sotto il titolo della pagina. Il grafico tiene a destra
+\cod{--ovx-pr} meno i 12 pixel che l'SVG lascia già dopo le etichette della
+scala: le etichette finiscono dove finisce la scelta del periodo.
+
+Dove serve un colore \enquote{uguale al fondo} --- l'intestazione fissa della
+tabella, la maniglia delle metriche e la sua sfumatura, i cerchi dei passi,
+l'anello dei punti del mirino --- si usa \cod{--ovx-bg}, cioè
+\cod{--qs-canvas}; il passaggio del mouse è \cod{--ovx-hover}
+(\cod{--ui-panel} sul fondo, \cod{--ui-panel-hover} dentro menu e pop-up, che
+tengono il colore dei pannelli). Le metriche stanno in una griglia con il
+bordo: le linee interne le disegna ogni casella con un'ombra a destra e sotto
+(\cod{--ovx-cell}), e quelle dell'ultima colonna e dell'ultima riga finiscono
+sotto il bordo della griglia, che le copre. Se l'ultima riga non è piena, lo
+spazio vuoto resta del colore della pagina.
+
+La colonna di destra è \cod{clamp(400px, 31\%, 468px)}. Sopra i \num{1100}
+pixel di larghezza e i \num{640} di altezza il canvas della pagina prende
+\cod{calc(100vh - var(--qs-tb-h))}, come le altre pagine a tutta altezza
+(\vediSez{studio-pagine}), senza margine in basso: le sezioni arrivano al bordo
+della finestra e la pagina non scorre. Sotto, le colonne diventano
+\cod{display: contents} e le sezioni si dispongono con
+\cod{grid-template-areas}: una sotto l'altra, o su due colonne fra \num{760} e
+\num{1100} pixel, con un \cod{border-top} ciascuna (e un \cod{border-left} sulle
+schede quando stanno accanto alle metriche). In questa disposizione la tabella
+non scorre per conto suo, perché senza un pannello attorno non si vedrebbe
+dove finisce: scorre la pagina, e l'intestazione resta ferma sotto la striscia
+in alto (\cod{top: var(--qs-tb-h)}). Le colonne della tabella lasciano il
+posto con le container query (\cod{@container ovstreams}): via la
+correlazione sotto \num{860} pixel, la curva sotto \num{760}, i fold sotto
+\num{640}, il drawdown sotto \num{520}.
+
+\subsection{Regole del foglio di stile}
+
+Ogni regola di \file{home.css} parte da \cod{\#ov-root}, tranne quelle sul
+canvas della pagina (\cod{\#qs-canvas[data-tab="home"]}): lo controlla
+\file{prova\_overview.py}. È la stessa ragione delle altre pagine rifatte ---
+\file{ui-system.css} arriva \emph{dopo} il foglio della pagina --- con tre
+conseguenze pratiche:
+
+\begin{description}[leftmargin = 1.4em, style = nextline, itemsep = 4pt]
+  \item[\cod{[hidden]}] \cod{\#ov-root [hidden]} è \cod{display: none} con
+    \cod{!important}: una regola come \cod{.ovx-btn \{ display: inline-flex \}}
+    altrimenti mostrerebbe un pulsante nascosto.
+  \item[Selezione unica a contrasto pieno] Periodo, schede, scelte dei filtri:
+    il selezionato ha \cod{--ui-solid-bg}/\cod{--ui-solid-tx}, come nel resto
+    dell'app. Le schede sono \cod{role="tablist"}, e la regola globale su
+    \cod{[aria-selected="true"]} dà già quel fondo.
+  \item[Pulsanti] I contenitori portano \cod{data-ui-group="none"} e le
+    regole dei pulsanti hanno \cod{!important} dove \file{ui-system.css} ne
+    usa uno (raggio, fondo dei premuti \cod{aria-pressed}). Con l'id davanti
+    vincono comunque.
+\end{description}
+
+% La tabella delle fonti non si spezza: se non sta in fondo alla pagina, meglio
+% che la sottosezione cominci su quella dopo (lasciando bianco in fondo) che
+% una pagina con gli spazi allargati per arrivare al margine.
+\filbreak
+\subsection{Lo stato e le fonti}
+
+\file{home.js} tiene uno stato \cod{S} e una funzione di disegno per ogni
+parte; nessuna parte legge il DOM di un'altra.
+
+\begin{center}
+\begin{tabular}{@{}L{46mm}L{92mm}@{}}
+\toprule
+\textbf{Fonte} & \textbf{Che cosa ne esce} \\
+\midrule
+\rigaTenue
+\percorsoHTTP{/api/a/overview?spark=1} & Le righe della tabella: Sharpe, CAGR,
+  drawdown, correlazione con SPY, fold, PSR, e la curva in 64 punti (solo
+  con \cod{spark=1}); i passi della guida; il target di volatilità. \\
+\percorsoHTTP{/api/projects} & I progetti, con le metriche salvate da
+  Ensemble. \\
+\rigaTenue
+\percorsoHTTP{/api/ensemble\_custom} & Per il progetto mostrato:
+  \cod{equity\_curve}, \cod{spy\_equity} e \cod{drawdown} sulle stesse date,
+  \cod{metrics}, \cod{robustness}, \cod{yearly}, \cod{stream\_weights},
+  \cod{weights\_info}, \cod{correlation\_matrix},
+  \cod{drawdown\_attribution.\_summary}. Le risposte restano in
+  \cod{S.ensCache}. \\
+\percorsoHTTP{/api/overview/prefs} & Progetto scelto e metriche visibili, in
+  ordine. \\
+\rigaTenue
+\percorsoHTTP{/api/metrics}, \cod{/compute}, \percorsoHTTP{/api/a/metric\_preview}
+  & Le metriche personalizzate, i loro valori sul progetto, l'anteprima nel
+  costruttore. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+La rotta passa allo script anche i nomi dei modi di pesatura
+(\cod{data-modes}, da \simbolo{EnsembleEngine.weighting\_modes\_meta}): la
+pagina scrive \enquote{Inverse-Cov}, non \cod{inverse\_cov}. Le preferenze
+di comodità stanno in \cod{localStorage}: \cod{lyra-ov-chart} (periodo, SPY,
+drawdown), \cod{lyra-ov-filters} (ordinamento e filtri), \cod{lira\_fav\_streams}
+(le stelle), \cod{lyra-ov-side} (la scheda aperta).
+
+\subsection{Quale progetto: \enquote{Automatic}}
+
+Senza una scelta salvata la pagina mostra il progetto con lo Sharpe più alto
+(\simbolo{pickProject}). Lo Sharpe è quello calcolato se il progetto è già in
+\cod{S.ensCache}, altrimenti quello salvato da Ensemble. Un progetto vecchio,
+salvato senza metriche, sarebbe escluso dal confronto senza che nessuno lo
+sapesse: \simbolo{automatico} calcola prima i progetti di cui lo Sharpe non si
+conosce (al più otto, in parallelo), poi sceglie. Con le metriche salvate,
+il caso normale, non parte nessuna chiamata in più.
+
+\subsection{Il grafico}
+
+Un SVG la cui \cod{viewBox} è la sua misura in pixel, ridisegnato da un
+\cod{ResizeObserver}: testi e tratti non si deformano, e i colori vengono dai
+token del tema, quindi il cambio di tema non chiede di ridisegnare.
+\simbolo{windowData} taglia la finestra del periodo (22, 126, 252, 756 sedute
+o tutto) e allinea SPY e drawdown per posizione, o per data se le lunghezze
+non coincidono. La scala di destra è la variazione dalla partenza della
+finestra, con un passo \enquote{tondo} (\simbolo{passo}) scelto per avere una
+tacca ogni 34 pixel circa; il drawdown è sotto, in una fascia sua, e resta
+quello di tutta la storia (la distanza dal massimo vero, non da quello della
+finestra).
+
+Il mirino non ridisegna: sposta le linee e le etichette che il disegno ha già
+creato, e nasconde le tacche e le etichette fisse che finirebbero sotto le
+sue. Il numero grande ha tre modi (\simbolo{readout}): \cod{scrub} segue il
+mirino, \cod{rest} torna all'ultimo valore senza animazione, \cod{anim} ci
+arriva contando (cambio di progetto). Le frecce, \texttt{Home}, \texttt{End} ed
+\texttt{Esc} fanno lo stesso da tastiera, con l'SVG nel giro del fuoco.
+
+\subsection{Menu e finestre}
+
+I menu (progetto mostrato, progetto della tabella, filtri) sono
+\cod{role="menu"}. All'apertura il fuoco va sulla voce scelta, le frecce
+scorrono le voci, \texttt{Esc} chiude e riporta il fuoco sul pulsante. Il
+verso si decide all'apertura (\simbolo{placeMenu}): verso l'alto se sotto non
+c'è posto per il menu più lungo che può diventare, e poi non cambia --- un
+menu che salta dall'altra parte mentre ci si clicca dentro fa perdere il
+segno. Le due finestre (metriche e idoneità) tengono il fuoco dentro finché
+sono aperte.
+
+\subsection{Le prove}
+
+\file{tests/studio\_finto.py} con \cod{--stream} prepara otto strategie con
+i risultati fuori campione dal 2019 (con il benchmark e un fattore comune,
+così un progetto ha uno Sharpe credibile), i fold del walk-forward per
+cinque, tre progetti con modi di pesatura veri e i primi due passi della
+guida fatti dall'utente della sessione. I nomi evitano le parole dei pattern
+degli stream storici di \file{dashboard/config.py}: un file
+\file{wf\_crypto\_momentum\_*} sarebbe diventato anche lo stream
+\enquote{momentum}.
+
+\file{tests/prova\_overview.py} controlla senza browser i dati di prova, la
+pagina (ogni id cercato dallo script esiste), le API con i campi che la
+pagina legge, le preferenze e il foglio di stile. \file{tests/e2e\_overview.js}
+avvia due copie dell'app, una con i dati e una vuota, e prova in Chrome la
+disposizione nei due temi (nessun contenitore né fondo proprio, il fondo
+interno uguale a quello della pagina, le linee, gli allineamenti al titolo e
+ai bordi), il portafoglio (menu, periodi, serie, mirino col mouse
+e con la tastiera), le metriche (valori uguali all'API, riordino, una metrica
+creata ed eliminata), le schede, la tabella (ordinamento, ricerca, filtri,
+progetti, stelle, idoneità) e le finestre strette (sezioni impilate, tabella
+che scorre con la pagina, intestazione ferma sotto la striscia).
+
+\begin{codiceInterno}{console}{Le prove della Overview}{}
+python tests/prova_overview.py
+PLAYWRIGHT_DIR=... CHROME_BIN=/usr/bin/google-chrome node tests/e2e_overview.js
+python tests/studio_finto.py --porta 5075 --sessione /tmp/sessione.txt --stream
+\end{codiceInterno}
+
+\noindent
+L'ultima riga lascia accesa l'app con gli stream e i progetti, per lavorare
+sull'aspetto della pagina; l'indirizzo con il gettone si stampa all'avvio e
+porta direttamente alla Overview.

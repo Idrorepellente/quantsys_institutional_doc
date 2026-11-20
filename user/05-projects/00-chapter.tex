@@ -31,10 +31,12 @@ chosen.
 \begin{perche}{Do not pick the best three}
 The temptation is to take the three highest Sharpe ratios. It is almost
 always the mistake: if the three strategies make the same bet, putting them
-together reduces nothing --- you are just making it three ways. The
-\voce{Corr} column on the home screen is there for this: two strategies with
-low correlation, even with modest Sharpe ratios, do better together than
-three good strategies that are all alike.
+together reduces nothing --- you are just making it three ways. The home
+screen helps here: \voce{SPY corr.} in the list shows the strategies that are
+the market in disguise, and the \voce{Allocation} tab gives the average
+correlation between the streams of a saved project (\vediSez{overview-tabs}).
+Two strategies with low correlation, even with modest Sharpe ratios, do
+better together than three good strategies that are all alike.
 \end{perche}
 
 \subsection{Step 2 --- Weighting}
@@ -243,8 +245,9 @@ correction is off for that project. You can turn it off in Config
 \section{Saving}\label{sez:projects-save}
 
 At the end you give it a name and save it. From then on the project appears
-in the list, its performance is what the home screen draws, and --- most
-importantly --- it can be chosen on the \voce{Live} page (\vediCap{live}).
+in the list, the home screen can draw it --- when you choose it, or by itself
+when it has the highest Sharpe (\vediSez{overview-chart}) --- and, most
+importantly, it can be chosen on the \voce{Live} page (\vediCap{live}).
 
 \section{Projects with empty streams}\label{sez:project-empty}
 
@@ -255,8 +258,8 @@ have no backtest, so they cannot have numbers:
 
 \begin{itemize}
   \item \textbf{Some empty streams.} The metrics, the charts and the curve on
-        the home screen are those of the streams with results, and a note
-        above them says which strategies are left out. The configuration at
+        the home screen are those of the streams with results, and the home
+        screen says how many strategies are left out. The configuration at
         the top lists them under \voce{Not in the metrics}.
   \item \textbf{Only empty streams.} There is nothing to measure: instead of
         the metrics, the page says why. The project is saved all the same, and

@@ -4,23 +4,31 @@
 \chapter{Studio}\label{cap:studio}
 
 Studio is where things are built. You get there from \voce{Studio} in the
-menu, or from the \pulsante{Open Studio} button on the home screen.
+menu, or from \pulsante{New stream} on the home screen.
 
 \figuraSchermata{1.0}{figure/schermate/studio.png}
-  {Studio. At the top the three ways of working, below them the five families
-   of artifacts, in the middle the drawing board.}
+  {Studio, \voce{Blueprint \& code}. On the left the five families, with how
+   many of each are in the system, and the strategies; on the right a
+   strategy built with blocks, open on the board next to the block library.}
   {studio}
+
+\noindent
+The page is one surface as tall as the window. On the left you choose
+\emph{what} you work on; on the right you work on it: a header that says
+how you are writing and where the file goes, the board or the code below it,
+and a line at the bottom that reminds you of the rules of what you are
+writing.
 
 \section{The five families}\label{sez:studio-families}
 
-The row of tabs below the title says \emph{what} you are building. They are
-five different things, and it is worth knowing which one you need before you
-start.
+The column on the left says \emph{what} you are building, and next to each
+family how many are already in the system. They are five different things,
+and it is worth knowing which one you need before you start.
 
 \begin{center}
 \begin{tabular}{@{}L{28mm}L{110mm}@{}}
 \toprule
-\textbf{Tab} & \textbf{What it is} \\
+\textbf{Family} & \textbf{What it is} \\
 \midrule
 \rigaTenue
 \voce{Strategies} & A strategy: it decides what to buy and sell, and when.
@@ -29,9 +37,9 @@ start.
   series of gains and losses directly. It is for people who already have a
   calculation of their own and just want to bring it into the system. \\
 \rigaTenue
-\voce{Weight mode} & A rule for sharing capital among several strategies.
+\voce{Weight modes} & A rule for sharing capital among several strategies.
   Fourteen come already installed. \\
-\voce{Overlay} & A brake: it reduces exposure when the market behaves in a
+\voce{Overlays} & A brake: it reduces exposure when the market behaves in a
   certain way. It does not earn, it protects. \\
 \rigaTenue
 \voce{Metrics} & A measure of your own, a number or a chart, shown on the
@@ -41,16 +49,57 @@ start.
 \end{tabular}
 \end{center}
 
+\section{What is in the system}\label{sez:studio-list}
+
+Under the families is the list of the chosen one: what is in the system,
+by name.
+
+\begin{itemize}
+  \item \textbf{Open} --- a click on a name. The name goes into the header,
+    and the list marks it. The small mark with two blocks next to a name says
+    that it was built with blocks: it opens on the board as well as in code.
+  \item \textbf{Search} --- the field above the list filters it as you
+    type, and shows the part that matches.
+  \item \textbf{New} --- \pulsantesec{+} asks for the name first, at the top
+    of the list: lowercase letters, digits and underscores, starting with a
+    letter. A name that is taken is refused there, before anything is
+    written. \texttt{Enter} creates it, \texttt{Esc} lets it go.
+  \item \textbf{Import} --- the button with the arrow into a tray brings in
+    an artifact written elsewhere (\vediSez{studio-import}).
+  \item \textbf{Delete} --- the bin appears when the mouse is over a name.
+    Studio asks first; the backtest results stay.
+\end{itemize}
+
+\noindent
+The arrows move through the list, and \texttt{Delete} on a name deletes it,
+after asking. The button at the bottom of the column reduces it to the icons
+of the families, to give the board or the code more room. Studio remembers
+the family you were on and how you left the column.
+
 \section{The three ways to build}\label{sez:studio-modes}
 
-At the top right you choose how to work. The result is the same --- a code
-file installed in the system --- and only the road changes.
+The switch at the start of the header, \voce{Blueprint} or \voce{Code},
+chooses how you write; the \voce{AI agent} has a tab of its own, next to
+\voce{Blueprint \& code}. The result is the same --- a code file installed in
+the system --- and only the road changes. Next to the switch the header shows
+where the file goes: the folder, the name --- which you write in place ---
+and the file.
 
 \subsection{Blueprint: with blocks}
 
 You drag blocks from the library on the left onto the board and connect
 outputs to inputs. The library is divided into categories: prices, numbers,
-external data such as earnings and fundamentals.
+external data such as earnings and fundamentals. The colour of a block says
+its category: sources in blue, market data in teal, indicators in violet,
+calculations in slate, conditions in amber, orders in green and red.
+
+\pulsantesec{Check} turns the board into code and checks it, without saving
+anything. \pulsante{Save} does the same and, if the check passes, puts the
+strategy in the system: it appears in the list with the mark of the blocks,
+and in \voce{Run backtest}. The result shows under the board --- what is
+wrong, if anything, and the code made from the blocks under
+\voce{Generated code} --- and the header says when the board has changes
+that are not saved yet. \pulsantesec{Clear} empties the board, after asking.
 
 \begin{pratica}{The quickest way to see how it works}
 Press \pulsante{Load an example}: an example appears, already wired (the
@@ -61,19 +110,94 @@ line.
 
 \subsection{Code: by writing}
 
-The \pulsantesec{\{ \} Code} button switches to the text editor. It is the
-same artifact, seen as Python code. You can switch between the two views.
+\voce{Code} switches to the text editor. A strategy or an approach is a
+folder with several files: they are listed on the left of the code, and
+\pulsantesec{+ file} adds one. \pulsante{Save} keeps the file, and
+\pulsante{Save \& test} also runs a backtest and shows what it writes, in a
+panel under the code. \texttt{Ctrl+S} saves whatever you are looking at.
 
-\subsection{AI agent: in words}
+\figuraSchermata{1.0}{figure/schermate/studio-code.png}
+  {The same strategy in \voce{Code}: the files of its folder on the left,
+   the code made from the blocks on the right, \pulsante{Save} and
+   \pulsante{Save \& test} in the header.}
+  {studio-code}
+
+\noindent
+The board and the code each keep their own artifact: you can have one open
+on the board and another in the code, and the list marks the one of the
+view you are looking at. A click on a name opens it in that view; a
+strategy written by hand has no blocks, so it opens in the code, and Studio
+says so. The other families are written in code only.
+
+A strategy written in code can also draw what it computes, to see it later
+in the \voce{View} next to its trades (\vediSez{view-plots}).
+\cod{chart(symbol)} gives the surface of an asset; each call adds the point
+of the current bar:
+
+\begin{codiceInterno}{python}{Drawing what the strategy looks at}{}
+from core.chart import chart
+
+ch = chart(symbol)
+ch.plot(fast.iloc[-1], "SMA 20", color="#4c8dff")
+ch.plot(rsi.iloc[-1], "RSI 14", pane="RSI")           # a pane of its own
+ch.hline(70, "Overbought", pane="RSI", color="#ef5350")
+if crossed_up:
+    ch.label(None, None, "cross", shape="arrow_up", position="below")
+\end{codiceInterno}
+
+\noindent
+There are also \cod{fill}, \cod{bgcolor}, \cod{line}, \cod{box} and
+\cod{vline}; the strategy guide in the code
+(\texttt{strategies/GUIDE\_STRATEGIE\_CUSTOM.md}) lists them all. Drawing never
+changes the results and does nothing in live trading: the same code runs
+everywhere.
+
+\subsection{AI agent: in words}\label{sez:studio-agent}
 
 The \voce{AI agent} tab opens a conversation: you describe the strategy in
-words and the model writes it. It needs a model installed locally; without
-one, the tab says so and the other two ways keep working.
+words and the model writes it, installs it, and can run a backtest and
+compare it with what you already have. It needs a model installed locally,
+through Ollama; without one, the tab says so and the other two ways keep
+working.
 
 \figuraSchermata{1.0}{figure/schermate/agent.png}
-  {The assistant. You describe what you want, and it writes the artifact and
-   installs it.}
+  {A conversation with the agent. On the left the chats, grouped by date; on
+   the right the open one, with what the agent did under each reply: the
+   operations, and the files it wrote with a link to open them in Studio.}
   {agent}
+
+\noindent
+The page fits the window: the conversation scrolls, the field where you
+write stays at the bottom.
+
+\begin{itemize}
+  \item \textbf{The chats} --- in the left column, grouped into
+        \voce{Today}, \voce{Yesterday}, \voce{Previous 7 days} and so on,
+        each with the icon of what it is about (strategy, metric, overlay,
+        indicator\ldots). The field above filters them by title.
+        \pulsante{New chat} starts a new one. They are saved on your
+        computer, in \file{data/chat/}.
+  \item \textbf{The title} --- the model writes a short one after your first
+        message. To change it, double-click it in the header, or use the
+        \voce{\ldots} menu, which also deletes the chat.
+  \item \textbf{The replies} --- they read like pages: headings, lists,
+        tables, and code with the name of its file, coloured, with a
+        \pulsantesec{Copy} button. A comparison between streams arrives as a
+        chart with its table of numbers.
+  \item \textbf{What the agent did} --- under the reply, a line says whether
+        the work was \voce{Completed} and how many operations it took,
+        including the attempts it had to correct. Click it to see each step.
+        Below, the \voce{Files written}, new or modified, with the lines
+        added and removed, and \pulsantesec{Open in Studio}.
+  \item \textbf{Writing} --- \texttt{Enter} sends, \texttt{Shift+Enter} goes
+        to a new line. The model is chosen in the field itself, from the
+        ones installed in Ollama.
+\end{itemize}
+
+\figuraSchermata{0.72}{figure/schermate/agent-new.png}
+  {A new chat. Four starting points for the most common requests; one click
+   writes the request in the field, ready to be edited and sent.}
+  {agent-new}
 
 \begin{attenzione}{Read what the assistant writes}
 The generated code is installed in the system and runs on your data --- and
@@ -85,7 +209,7 @@ was asked. The \voce{Code} tab is there for this too.
 \section{Metrics}\label{sez:studio-metrics}
 
 A metric is a few lines of Python on the results of a strategy. Two fields
-above the editor say what it produces: \voce{Output} --- \voce{Number} or
+under the header say what it produces: \voce{Output} --- \voce{Number} or
 \voce{Chart} --- and, for a chart, \voce{Chart type}. \voce{Figure} is the
 type for a chart with several series, points and an axis of numbers instead
 of dates.
@@ -128,20 +252,129 @@ shows \voce{Data not available} until the data arrives.
 \section{Genetics}\label{sez:studio-genetics}
 
 The \voce{Genetics} tab opens an area of its own: instead of writing one
-strategy, you let many of them be born and keep those that survive. You
-choose the universe of instruments and let it run.
+strategy, you let many of them be born and keep those that survive. Each
+candidate is an expression built from indicators --- the \emph{building
+blocks} --- and the evolution combines, mutates and selects them generation
+after generation, scoring each one on real data.
 
 \figuraSchermata{1.0}{figure/schermate/genetic.png}
-  {The genetics section. You declare what the strategies should evolve on,
-   and the rest is waiting.}
+  {Genetics while an evolution runs. On the left you prepare the next one;
+   on the right you follow this one: the generation, the time left, the best
+   fitness on the training and on the evaluation data, the diamonds where
+   the agent proposed variants, and the best expression so far.}
   {genetic}
 
-\begin{nota}{It takes a long time}
-It is the slowest job in the application. It starts as a background process:
-you can close the page, and the bell tells you when it is finished.
+\subsection{Preparing an evolution}
+
+The column on the left is read from top to bottom; the
+\pulsante{Start evolution} button stays at the bottom, and the line above it
+says what is still missing, if anything is (a name, a building block, a
+number that does not add up).
+
+\begin{itemize}
+  \item \textbf{Name} --- lowercase letters, digits and underscores,
+        starting with a letter. It becomes the name of the strategy.
+  \item \textbf{Data} --- the \voce{Universe} is \voce{All assets},
+        some \voce{Categories} (those without market data are greyed out),
+        or \voce{One symbol}. Then the \voce{Timeframe}, and how many
+        assets of the universe each candidate is scored on
+        (\voce{Assets tested}).
+  \item \textbf{Split} --- each asset's history is cut in time order: the
+        evolution learns on the first part (\voce{Training}), chooses on the
+        second (\voce{Evaluation}) and confirms on the last (\voce{Test}).
+        The three colours are the same everywhere on the page: in the bar,
+        in the chart and in the results.
+  \item \textbf{Building blocks} --- the indicators the evolution can
+        combine, grouped by family: trend, momentum, mean reversion,
+        volatility, breakout. The indicators of the system that export a
+        primitive are listed too. At least two.
+  \item \textbf{Evolution} --- the \voce{Mutations} are \voce{Heuristic}
+        (random changes to the trees) or \voce{Agent-guided}: every few
+        generations a local model proposes variants of the best expression,
+        and those outside the grammar are thrown away. Then
+        \voce{Population}, \voce{Generations}, \voce{Signal threshold} and
+        \voce{Seed}: the same seed with the same settings gives the same
+        result. \voce{Favour decision rules} puts an if-then-else at the root
+        of the tree, so the result reads as a rule instead of a formula.
+  \item \textbf{Approval filter} --- what a strategy must pass to be
+        installed: how many assets must pass the checks (at least one per
+        category, and at least two, because a rule that works on one asset
+        may work by chance), the minimum number of trades, the
+        risk/reward with the win rate it implies, and the share of Monte
+        Carlo simulations it must survive.
+\end{itemize}
+
+\noindent
+The next time you open the page, the form has the settings of your last run
+(\voce{Settings from your last run} next to the title); \pulsantesec{Reset}
+brings back the defaults.
+
+\subsection{Following the run}
+
+While the evolution runs, the box on the right shows the generation, the time
+elapsed and the time left. The chart is the part to watch: two lines, the
+best fitness on the \textbf{training} data and on the \textbf{evaluation}
+data. Move the mouse over it to read each generation.
+
+\begin{perche}{The distance between the two lines}
+If the training line keeps rising and the evaluation line stays where it
+was, the evolution is learning the training data, not the market: the rules
+it finds fit the past they were made on. The evaluation line is the one that
+counts --- it is computed on data the evolution never learned from.
+\end{perche}
+
+\noindent
+Below the chart, the \textbf{best expression} so far: functions, building
+blocks and numbers in different colours, with \pulsantesec{Copy}.
+\voce{Show as a Python rule} shows the same thing as the code that will be
+installed: reading it \emph{before} it enters the system is the way to know
+what it does. \pulsantesec{Stop} ends the run, and the \voce{Log} keeps
+every line the evolution wrote. With more than one run in the session, the
+menu at the top of the box goes back to the others.
+
+\begin{nota}{The run lives in the application}
+The evolution runs on your computer, inside the application: you can leave
+the page and come back, and the run is where you left it. Closing the
+application stops it.
 \end{nota}
 
-\section{What happens when you press \enquote{Install}}\label{sez:studio-install}
+\subsection{Reading the result}
+
+At the end the box adds two panels: the \voce{Results}, as averages per asset
+on the three parts of the data, and the \voce{Approval filter}, category by
+category, with a bar that says how close each one came to its quota. A
+strategy that passes is installed by itself, and appears in
+\voce{Run backtest} and in \voce{View} like any other.
+
+\figuraSchermata{0.85}{figure/schermate/genetic-result.png}
+  {A run that did not pass the filter: no asset of the category passed the
+   checks on the evaluation data. The numbers are still there to read, and
+   the strategy can be installed anyway.}
+  {genetic-result}
+
+\noindent
+A strategy that does not pass is not thrown away: \pulsante{Add to the system
+anyway} installs it, marked as such. It may have failed because a category
+had too few assets, or because the evaluation period was unfavourable; a
+backtest says more. \pulsantesec{Open in Studio} and
+\pulsantesec{Run backtest} take you to the strategy just installed.
+
+\subsection{The evolved strategies}
+
+Under the run, the table of every strategy born here: Sharpe on the
+evaluation and test data, the return and the drawdown on the test data, the
+approval --- \voce{Approved} with how many assets passed, or
+\voce{On request} --- and when it was created. The columns sort with a
+click; with more than one strategy, a field filters them by name or by
+expression.
+
+\figuraSchermata{0.85}{figure/schermate/genetic-library.png}
+  {The evolved strategies, with one of them open: the expression and the
+   rule, how it was evolved, the results on the three parts of the data and
+   the fitness curve of its run.}
+  {genetic-library}
+
+\section{What happens when you save}\label{sez:studio-install}
 
 The artifact is written to a folder of the system, and from then on it
 appears in the lists: a strategy among those you can run, a weighting mode
@@ -156,9 +389,9 @@ these, the installation is refused and the reason is shown.
 
 An artifact written somewhere else --- in another editor, received as a
 \file{.zip}, downloaded --- does not have to be copied by hand into the right
-folder. Each family has \pulsante{Import\ldots} in its bar, next to
-\pulsantesec{Delete}. The window shows the shape that family expects and
-what you can choose.
+folder. Each family has its import button next to the search, in the
+column on the left (\vediSez{studio-list}). The window shows the shape that
+family expects and what you can choose.
 
 \figuraSchermata{0.8}{figure/schermate/studio-import-dialog.png}
   {Importing a strategy: a folder, a .zip or .py files, chosen with the
@@ -178,7 +411,7 @@ what you can choose.
 \voce{Approaches} & a folder, a .zip, .py files
   & the same, with \file{approach.py} \\
 \rigaTenue
-\voce{Weight mode}, \voce{Overlay} & a folder, a .zip, .py files
+\voce{Weight modes}, \voce{Overlays} & a folder, a .zip, .py files
   & the folder with \file{weight\_mode.py} or \file{overlay.py} (and its
     \file{data\_port.py}), or a single \file{.py} with \cod{META} and
     \cod{compute()} \\

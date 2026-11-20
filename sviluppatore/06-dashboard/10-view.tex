@@ -1,0 +1,150 @@
+% ===========================================================================
+%  sviluppatore/06-dashboard/10-view.tex
+% ===========================================================================
+\section{La View a tutto grafico}\label{sez:view-guscio}
+
+La pagina View è il grafico: \file{templates/visual.html} ha un solo palco,
+\cod{\#vd-main}, che il grafico riempie da bordo a bordo; tutto il resto gli
+sta sopra in posizione assoluta. Il canvas dell'app perde margini e titolo
+solo su questa pagina (\cod{\#qs-canvas[data-tab="visual"]} in
+\file{static/css/visual.css}): l'altezza è quella della finestra meno
+\cod{--ui-shell-inset}, il titolo resta nell'intestazione ritagliata a un
+pixel per la sintesi vocale. Sotto i 640 pixel l'intestazione torna, perché lì
+la navigazione è un menu e il pulsante che lo apre sta in lei.
+
+\subsection{Il guscio}
+
+\file{static/js/visual\_chrome.js}, con \simbolo{LyraChrome}\cod{.create(o)},
+governa i tre pannelli che stanno sopra il grafico:
+
+\begin{center}
+\begin{tabular}{@{}L{34mm}L{104mm}@{}}
+\toprule
+\textbf{Pannello} & \textbf{Come si riduce} \\
+\midrule
+\rigaTenue
+\cod{\#vd-topbar} & \cod{\#vd-top-fold}, il suo primo pulsante, la riduce alla
+  linguetta \cod{\#vd-top-tab} nello stesso punto. \\
+\cod{\#vd-toolbar} & \cod{\#vd-tools-fold} e \cod{\#vd-tools-tab}, allo stesso
+  modo. \\
+\rigaTenue
+\cod{\#vd-ind-editor} & Un pannello agganciato in basso: \cod{\#vd-ind-min} lo
+  riduce alla pillola \cod{\#vd-ind-pill}, in basso a sinistra, che lo
+  riapre; \cod{\#vd-ind-max} lo massimizza e lo ripristina. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Lo stato delle barre sta in due attributi del palco, \cod{data-top} e
+\cod{data-tools}, che valgono \cod{"open"} o \cod{"folded"}: il CSS ne ricava
+che cosa si vede. Le barre ridotte sfumano con \cod{visibility}, così escono anche
+dall'ordine del tasto Tab. Ridurre sposta il fuoco sulla linguetta, riaprire
+sul pulsante; la linguetta sta dove stava il pulsante, quindi il mouse resta
+sopra al comando che serve dopo. Ridurre la barra in alto chiude i menu
+aperti, con \cod{o.onFold}.
+
+L'editor degli indicatori è un pannello in basso, a tutta larghezza, come su
+TradingView. Il suo stato è l'attributo \cod{data-editor} del palco:
+\cod{"closed"}, \cod{"open"} o \cod{"max"}. Aperto, il grafico finisce dove
+il pannello comincia (\cod{bottom: var(--vd-ed-off)}): asse dei tempi,
+riquadri delle anteprime e logo restano scoperti, e ciò che stava in basso
+(intervallo, barra del replay, operazioni, stato) sale con lui. Massimizzato,
+il pannello arriva sotto la barra in alto (\cod{--vd-ed-top}) e il grafico
+resta della misura che aveva, sotto di lui.
+
+\begin{perche}{Il grafico si accorcia, non si copre}
+Un pannello sopra il grafico ne nasconde proprio la parte bassa, dove
+compare il riquadro dell'indicatore che si sta scrivendo e dove sta l'asse
+dei tempi. Accorciare il grafico costa una ridisegnata di Lightweight Charts
+(\cod{autoSize}) e lascia leggibile l'anteprima.
+\end{perche}
+
+L'altezza (\cod{--vd-ed-h}) si cambia dal bordo superiore del pannello,
+\cod{\#vd-ind-grip}, che per la tastiera e gli screen reader è un separatore
+(\cod{role="separator"}, con \cod{aria-valuenow}): si trascina coi pointer
+event e \cod{setPointerCapture}, o si sposta con le frecce (24 pixel, 96 con
+Maiuscolo), Home ed End. \simbolo{limitiEditor} la tiene fra 170
+pixel e quanto lascia al grafico 200 pixel; la prima volta vale il 42\%
+dell'altezza del palco. Dallo stato massimizzato il trascinamento riparte
+dall'altezza vera. Il doppio clic sull'intestazione (non sui suoi comandi) o
+sul bordo massimizza e ripristina. All'apertura \cod{o.onEditor(true)}
+carica il modello se l'editor è vuoto, e il fuoco va nel codice; riducendo,
+va alla pillola.
+
+Tutto resta in \cod{localStorage["vd-chrome"]}: le barre e l'editor,
+\cod{\{open, h, max\}}. Una posizione di finestra salvata dalla versione di
+prima (ha \cod{x}) si ignora. Uno script in linea subito dopo l'apertura del
+palco rimette le barre ridotte prima del primo disegno, così non si vedono
+aprirsi e richiudersi.
+
+\subsection{L'impaginazione}
+
+Dove stanno le cose che il grafico si porta sopra lo decide
+\simbolo{impagina}, che scrive variabili CSS sul palco, e solo quando
+cambiano:
+
+\begin{center}
+\begin{tabular}{@{}L{40mm}L{98mm}@{}}
+\toprule
+\textbf{Variabile} & \textbf{Che cosa} \\
+\midrule
+\rigaTenue
+\cod{--vd-scale-w}, \cod{--vd-time-h} & La scala dei prezzi e l'asse dei
+  tempi: nessun pannello ci va sopra. \\
+\cod{--vd-rail-top}, \cod{--vd-rail-maxh} & Gli strumenti: sotto la barra in
+  alto (anche quando va a capo), fino al logo di TradingView. \\
+\rigaTenue
+\cod{--vd-legend-top}, \cod{--vd-legend-left}, \cod{--vd-legend-maxw} & La legenda: nell'angolo fra le
+  due barre o le loro linguette, larga fino alle etichette Sell/Buy o alla
+  scala. \\
+\cod{--vd-tags-top} & Sell/Buy: in alto, o sotto la barra se lei arriva fin
+  lì. \\
+\rigaTenue
+\cod{--vd-panel-top} & Il pannello dell'ingranaggio, sotto Sell/Buy. \\
+\cod{--vd-trades-top} & Le operazioni del replay, sotto la legenda. \\
+\rigaTenue
+\cod{--vd-dock-left} & La pillola e lo stato, dopo il logo. \\
+\cod{--vd-ed-h}, \cod{--vd-ed-off}, \cod{--vd-ed-top} & L'editor: la sua
+  altezza, dove finisce il grafico, dove arriva massimizzato. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Le misure del grafico gliele dà \file{visual.js} con \simbolo{chartMetrics}:
+la larghezza della scala dei prezzi, l'altezza dell'asse dei tempi e il
+rettangolo del logo di TradingView, che non va mai coperto perché è
+l'attribuzione chiesta dalla licenza. I pannelli si misurano con
+\cod{offsetLeft} e \cod{offsetWidth}, non con \cod{getBoundingClientRect}:
+durante la transizione sono scalati, e il rettangolo trasformato darebbe
+posizioni sbagliate fino all'impaginazione successiva. Si impagina con un
+\cod{ResizeObserver} (palco, barre, legenda, etichette, pillola), al
+ridimensionamento della finestra e quando cambia la misura dell'asse dei
+tempi, con \cod{subscribeSizeChange}, che scatta anche quando si allarga la
+scala dei prezzi. \cod{o.onLayout(g)} passa a \file{visual.js} i rettangoli
+del guscio sul lato sinistro, \cod{g.ostacoli}, solo quando cambiano;
+\simbolo{layoutPaneLegends} sposta la legenda di un riquadro a destra di
+quelli che la coprirebbero. Quando la colonna degli strumenti non ci sta
+fra la barra in alto e il logo (con l'editor aperto, o in una finestra
+bassa), \simbolo{impagina} la mette su due colonne (\cod{.vd-rail-2}),
+misurando l'altezza di una colonna sola prima di decidere.
+
+\paragraph{Sovrapposizione.} \cod{\#vd-chart} ha \cod{z-index: 0}. Senza, il
+contenitore del grafico non è un contesto di sovrapposizione, e gli elementi
+interni della libreria con uno z-index (i separatori dei riquadri, che si
+trascinano) gareggiano con quelli del palco: passavano sopra i pannelli, e un
+clic sul bordo di un riquadro sotto uno di loro arrivava al grafico. Il palco ha \cod{data-ui-group="none"}: \file{ui-system.js} prenderebbe
+le due linguette per una serie di pulsanti e darebbe loro il raggio piccolo
+dei gruppi.
+
+\subsection{Le prove}
+
+La sezione H di \file{tests/e2e\_grafici.js}: il grafico che riempie l'area e
+la pagina che non scorre, il titolo, le barre e la legenda al loro posto, le
+legende dei riquadri che scansano gli strumenti, il logo scoperto; ridurre e
+riaprire (la linguetta sotto il mouse, il fuoco, la legenda che si sposta, il
+grafico che non cambia misura, lo stato dopo il ricaricamento); il pannello
+dell'editor (apertura dalla pillola, larghezza piena e altezza iniziale,
+fuoco nel codice, grafico che finisce dove lui comincia, logo e asse scoperti,
+strumenti sopra il logo, trascinamento e limiti, tastiera, massimizza e
+ripristina, doppio clic, riduzione e riapertura alla stessa altezza,
+ricaricamento); lo schermo stretto.
